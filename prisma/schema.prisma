@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id           String     @id @default(cuid())
+  namaLengkap  String
+  nisn         String     @unique
+  kelas        String
+  sekolah      String
+  jenisKelamin String
+  createdAt    DateTime   @default(now())
+
+  results      Result[]
+}
+
+model Result {
+  id              String   @id @default(cuid())
+  studentId       String
+  student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  // Typing test metrics
+  typedText       String   // teks yang berhasil diketik siswa
+  charCount       Int      // jumlah karakter yang diketik
+  correctChars    Int      // karakter yang benar (sesuai teks asli)
+  typingSpeedWPM  Float    // kecepatan mengetik (kata per menit)
+  typingAccuracy  Float    // akurasi (%)
+  typingDuration  Int      // durasi aktual mengetik (detik)
+  typingScore     Float    // nilai akhir typing (0-100)
+
+  // Quiz metrics
+  quizAnswers     String   // JSON array of {questionId, selectedAnswer}
+  quizCorrect     Int      // jumlah jawaban benar
+  quizTotal       Int      // total soal (30)
+  quizScore       Float    // nilai akhir quiz (0-100)
+
+  // Overall
+  totalScore      Float    // kombinasi (0-100)
+  completedAt     DateTime @default(now())
+}
