@@ -34,17 +34,34 @@ import { toast } from 'sonner'
 const TOTAL_TIME_SECONDS = 25 * 60 // 25 menit
 
 export function QuizStage() {
-  const { setStage, setQuizResult, student, typingResult } = useAppStore()
+  const { setStage, setQuizResult, student, typingResult, progress } = useAppStore()
   const [answers, setAnswers] = useState<Record<number, number>>({})
   const [currentIdx, setCurrentIdx] = useState(0)
-  const [startTime] = useState<number>(Date.now())
+  const [startTime, setStartTime] = useState<number | null>(null)
   const [now, setNow] = useState<number>(Date.now())
   const [showSubmitDialog, setShowSubmitDialog] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null)
+  const [savingProgress, setSavingProgress] = useState(false)
   const isMounted = useRef(true)
 
   // Pilih set soal sesuai kelas siswa (kelas 8 = dasar, kelas 9 = advanced)
   const [QUESTIONS, setQuestions] = useState<Question[]>([])
+
+  // Resume: load progress quiz dari DB
+  useEffect(() => {
+    if (progress && progress.quizAnswers && Object.keys(progress.quizAnswers).length > 0) {
+      setAnswers(progress.quizAnswers)
+      toast.info(`Progress quiz dimuat: ${Object.keys(progress.quizAnswers).length} soal sudah dijawab`)
+    }
+    if (progress && progress.quizStartTime) {
+      const savedStart = new Date(progress.quizStartTime).getTime()
+      const adjustedStart = savedStart - (progress.quizDuration * 1000)
+      setStartTime(adjustedStart)
+    } else {
+      setStartTime(Date.now())
+    }
+  }, [progress])
 
   useEffect(() => {
     const grade = (student?.kelas as GradeLevel) ?? '8A'
@@ -78,12 +95,63 @@ export function QuizStage() {
     return () => clearInterval(interval)
   }, [])
 
-  const elapsedSec = Math.floor((now - startTime) / 1000)
+  const elapsedSec = startTime ? Math.floor((now - startTime) / 1000) : 0
   const remainingSec = Math.max(0, TOTAL_TIME_SECONDS - elapsedSec)
   const timeUp = remainingSec === 0
 
   const answeredCount = Object.keys(answers).length
-  const progress = (answeredCount / QUESTIONS.length) * 100
+  const progressPct = QUESTIONS.length > 0 ? (answeredCount / QUESTIONS.length) * 100 : 0
+
+  // Auto-save jawaban quiz ke DB setiap kali jawaban berubah
+  useEffect(() => {
+    if (!student?.id || !startTime) return
+
+    const saveQuizProgress = async () => {
+      setSavingProgress(true)
+      try {
+        const res = await fetch('/api/student/progress', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            studentId: student.id,
+            currentStage: 'quiz',
+            quizAnswers: JSON.stringify(answers),
+            quizStartTime: new Date(startTime).toISOString(),
+            quizDuration: elapsedSec,
+            isCompleted: false,
+          }),
+        })
+        if (res.ok) setLastSavedAt(Date.now())
+      } catch (err) {
+        console.error('Auto-save quiz failed:', err)
+      } finally {
+        setSavingProgress(false)
+      }
+    }
+
+    // Debounced save 1 detik setelah jawaban berubah
+    const timer = setTimeout(saveQuizProgress, 1000)
+
+    // Save saat tab ditutup
+    const handleBeforeUnload = () => {
+      const payload = JSON.stringify({
+        studentId: student.id,
+        currentStage: 'quiz',
+        quizAnswers: JSON.stringify(answers),
+        quizStartTime: new Date(startTime).toISOString(),
+        quizDuration: elapsedSec,
+        isCompleted: false,
+      })
+      const blob = new Blob([payload], { type: 'application/json' })
+      navigator.sendBeacon('/api/student/progress', blob)
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [answers, startTime, student?.id, elapsedSec])
 
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60)
@@ -116,7 +184,7 @@ export function QuizStage() {
     const typingScore = typingResult?.typingScore ?? 0
     const totalScore = Math.round(typingScore * 0.5 + result.quizScore * 0.5)
 
-    // Simpan ke database
+    // Simpan hasil akhir ke tabel Result
     try {
       const res = await fetch('/api/result', {
         method: 'POST',
@@ -140,9 +208,24 @@ export function QuizStage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Gagal menyimpan')
-      // Simpan resultId ke store
       useAppStore.getState().setResultId(data.result.id)
       useAppStore.getState().setTotalScore(totalScore)
+
+      // Tandai progress sebagai completed
+      if (student?.id) {
+        await fetch('/api/student/progress', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            studentId: student.id,
+            currentStage: 'completed',
+            quizAnswers: JSON.stringify(answers),
+            quizStartTime: startTime ? new Date(startTime).toISOString() : '',
+            quizDuration: result.quizDuration,
+            isCompleted: true,
+          }),
+        })
+      }
     } catch (err) {
       console.error(err)
       toast.error('Gagal menyimpan hasil ke database, namun hasil tetap ditampilkan.')
@@ -220,6 +303,24 @@ export function QuizStage() {
             <Clock className="w-5 h-5" />
             {formatTime(remainingSec)}
           </div>
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 ml-2">
+            {savingProgress ? (
+              <>
+                <RefreshCw className="w-3 h-3 animate-spin" />
+                <span>Menyimpan...</span>
+              </>
+            ) : lastSavedAt ? (
+              <>
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                <span>Tersimpan</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-3 h-3" />
+                <span>Auto-save aktif</span>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -232,7 +333,7 @@ export function QuizStage() {
               {answeredCount}/{QUESTIONS.length} soal terjawab
             </span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progressPct} className="h-2" />
         </div>
 
         <div className="grid lg:grid-cols-[1fr_280px] gap-6">

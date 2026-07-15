@@ -1,7 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type AppStage = 'welcome' | 'typing' | 'typing-finished' | 'quiz' | 'results'
+export type AppStage =
+  | 'welcome'
+  | 'typing'
+  | 'typing-finished'
+  | 'quiz'
+  | 'results'
 
 export interface StudentInfo {
   id?: string
@@ -31,6 +36,18 @@ export interface QuizResult {
   quizDuration: number // detik
 }
 
+// Progress untuk resume
+export interface ResumableProgress {
+  progressId?: string
+  typedText: string
+  typingStartTime: string | null
+  typingDuration: number
+  quizAnswers: Record<number, number>
+  quizStartTime: string | null
+  quizDuration: number
+  resumeStage: AppStage
+}
+
 interface AppState {
   stage: AppStage
   student: StudentInfo | null
@@ -38,6 +55,7 @@ interface AppState {
   quizResult: QuizResult | null
   totalScore: number | null
   resultId: string | null
+  progress: ResumableProgress | null
 
   setStage: (stage: AppStage) => void
   setStudent: (student: StudentInfo) => void
@@ -45,6 +63,7 @@ interface AppState {
   setQuizResult: (r: QuizResult) => void
   setTotalScore: (s: number) => void
   setResultId: (id: string) => void
+  setProgress: (p: ResumableProgress | null) => void
   reset: () => void
 }
 
@@ -57,6 +76,7 @@ export const useAppStore = create<AppState>()(
       quizResult: null,
       totalScore: null,
       resultId: null,
+      progress: null,
 
       setStage: (stage) => set({ stage }),
       setStudent: (student) => set({ student }),
@@ -64,6 +84,7 @@ export const useAppStore = create<AppState>()(
       setQuizResult: (quizResult) => set({ quizResult }),
       setTotalScore: (totalScore) => set({ totalScore }),
       setResultId: (resultId) => set({ resultId }),
+      setProgress: (progress) => set({ progress }),
       reset: () =>
         set({
           stage: 'welcome',
@@ -72,6 +93,7 @@ export const useAppStore = create<AppState>()(
           quizResult: null,
           totalScore: null,
           resultId: null,
+          progress: null,
         }),
     }),
     {

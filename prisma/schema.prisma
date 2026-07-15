@@ -21,6 +21,7 @@ model Student {
   createdAt    DateTime   @default(now())
 
   results      Result[]
+  progresses   Progress[]
 }
 
 model Teacher {
@@ -56,6 +57,36 @@ model TypingText {
   isActive     Boolean  @default(true)  // hanya 1 aktif per kelas yang dipakai
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// Progress pengerjaan siswa - untuk resume jika error/keluar aplikasi
+model Progress {
+  id              String   @id @default(cuid())
+  studentId       String
+  student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  // Stage saat ini: 'typing' | 'typing-finished' | 'quiz' | 'completed'
+  currentStage    String   @default("typing")
+
+  // Typing progress (auto-save)
+  typedText       String   @default("")
+  charCount       Int      @default(0)
+  correctChars    Int      @default(0)
+  typingStartTime String   @default("") // ISO timestamp
+  typingDuration  Int      @default(0)  // detik
+
+  // Quiz progress (auto-save)
+  quizAnswers     String   @default("{}") // JSON {questionId: selectedIndex}
+  quizStartTime   String   @default("")
+  quizDuration    Int      @default(0)
+
+  // Status
+  isCompleted     Boolean  @default(false)
+  lastSavedAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([studentId])
 }
 
 model Result {

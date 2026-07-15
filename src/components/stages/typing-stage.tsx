@@ -42,14 +42,24 @@ const TOTAL_TIME_SECONDS = 40 * 60 // 40 menit
 const LINE_HEIGHT = 28 // px, harus sama antara source & textarea
 const FONT_SIZE = 15
 
+function formatTimeAgo(timestamp: number): string {
+  const diff = Math.floor((Date.now() - timestamp) / 1000)
+  if (diff < 5) return 'baru saja'
+  if (diff < 60) return `${diff} dtk lalu`
+  const min = Math.floor(diff / 60)
+  return `${min} mnt lalu`
+}
+
 export function TypingStage() {
-  const { setStage, setTypingResult, student } = useAppStore()
+  const { setStage, setTypingResult, student, progress, setProgress } = useAppStore()
   const [typed, setTyped] = useState('')
   const [startTime, setStartTime] = useState<number | null>(null)
   const [now, setNow] = useState<number>(Date.now())
   const [copyWarnings, setCopyWarnings] = useState(0)
   const [blocked, setBlocked] = useState(false)
   const [showFinishDialog, setShowFinishDialog] = useState(false)
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null)
+  const [savingProgress, setSavingProgress] = useState(false)
 
   // State untuk teks dari DB
   const [TYPING_TEXT, setTypingText] = useState<string>('')
@@ -78,6 +88,23 @@ export function TypingStage() {
       .finally(() => setTextLoading(false))
   }, [student?.kelas])
 
+  // Resume: load progress sebelumnya jika ada
+  useEffect(() => {
+    if (progress && progress.typedText) {
+      setTyped(progress.typedText)
+      if (progress.typingStartTime) {
+        const savedStart = new Date(progress.typingStartTime).getTime()
+        // Tambahkan durasi yang sudah berlalu ke startTime
+        const adjustedStart = savedStart - (progress.typingDuration * 1000)
+        setStartTime(adjustedStart)
+      }
+      if (progress.copyWarnings) {
+        setCopyWarnings(progress.copyWarnings)
+      }
+      toast.info(`Progress dimuat: ${progress.typedText.length} karakter diketik sebelumnya`)
+    }
+  }, [progress])
+
   const sourceHeadings = useMemo(
     () => countHeadings(TYPING_TEXT),
     [TYPING_TEXT]
@@ -89,12 +116,85 @@ export function TypingStage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Auto-start timer on first keystroke
+  // Auto-start timer on first keystroke (jika belum ada startTime)
   useEffect(() => {
     if (typed.length > 0 && startTime === null) {
       setStartTime(Date.now())
     }
   }, [typed, startTime])
+
+  // Auto-save progress ke DB setiap 5 detik (jika ada perubahan)
+  useEffect(() => {
+    if (!student?.id || !startTime || typed.length === 0) return
+
+    const saveProgress = async () => {
+      setSavingProgress(true)
+      try {
+        const elapsedSec = Math.floor((Date.now() - (startTime || Date.now())) / 1000)
+        let correctChars = 0
+        for (let i = 0; i < typed.length; i++) {
+          if (typed[i] === TYPING_TEXT[i]) correctChars++
+        }
+
+        const res = await fetch('/api/student/progress', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            studentId: student.id,
+            currentStage: 'typing',
+            typedText: typed,
+            charCount: typed.length,
+            correctChars,
+            typingStartTime: new Date(startTime).toISOString(),
+            typingDuration: elapsedSec,
+            quizAnswers: '{}',
+            isCompleted: false,
+          }),
+        })
+        if (res.ok) {
+          setLastSavedAt(Date.now())
+        }
+      } catch (err) {
+        console.error('Auto-save failed:', err)
+      } finally {
+        setSavingProgress(false)
+      }
+    }
+
+    const interval = setInterval(saveProgress, 5000)
+    // Save awal setelah 2 detik
+    const initialTimer = setTimeout(saveProgress, 2000)
+
+    // Save saat tab ditutup / refresh
+    const handleBeforeUnload = () => {
+      // Pakai sendBeacon untuk reliability saat unload
+      const elapsedSec = Math.floor((Date.now() - (startTime || Date.now())) / 1000)
+      let correctChars = 0
+      for (let i = 0; i < typed.length; i++) {
+        if (typed[i] === TYPING_TEXT[i]) correctChars++
+      }
+      const payload = JSON.stringify({
+        studentId: student.id,
+        currentStage: 'typing',
+        typedText: typed,
+        charCount: typed.length,
+        correctChars,
+        typingStartTime: new Date(startTime).toISOString(),
+        typingDuration: elapsedSec,
+        quizAnswers: '{}',
+        isCompleted: false,
+      })
+      const blob = new Blob([payload], { type: 'application/json' })
+      navigator.sendBeacon('/api/student/progress', blob)
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    return () => {
+      clearInterval(interval)
+      clearTimeout(initialTimer)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [typed, startTime, student?.id, TYPING_TEXT])
 
   // Anti copy-paste
   useEffect(() => {
@@ -252,6 +352,28 @@ export function TypingStage() {
   const handleFinish = () => {
     const result = computeScore()
     setTypingResult(result)
+    // Simpan progress ke stage 'typing-finished'
+    if (student?.id) {
+      let correctChars = 0
+      for (let i = 0; i < typed.length; i++) {
+        if (typed[i] === TYPING_TEXT[i]) correctChars++
+      }
+      fetch('/api/student/progress', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId: student.id,
+          currentStage: 'typing-finished',
+          typedText: typed,
+          charCount: typed.length,
+          correctChars,
+          typingStartTime: startTime ? new Date(startTime).toISOString() : '',
+          typingDuration: stats.elapsedSec,
+          quizAnswers: '{}',
+          isCompleted: false,
+        }),
+      }).catch(err => console.error('Failed to save progress:', err))
+    }
     setStage('typing-finished')
   }
 
@@ -345,6 +467,24 @@ export function TypingStage() {
             >
               <Clock className="w-5 h-5" />
               {formatTime(remainingSec)}
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 ml-2">
+              {savingProgress ? (
+                <>
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  <span>Menyimpan...</span>
+                </>
+              ) : lastSavedAt ? (
+                <>
+                  <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                  <span>Tersimpan {formatTimeAgo(lastSavedAt)}</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Auto-save aktif</span>
+                </>
+              )}
             </div>
           </div>
         </div>
