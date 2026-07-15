@@ -27,6 +27,7 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertCircle,
+  RefreshCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -162,6 +163,33 @@ export function QuizStage() {
   }, [timeUp])
 
   const currentQ = QUESTIONS[currentIdx]
+
+  // Loading state saat soal belum ter-load dari DB
+  if (QUESTIONS.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <header className="sticky top-0 z-40 bg-white border-b shadow-sm">
+          <div className="container max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-teal-600 flex items-center justify-center">
+              <Brain className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-900">
+                Tahap 2: Soal HOTS Berpikir Komputasional
+              </p>
+              <p className="text-xs text-slate-500">Memuat soal...</p>
+            </div>
+          </div>
+        </header>
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center text-slate-400">
+            <RefreshCw className="w-10 h-10 mx-auto animate-spin mb-3" />
+            <p className="text-sm">Sedang menyiapkan soal untuk kelas {student?.kelas}...</p>
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">

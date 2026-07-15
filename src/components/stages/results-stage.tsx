@@ -18,6 +18,7 @@ import {
   RotateCcw,
   Download,
   Award,
+  RefreshCw,
 } from 'lucide-react'
 
 export function ResultsStage() {
@@ -44,6 +45,18 @@ export function ResultsStage() {
   }, [student?.kelas])
 
   if (!typingResult || !quizResult) return null
+
+  // Loading state saat soal belum ter-load
+  if (QUESTIONS.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center text-slate-400">
+          <RefreshCw className="w-10 h-10 mx-auto animate-spin mb-3" />
+          <p className="text-sm">Memuat data soal untuk pembahasan...</p>
+        </div>
+      </div>
+    )
+  }
 
   const formatDuration = (sec: number) => {
     const m = Math.floor(sec / 60)
