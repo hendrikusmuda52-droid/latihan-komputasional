@@ -1,7 +1,8 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useAppStore } from '@/lib/store'
-import { QUESTIONS } from '@/lib/data'
+import { getQuestions, type GradeLevel } from '@/lib/data'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -21,6 +22,12 @@ import {
 
 export function ResultsStage() {
   const { student, typingResult, quizResult, totalScore, reset } = useAppStore()
+
+  // Ambil set soal sesuai kelas siswa untuk pembahasan
+  const QUESTIONS = useMemo(
+    () => getQuestions((student?.kelas as GradeLevel) ?? '8A'),
+    [student?.kelas]
+  )
 
   if (!typingResult || !quizResult) return null
 

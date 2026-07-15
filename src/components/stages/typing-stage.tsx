@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAppStore, type TypingResult } from '@/lib/store'
-import { TYPING_TEXT } from '@/lib/data'
+import { getTypingText, type GradeLevel } from '@/lib/data'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -42,6 +42,13 @@ export function TypingStage() {
   const [blocked, setBlocked] = useState(false)
   const [showFinishDialog, setShowFinishDialog] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Pilih teks mengetik sesuai kelas siswa
+  const TYPING_TEXT = useMemo(
+    () => getTypingText((student?.kelas as GradeLevel) ?? '8A'),
+    [student?.kelas]
+  )
+  const gradeTier = (student?.kelas ?? '8A').charAt(0) // '8' atau '9'
 
   // Timer
   useEffect(() => {
@@ -340,7 +347,11 @@ export function TypingStage() {
                 Teks Sumber — Ketik teks di bawah ini
               </CardTitle>
               <p className="text-xs text-slate-500 mt-1">
-                Topik: Berpikir Komputasional & Teknologi AI Modern
+                Topik:{' '}
+                {gradeTier === '8'
+                  ? 'Berpikir Komputasional di Kehidupan Sehari-hari'
+                  : 'Berpikir Komputasional & Isu Teknologi Modern (AI, IoT)'}{' '}
+                — Kelas {student?.kelas}
               </p>
             </CardHeader>
             <CardContent className="pt-4">

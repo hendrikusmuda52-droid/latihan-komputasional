@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAppStore, type QuizResult } from '@/lib/store'
-import { QUESTIONS } from '@/lib/data'
+import { getQuestions, type GradeLevel } from '@/lib/data'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -41,6 +41,12 @@ export function QuizStage() {
   const [showSubmitDialog, setShowSubmitDialog] = useState(false)
   const [saving, setSaving] = useState(false)
   const isMounted = useRef(true)
+
+  // Pilih set soal sesuai kelas siswa (kelas 8 = dasar, kelas 9 = advanced)
+  const QUESTIONS = useMemo(
+    () => getQuestions((student?.kelas as GradeLevel) ?? '8A'),
+    [student?.kelas]
+  )
 
   useEffect(() => {
     isMounted.current = true

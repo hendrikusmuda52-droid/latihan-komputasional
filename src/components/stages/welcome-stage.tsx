@@ -28,7 +28,7 @@ export function WelcomeStage() {
   const [form, setForm] = useState({
     namaLengkap: '',
     nisn: '',
-    kelas: '9A',
+    kelas: '8A',
     sekolah: '',
     jenisKelamin: '',
   })
@@ -184,12 +184,11 @@ export function WelcomeStage() {
                       <SelectValue placeholder="Pilih kelas" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="8A">8A</SelectItem>
+                      <SelectItem value="8B">8B</SelectItem>
+                      <SelectItem value="8C">8C</SelectItem>
                       <SelectItem value="9A">9A</SelectItem>
                       <SelectItem value="9B">9B</SelectItem>
-                      <SelectItem value="9C">9C</SelectItem>
-                      <SelectItem value="9D">9D</SelectItem>
-                      <SelectItem value="9E">9E</SelectItem>
-                      <SelectItem value="9F">9F</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
