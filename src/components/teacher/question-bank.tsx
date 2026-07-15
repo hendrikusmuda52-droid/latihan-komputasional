@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -32,7 +32,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, RefreshCw } from 'lucide-react'
+import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, RefreshCw, Download, Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface Question {
@@ -57,6 +57,18 @@ export function QuestionBank() {
   const [filterGrade, setFilterGrade] = useState<string>('8')
   const [editing, setEditing] = useState<Question | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [showImport, setShowImport] = useState(false)
+
+  const handleDownloadTemplate = () => {
+    // Trigger download dari API
+    const link = document.createElement('a')
+    link.href = '/api/questions/template'
+    link.download = 'template-import-soal.xlsx'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    toast.success('Template diunduh. Isi sesuai panduan di sheet "Panduan".')
+  }
 
   const fetchQuestions = async () => {
     setLoading(true)
@@ -122,6 +134,23 @@ export function QuestionBank() {
               </Select>
               <Button variant="outline" size="sm" onClick={fetchQuestions} disabled={loading}>
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadTemplate}
+                title="Download template Excel"
+              >
+                <Download className="w-4 h-4 mr-1" />
+                <span className="hidden sm:inline">Template</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowImport(true)}
+              >
+                <Upload className="w-4 h-4 mr-1" />
+                <span className="hidden sm:inline">Import</span>
               </Button>
               <Button
                 size="sm"
@@ -259,7 +288,232 @@ export function QuestionBank() {
           }}
         />
       )}
+
+      {showImport && (
+        <ImportDialog
+          onClose={() => setShowImport(false)}
+          onImported={() => {
+            setShowImport(false)
+            fetchQuestions()
+          }}
+        />
+      )}
     </div>
+  )
+}
+
+function ImportDialog({
+  onClose,
+  onImported,
+}: {
+  onClose: () => void
+  onImported: () => void
+}) {
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [preview, setPreview] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setSelectedFile(file)
+      setPreview(null)
+    }
+  }
+
+  const handlePreview = async () => {
+    if (!selectedFile) {
+      toast.error('Pilih file dulu')
+      return
+    }
+    setLoading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', selectedFile)
+      const res = await fetch('/api/questions/import?mode=preview', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Gagal')
+      setPreview(data)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Gagal parse file')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!selectedFile) return
+    setSaving(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', selectedFile)
+      const res = await fetch('/api/questions/import?mode=save', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Gagal import')
+      toast.success(data.message || 'Import berhasil')
+      onImported()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Gagal import')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
+            Import Soal dari Excel/CSV
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Step 1: Download template */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm font-semibold text-blue-900 mb-2">
+              Langkah 1: Download Template
+            </p>
+            <p className="text-xs text-blue-700 mb-3">
+              Unduh template Excel, isi soal sesuai format di sheet "Soal". Baca panduan di sheet "Panduan".
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="bg-white"
+              onClick={() => {
+                const link = document.createElement('a')
+                link.href = '/api/questions/template'
+                link.download = 'template-import-soal.xlsx'
+                link.click()
+              }}
+            >
+              <Download className="w-4 h-4 mr-1" />
+              Download Template Excel
+            </Button>
+          </div>
+
+          {/* Step 2: Upload file */}
+          <div>
+            <p className="text-sm font-semibold text-slate-900 mb-2">
+              Langkah 2: Upload File
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileRef.current?.click()}
+              >
+                <Upload className="w-4 h-4 mr-1" />
+                Pilih File
+              </Button>
+              <span className="text-xs text-slate-600 flex-1 truncate">
+                {selectedFile ? selectedFile.name : 'Belum ada file dipilih'}
+              </span>
+              <Button
+                size="sm"
+                onClick={handlePreview}
+                disabled={!selectedFile || loading}
+                className="bg-slate-700 hover:bg-slate-800"
+              >
+                {loading ? 'Memproses...' : 'Preview'}
+              </Button>
+            </div>
+          </div>
+
+          {/* Step 3: Preview hasil */}
+          {preview && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-slate-100 rounded p-3 text-center">
+                  <p className="text-2xl font-bold text-slate-900">{preview.totalRows}</p>
+                  <p className="text-xs text-slate-500">Total Baris</p>
+                </div>
+                <div className="bg-emerald-50 border border-emerald-200 rounded p-3 text-center">
+                  <p className="text-2xl font-bold text-emerald-600">{preview.validCount}</p>
+                  <p className="text-xs text-emerald-700">Soal Valid</p>
+                </div>
+                <div className="bg-red-50 border border-red-200 rounded p-3 text-center">
+                  <p className="text-2xl font-bold text-red-600">{preview.invalidCount}</p>
+                  <p className="text-xs text-red-700">Baris Error</p>
+                </div>
+              </div>
+
+              {preview.invalidCount > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 max-h-[200px] overflow-y-auto">
+                  <p className="text-xs font-semibold text-red-800 mb-2 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    Baris dengan error ({preview.invalid.length}):
+                  </p>
+                  <div className="space-y-1">
+                    {preview.invalid.map((row: any, i: number) => (
+                      <div key={i} className="text-xs text-red-700">
+                        <strong>Baris {row.rowNumber}:</strong> {row.errors.join('; ')}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {preview.validCount > 0 && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 max-h-[300px] overflow-y-auto">
+                  <p className="text-xs font-semibold text-emerald-800 mb-2 flex items-center gap-1">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Preview Soal Valid ({preview.valid.length}):
+                  </p>
+                  <div className="space-y-2">
+                    {preview.valid.slice(0, 10).map((row: any, i: number) => (
+                      <div key={i} className="text-xs border-l-2 border-emerald-400 pl-2">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <Badge variant="outline" className="text-xs">Kelas {row.gradeLevel}</Badge>
+                          <Badge variant="outline" className="text-xs bg-teal-50 text-teal-700">{row.category}</Badge>
+                          <span className="text-emerald-700 font-semibold">
+                            Jawaban: {String.fromCharCode(65 + row.correctAnswer)}
+                          </span>
+                        </div>
+                        <p className="text-slate-700">{row.question}</p>
+                      </div>
+                    ))}
+                    {preview.valid.length > 10 && (
+                      <p className="text-xs text-slate-500 italic mt-1">
+                        ... dan {preview.valid.length - 10} soal lainnya
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose}>Batal</Button>
+          <Button
+            onClick={handleSave}
+            disabled={!preview || preview.validCount === 0 || saving}
+            className="bg-emerald-600 hover:bg-emerald-700"
+          >
+            {saving ? 'Menyimpan...' : `Import ${preview?.validCount || 0} Soal`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
