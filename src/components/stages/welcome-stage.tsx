@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Keyboard, Brain, Clock, AlertTriangle, BookOpen } from 'lucide-react'
+import { Keyboard, Brain, Clock, AlertTriangle, BookOpen, School } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function WelcomeStage() {
@@ -68,12 +68,25 @@ export function WelcomeStage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+      {/* Top bar with link to teacher dashboard */}
+      <div className="bg-white/60 backdrop-blur border-b border-slate-200">
+        <div className="container max-w-5xl mx-auto px-4 py-2 flex justify-end">
+          <a
+            href="/?view=teacher"
+            className="inline-flex items-center gap-2 text-xs font-medium text-slate-600 hover:text-emerald-700 transition-colors"
+          >
+            <School className="w-4 h-4" />
+            Dashboard Guru →
+          </a>
+        </div>
+      </div>
+
       <main className="flex-1 container max-w-5xl mx-auto px-4 py-10">
         {/* Hero */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-full text-sm font-medium mb-4">
             <BookOpen className="w-4 h-4" />
-            Latihan Kompetensi Siswa SMP Kelas 9
+            Latihan Kompetensi Siswa SMP
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 leading-tight">
             Mengetik & Berpikir Komputasional
