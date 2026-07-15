@@ -28,11 +28,16 @@ export async function GET(req: NextRequest) {
       return kelasList.includes(studentKelas)
     })
 
-    // Ambil hasil latihan siswa
+    // Ambil hasil latihan siswa yang SUDAH DIRILIS guru saja
     const results = await db.result.findMany({
-      where: { studentId: session.studentId },
-      orderBy: { completedAt: 'desc' },
+      where: { studentId: session.studentId, isReleased: true },
+      orderBy: { releasedAt: 'desc' },
       take: 10,
+    })
+
+    // Hitung juga jumlah tugas yang sudah dikerjakan tapi belum dirilis
+    const pendingResults = await db.result.count({
+      where: { studentId: session.studentId, isReleased: false },
     })
 
     // Ambil progress aktif (belum selesai)
@@ -66,7 +71,9 @@ export async function GET(req: NextRequest) {
         quizCorrect: r.quizCorrect,
         quizTotal: r.quizTotal,
         completedAt: r.completedAt,
+        releasedAt: r.releasedAt,
       })),
+      pendingResultsCount: pendingResults,
       hasActiveProgress: !!activeProgress,
       activeProgressStage: activeProgress?.currentStage || null,
     })

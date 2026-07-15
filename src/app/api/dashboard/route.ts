@@ -27,6 +27,8 @@ export async function GET() {
       quizScore: r.quizScore,
       totalScore: r.totalScore,
       completedAt: r.completedAt.toISOString(),
+      isReleased: r.isReleased,
+      releasedAt: r.releasedAt ? r.releasedAt.toISOString() : null,
     }))
 
     const stats = {

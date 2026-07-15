@@ -22,9 +22,9 @@ interface StudentInfo {
   jenisKelamin: string
 }
 
-function RedirectToStudentLogin() {
+function RedirectToLogin() {
   useEffect(() => {
-    window.location.href = '/?view=student-login'
+    window.location.href = '/'
   }, [])
   return null
 }
@@ -34,16 +34,17 @@ function HomeContent() {
   const searchParams = useSearchParams()
   const view = searchParams.get('view')
   const isTeacherView = view === 'teacher'
-  const isStudentLogin = view === 'student-login'
   const isStudentDashboard = view === 'student-dashboard'
+  // Flag untuk menandakan sedang dalam mode latihan (typing/quiz/results)
+  const isLatihanMode = stage !== 'welcome'
 
   // State untuk student session
   const [studentSession, setStudentSession] = useState<StudentInfo | null>(null)
-  const [authChecked, setAuthChecked] = useState(!isStudentDashboard)
+  const [authChecked, setAuthChecked] = useState(!isStudentDashboard && !isLatihanMode)
 
-  // Cek session siswa saat mount (untuk student-dashboard)
+  // Cek session siswa saat mount
   useEffect(() => {
-    if (!isStudentDashboard) return
+    if (!isStudentDashboard && !isLatihanMode) return
     let cancelled = false
     fetch('/api/student/auth')
       .then((r) => r.json())
@@ -56,27 +57,39 @@ function HomeContent() {
         if (!cancelled) setAuthChecked(true)
       })
     return () => { cancelled = true }
-  }, [isStudentDashboard])
+  }, [isStudentDashboard, isLatihanMode])
 
   // Scroll to top saat stage berubah
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [stage])
 
-  // Routing berdasarkan query param
+  // Routing berdasarkan query param atau stage
   if (isTeacherView) return <TeacherDashboard />
 
-  if (isStudentLogin) {
+  // Mode latihan (typing/quiz/results) - butuh session siswa
+  if (isLatihanMode) {
+    if (!authChecked) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-50">
+          <div className="w-10 h-10 animate-spin text-emerald-500" />
+        </div>
+      )
+    }
+    if (!studentSession) {
+      return <RedirectToLogin />
+    }
     return (
-      <StudentLogin
-        onLogin={(s) => {
-          setStudentSession(s)
-          window.location.href = '/?view=student-dashboard'
-        }}
-      />
+      <>
+        {stage === 'typing' && <TypingStage />}
+        {stage === 'typing-finished' && <TypingFinishedStage />}
+        {stage === 'quiz' && <QuizStage />}
+        {stage === 'results' && <ResultsStage />}
+      </>
     )
   }
 
+  // Mode student-dashboard
   if (isStudentDashboard) {
     if (!authChecked) {
       return (
@@ -86,29 +99,27 @@ function HomeContent() {
       )
     }
     if (!studentSession) {
-      // Belum login → redirect ke login via useEffect
-      return <RedirectToStudentLogin />
+      return <RedirectToLogin />
     }
     return (
       <StudentDashboard
         student={studentSession}
         onLogout={() => {
           setStudentSession(null)
-          window.location.href = '/?view=student-login'
+          window.location.href = '/'
         }}
       />
     )
   }
 
-  // Default: alur siswa (welcome → typing → quiz → results)
+  // DEFAULT: halaman login siswa (halaman pertama yang muncul)
   return (
-    <>
-      {stage === 'welcome' && <WelcomeStage />}
-      {stage === 'typing' && <TypingStage />}
-      {stage === 'typing-finished' && <TypingFinishedStage />}
-      {stage === 'quiz' && <QuizStage />}
-      {stage === 'results' && <ResultsStage />}
-    </>
+    <StudentLogin
+      onLogin={(s) => {
+        setStudentSession(s)
+        window.location.href = '/?view=student-dashboard'
+      }}
+    />
   )
 }
 

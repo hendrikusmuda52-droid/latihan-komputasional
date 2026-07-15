@@ -126,4 +126,8 @@ model Result {
   // Overall
   totalScore      Float    // kombinasi (0-100)
   completedAt     DateTime @default(now())
+
+  // Status rilis - guru yang kontrol kapan nilai terlihat siswa
+  isReleased      Boolean  @default(false)
+  releasedAt      DateTime?
 }

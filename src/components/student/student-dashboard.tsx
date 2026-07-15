@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
   GraduationCap, LogOut, Play, History, Clock, CheckCircle2,
-  Trophy, Type, Brain, Target, FileText, Calendar, RefreshCw, ArrowLeft
+  Trophy, Type, Brain, Target, FileText, Calendar, RefreshCw,
+  Lock, AlertCircle, Hourglass,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAppStore } from '@/lib/store'
@@ -38,12 +39,14 @@ interface ResultItem {
   quizCorrect: number
   quizTotal: number
   completedAt: string
+  releasedAt: string | null
 }
 
 interface DashboardData {
   student: StudentInfo
   assignments: Assignment[]
   results: ResultItem[]
+  pendingResultsCount: number
   hasActiveProgress: boolean
   activeProgressStage: string | null
 }
@@ -78,19 +81,17 @@ export function StudentDashboard({
     fetchData()
   }, [])
 
-  const handleStartAssignment = () => {
-    // Set student di store & mulai latihan
+  const handleStartAssignment = (assignment: Assignment) => {
+    // Set student di store & mulai latihan dari tugas yang dipilih
     setStudent(student)
     setProgress(null)
-    setStage('typing')
-  }
 
-  const handleResumeProgress = () => {
-    setStudent(student)
-    if (data?.activeProgressStage) {
+    // Jika ada progress aktif, lanjutkan; jika tidak, mulai dari typing
+    if (data?.hasActiveProgress && data.activeProgressStage) {
       toast.info(`Melanjutkan dari ${data.activeProgressStage}`)
       setStage(data.activeProgressStage as 'typing' | 'quiz')
     } else {
+      toast.success(`Memulai tugas: ${assignment.title}`)
       setStage('typing')
     }
   }
@@ -100,9 +101,6 @@ export function StudentDashboard({
     onLogout()
     toast.success('Berhasil logout')
   }
-
-  const getScoreColor = (s: number) =>
-    s >= 80 ? 'text-emerald-600' : s >= 60 ? 'text-amber-600' : 'text-red-600'
 
   const getScoreBadge = (s: number) =>
     s >= 80 ? 'bg-emerald-100 text-emerald-700'
@@ -134,6 +132,11 @@ export function StudentDashboard({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <a href="/?view=teacher" target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" size="sm">
+                Dashboard Guru
+              </Button>
+            </a>
             <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
@@ -163,39 +166,26 @@ export function StudentDashboard({
                   NISN: {student.nisn} • Kelas: {student.kelas}
                 </p>
               </div>
-              <div className="flex flex-col gap-2">
-                {data?.hasActiveProgress ? (
-                  <Button
-                    size="lg"
-                    className="bg-blue-600 hover:bg-blue-700"
-                    onClick={handleResumeProgress}
-                  >
-                    <Play className="w-5 h-5 mr-2" />
-                    Lanjutkan Latihan
-                  </Button>
-                ) : (
-                  <Button
-                    size="lg"
-                    className="bg-emerald-600 hover:bg-emerald-700"
-                    onClick={handleStartAssignment}
-                    disabled={data?.assignments.length === 0}
-                  >
-                    <Play className="w-5 h-5 mr-2" />
-                    Mulai Latihan
-                  </Button>
-                )}
-              </div>
+              {data?.hasActiveProgress && (
+                <Badge className="bg-blue-100 text-blue-700 text-sm py-1.5 px-3">
+                  <Hourglass className="w-3 h-3 mr-1" />
+                  Ada latihan yang belum selesai
+                </Badge>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Tugas Aktif */}
+        {/* Tugas Aktif - siswa klik untuk mulai */}
         <Card>
           <CardHeader className="bg-slate-50 pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <FileText className="w-4 h-4 text-emerald-600" />
               Tugas Latihan Aktif
             </CardTitle>
+            <p className="text-xs text-slate-500 mt-1">
+              Klik tugas untuk mulai mengerjakan. Hasil akan dikirim ke guru untuk dinilai.
+            </p>
           </CardHeader>
           <CardContent className="pt-4">
             {!data?.assignments.length ? (
@@ -209,16 +199,25 @@ export function StudentDashboard({
                 {data.assignments.map((a) => (
                   <div
                     key={a.id}
-                    className="border border-slate-200 rounded-lg p-4 hover:border-emerald-300 transition-colors"
+                    className="border border-slate-200 rounded-lg p-4 hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer group"
+                    onClick={() => handleStartAssignment(a)}
                   >
                     <div className="flex items-start justify-between gap-3 mb-2">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-slate-900">{a.title}</h4>
+                        <h4 className="font-semibold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                          {a.title}
+                        </h4>
                         {a.description && (
                           <p className="text-sm text-slate-600 mt-1">{a.description}</p>
                         )}
                       </div>
-                      <Badge className="bg-emerald-100 text-emerald-700">Aktif</Badge>
+                      <div className="flex flex-col items-end gap-2">
+                        <Badge className="bg-emerald-100 text-emerald-700">Aktif</Badge>
+                        <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 opacity-90 group-hover:opacity-100">
+                          <Play className="w-3 h-3 mr-1" />
+                          {data.hasActiveProgress ? 'Lanjutkan' : 'Mulai'}
+                        </Button>
+                      </div>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-slate-500 mt-2">
                       <span className="flex items-center gap-1">
@@ -239,7 +238,27 @@ export function StudentDashboard({
           </CardContent>
         </Card>
 
-        {/* Statistik Cepat */}
+        {/* Notif: ada hasil yang belum dirilis */}
+        {data?.pendingResultsCount > 0 && (
+          <Card className="border-amber-300 bg-amber-50">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-start gap-3">
+                <Lock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-900">
+                    {data.pendingResultsCount} hasil latihan sedang menunggu review guru
+                  </p>
+                  <p className="text-xs text-amber-700 mt-1">
+                    Hasil latihan Anda akan muncul di sini setelah guru merilis nilai.
+                    Sabar ya, nilai sedang diproses guru. 📚
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Statistik Cepat - hanya dari hasil yang sudah dirilis */}
         {data && data.results.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
@@ -283,7 +302,7 @@ export function StudentDashboard({
           </div>
         )}
 
-        {/* Riwayat Latihan */}
+        {/* Riwayat Latihan - hanya yang sudah dirilis */}
         <Card>
           <CardHeader className="bg-slate-50 pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -295,8 +314,10 @@ export function StudentDashboard({
             {!data?.results.length ? (
               <div className="py-8 text-center text-slate-400">
                 <History className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                <p className="font-medium">Belum ada riwayat latihan</p>
-                <p className="text-xs mt-1">Mulai latihan pertama Anda di atas</p>
+                <p className="font-medium">Belum ada riwayat nilai yang dirilis</p>
+                <p className="text-xs mt-1">
+                  Kerjakan tugas di atas, lalu tunggu guru merilis hasilnya
+                </p>
               </div>
             ) : (
               <div className="space-y-2 max-h-[500px] overflow-y-auto">
@@ -311,10 +332,16 @@ export function StudentDashboard({
                       </div>
                       <div>
                         <p className="text-sm font-medium text-slate-900">
-                          {new Date(r.completedAt).toLocaleString('id-ID', {
-                            day: '2-digit', month: 'short', year: 'numeric',
-                            hour: '2-digit', minute: '2-digit',
-                          })}
+                          {r.releasedAt
+                            ? new Date(r.releasedAt).toLocaleString('id-ID', {
+                                day: '2-digit', month: 'short', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit',
+                              })
+                            : new Date(r.completedAt).toLocaleString('id-ID', {
+                                day: '2-digit', month: 'short', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit',
+                              })
+                          }
                         </p>
                         <div className="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
                           <span className="flex items-center gap-1">

@@ -37,6 +37,7 @@ import {
   Users,
   FileCheck,
   TrendingUp,
+  CheckCircle2,
   Download,
   Search,
   ArrowLeft,
@@ -51,6 +52,8 @@ import {
   BookOpen,
   FileText,
   UserCog,
+  Send,
+  Lock,
 } from 'lucide-react'
 import {
   BarChart,
@@ -94,6 +97,8 @@ interface ResultRow {
   quizScore: number
   totalScore: number
   completedAt: string
+  isReleased: boolean
+  releasedAt: string | null
 }
 
 interface Stats {
@@ -178,6 +183,49 @@ export function TeacherDashboard() {
       fetchData()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Gagal menghapus')
+    }
+  }
+
+  const handleToggleRelease = async (id: string, isReleased: boolean, nama: string) => {
+    try {
+      const res = await fetch('/api/result/release', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, isReleased }),
+      })
+      if (!res.ok) throw new Error('Gagal')
+      toast.success(
+        isReleased
+          ? `Nilai ${nama} dirilis ke siswa`
+          : `Rilis nilai ${nama} dibatalkan`
+      )
+      fetchData()
+    } catch {
+      toast.error('Gagal mengubah status rilis')
+    }
+  }
+
+  const handleBulkRelease = async () => {
+    const unreleased = filtered.filter((r) => !r.isReleased)
+    if (unreleased.length === 0) {
+      toast.info('Tidak ada nilai yang belum dirilis')
+      return
+    }
+    try {
+      const results = await Promise.all(
+        unreleased.map((r) =>
+          fetch('/api/result/release', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: r.id, isReleased: true }),
+          })
+        )
+      )
+      const success = results.filter((r) => r.ok).length
+      toast.success(`${success} nilai berhasil dirilis ke siswa`)
+      fetchData()
+    } catch {
+      toast.error('Gagal merilis nilai massal')
     }
   }
 
@@ -312,6 +360,14 @@ export function TeacherDashboard() {
             <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
               <RefreshCw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
               Refresh
+            </Button>
+            <Button
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={handleBulkRelease}
+            >
+              <Send className="w-4 h-4 mr-1" />
+              Rilis Semua
             </Button>
             <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={handleExportCSV}>
               <Download className="w-4 h-4 mr-1" />
@@ -575,6 +631,7 @@ export function TeacherDashboard() {
                       <TableHead className="text-center">Mengetik</TableHead>
                       <TableHead className="text-center">Quiz</TableHead>
                       <TableHead className="text-center">Nilai Akhir</TableHead>
+                      <TableHead className="text-center">Status Rilis</TableHead>
                       <TableHead>Waktu Selesai</TableHead>
                       <TableHead className="text-center">Aksi</TableHead>
                     </TableRow>
@@ -609,6 +666,19 @@ export function TeacherDashboard() {
                             {r.totalScore}
                           </span>
                         </TableCell>
+                        <TableCell className="text-center">
+                          {r.isReleased ? (
+                            <Badge className="bg-emerald-100 text-emerald-700 text-xs">
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                              Dirilis
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-amber-100 text-amber-700 text-xs">
+                              <Lock className="w-3 h-3 mr-1" />
+                              Belum Dirilis
+                            </Badge>
+                          )}
+                        </TableCell>
                         <TableCell className="text-xs text-slate-500">
                           {new Date(r.completedAt).toLocaleString('id-ID', {
                             day: '2-digit', month: 'short', year: 'numeric',
@@ -616,7 +686,27 @@ export function TeacherDashboard() {
                           })}
                         </TableCell>
                         <TableCell className="text-center">
-                          <AlertDialog>
+                          <div className="flex justify-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={`h-8 px-2 ${r.isReleased ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
+                              onClick={() => handleToggleRelease(r.id, !r.isReleased, r.namaLengkap)}
+                              title={r.isReleased ? 'Batalkan Rilis' : 'Rilis Nilai ke Siswa'}
+                            >
+                              {r.isReleased ? (
+                                <>
+                                  <Lock className="w-3 h-3 mr-1" />
+                                  <span className="text-xs">Batal</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Send className="w-3 h-3 mr-1" />
+                                  <span className="text-xs">Rilis</span>
+                                </>
+                              )}
+                            </Button>
+                            <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button
                                 variant="ghost"
@@ -647,6 +737,7 @@ export function TeacherDashboard() {
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

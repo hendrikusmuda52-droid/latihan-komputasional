@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { GraduationCap, Lock, KeyRound, ArrowLeft, User, School } from 'lucide-react'
+import { GraduationCap, Lock, KeyRound, School } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface StudentInfo {
@@ -113,11 +113,11 @@ export function StudentLogin({ onLogin }: { onLogin: (s: StudentInfo) => void })
               </div>
 
               <a
-                href="/"
+                href="/?view=teacher"
                 className="block text-center text-sm text-slate-500 hover:text-slate-700 mt-2"
               >
-                <ArrowLeft className="w-4 h-4 inline mr-1" />
-                Kembali ke halaman utama
+                <School className="w-4 h-4 inline mr-1" />
+                Login sebagai Guru
               </a>
             </form>
           </CardContent>
