@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useAppStore } from '@/lib/store'
-import { getQuestions, type GradeLevel } from '@/lib/data'
+import { getQuestions as getQuestionsFallback, type GradeLevel, type Question } from '@/lib/data'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -24,10 +24,24 @@ export function ResultsStage() {
   const { student, typingResult, quizResult, totalScore, reset } = useAppStore()
 
   // Ambil set soal sesuai kelas siswa untuk pembahasan
-  const QUESTIONS = useMemo(
-    () => getQuestions((student?.kelas as GradeLevel) ?? '8A'),
-    [student?.kelas]
-  )
+  const [QUESTIONS, setQuestions] = useState<Question[]>([])
+
+  useEffect(() => {
+    const grade = (student?.kelas as GradeLevel) ?? '8A'
+    const tier = grade.charAt(0) as '8' | '9'
+    fetch(`/api/content/questions?grade=${tier}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.questions?.length > 0) {
+          setQuestions(data.questions)
+        } else {
+          setQuestions(getQuestionsFallback(grade))
+        }
+      })
+      .catch(() => {
+        setQuestions(getQuestionsFallback(grade))
+      })
+  }, [student?.kelas])
 
   if (!typingResult || !quizResult) return null
 

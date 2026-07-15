@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAppStore, type QuizResult } from '@/lib/store'
-import { getQuestions, type GradeLevel } from '@/lib/data'
+import { getQuestions as getQuestionsFallback, type GradeLevel, type Question } from '@/lib/data'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -43,10 +43,25 @@ export function QuizStage() {
   const isMounted = useRef(true)
 
   // Pilih set soal sesuai kelas siswa (kelas 8 = dasar, kelas 9 = advanced)
-  const QUESTIONS = useMemo(
-    () => getQuestions((student?.kelas as GradeLevel) ?? '8A'),
-    [student?.kelas]
-  )
+  const [QUESTIONS, setQuestions] = useState<Question[]>([])
+
+  useEffect(() => {
+    const grade = (student?.kelas as GradeLevel) ?? '8A'
+    const tier = grade.charAt(0) as '8' | '9'
+    fetch(`/api/content/questions?grade=${tier}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.questions?.length > 0) {
+          setQuestions(data.questions)
+        } else {
+          // Fallback ke data statis jika API gagal
+          setQuestions(getQuestionsFallback(grade))
+        }
+      })
+      .catch(() => {
+        setQuestions(getQuestionsFallback(grade))
+      })
+  }, [student?.kelas])
 
   useEffect(() => {
     isMounted.current = true

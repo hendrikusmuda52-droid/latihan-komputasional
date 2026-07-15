@@ -3,10 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAppStore, type TypingResult } from '@/lib/store'
 import {
-  getTypingText,
-  isStructuredText,
   countHeadings,
-  getSourceHeadings,
   type GradeLevel,
 } from '@/lib/data'
 import { Button } from '@/components/ui/button'
@@ -37,6 +34,7 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  RefreshCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -53,20 +51,36 @@ export function TypingStage() {
   const [blocked, setBlocked] = useState(false)
   const [showFinishDialog, setShowFinishDialog] = useState(false)
 
+  // State untuk teks dari DB
+  const [TYPING_TEXT, setTypingText] = useState<string>('')
+  const [isStructured, setIsStructured] = useState<boolean>(false)
+  const [textLoading, setTextLoading] = useState<boolean>(true)
+
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const sourceScrollRef = useRef<HTMLDivElement>(null)
   const textareaScrollRef = useRef<HTMLDivElement>(null)
 
-  // Pilih teks mengetik sesuai kelas
-  const TYPING_TEXT = useMemo(
-    () => getTypingText((student?.kelas as GradeLevel) ?? '8A'),
-    [student?.kelas]
-  )
   const gradeTier = (student?.kelas ?? '8A').charAt(0)
-  const isStructured = isStructuredText((student?.kelas as GradeLevel) ?? '8A')
+
+  // Fetch teks dari DB sesuai kelas
+  useEffect(() => {
+    const grade = (student?.kelas as GradeLevel) ?? '8A'
+    setTextLoading(true)
+    fetch(`/api/content/typing-text?grade=${grade}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.text) {
+          setTypingText(data.text.content)
+          setIsStructured(data.text.isStructured)
+        }
+      })
+      .catch((err) => console.error('Failed to load text:', err))
+      .finally(() => setTextLoading(false))
+  }, [student?.kelas])
+
   const sourceHeadings = useMemo(
-    () => getSourceHeadings((student?.kelas as GradeLevel) ?? '8A'),
-    [student?.kelas]
+    () => countHeadings(TYPING_TEXT),
+    [TYPING_TEXT]
   )
 
   // Timer
@@ -355,6 +369,13 @@ export function TypingStage() {
       )}
 
       <main className="flex-1 container max-w-7xl mx-auto px-4 py-6">
+        {textLoading ? (
+          <div className="py-20 text-center text-slate-400">
+            <RefreshCw className="w-8 h-8 mx-auto animate-spin mb-3" />
+            <p>Memuat teks bacaan...</p>
+          </div>
+        ) : (
+          <>
         {/* Stats bar */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
           <Card>
@@ -574,6 +595,8 @@ export function TypingStage() {
             </AlertDialogContent>
           </AlertDialog>
         </div>
+          </>
+        )}
       </main>
 
       <footer className="bg-slate-900 text-slate-400 py-4 mt-auto">

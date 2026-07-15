@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +48,9 @@ import {
   Trash2,
   LogOut,
   BarChart3,
+  BookOpen,
+  FileText,
+  UserCog,
 } from 'lucide-react'
 import {
   BarChart,
@@ -65,6 +69,9 @@ import {
 } from 'recharts'
 import { toast } from 'sonner'
 import { TeacherLogin } from './teacher-login'
+import { QuestionBank } from './teacher/question-bank'
+import { TextManager } from './teacher/text-manager'
+import { TeacherProfile } from './teacher/teacher-profile'
 
 interface ResultRow {
   id: string
@@ -323,6 +330,27 @@ export function TeacherDashboard() {
       </header>
 
       <main className="flex-1 container max-w-7xl mx-auto px-4 py-6">
+        <Tabs defaultValue="results" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6">
+            <TabsTrigger value="results" className="flex items-center gap-1">
+              <FileCheck className="w-4 h-4" />
+              <span className="hidden sm:inline">Hasil Siswa</span>
+            </TabsTrigger>
+            <TabsTrigger value="questions" className="flex items-center gap-1">
+              <BookOpen className="w-4 h-4" />
+              <span className="hidden sm:inline">Bank Soal</span>
+            </TabsTrigger>
+            <TabsTrigger value="texts" className="flex items-center gap-1">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Teks Bacaan</span>
+            </TabsTrigger>
+            <TabsTrigger value="profile" className="flex items-center gap-1">
+              <UserCog className="w-4 h-4" />
+              <span className="hidden sm:inline">Profil Akun</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="results" className="space-y-6">
         {/* Statistik Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <Card>
@@ -651,6 +679,23 @@ export function TeacherDashboard() {
             </CardContent>
           </Card>
         </div>
+          </TabsContent>
+
+          <TabsContent value="questions">
+            <QuestionBank />
+          </TabsContent>
+
+          <TabsContent value="texts">
+            <TextManager />
+          </TabsContent>
+
+          <TabsContent value="profile">
+            <TeacherProfile
+              teacher={teacher}
+              onUpdated={(t) => setTeacher(t)}
+            />
+          </TabsContent>
+        </Tabs>
       </main>
 
       <footer className="bg-slate-900 text-slate-400 py-4 mt-auto">

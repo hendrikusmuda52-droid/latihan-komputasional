@@ -30,6 +30,33 @@ model Teacher {
   createdAt DateTime @default(now())
 }
 
+model Question {
+  id            String   @id @default(cuid())
+  gradeLevel    String   // '8' atau '9'
+  question      String
+  optionA       String
+  optionB       String
+  optionC       String
+  optionD       String
+  correctAnswer Int      // 0-3
+  explanation   String
+  category      String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model TypingText {
+  id           String   @id @default(cuid())
+  gradeLevel   String   // '8A', '8B', '8C', '9A', '9B'
+  title        String
+  content      String
+  isStructured Boolean  @default(false) // true untuk kelas 9 (format markdown)
+  isActive     Boolean  @default(true)  // hanya 1 aktif per kelas yang dipakai
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 model Result {
   id              String   @id @default(cuid())
   studentId       String
