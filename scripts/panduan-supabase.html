@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Panduan Setup Database Supabase - Aplikasi Latihan Mengetik & Berpikir Komputasional</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+@page {
+  size: 720px 1020px;
+  margin: 0;
+}
+:root {
+  --c-bg: #0a1628;
+  --c-bg-alt: #0f2942;
+  --c-text: #e8eef5;
+  --c-text-soft: #a8b8c8;
+  --c-accent: #10b981;
+  --c-accent-soft: #34d399;
+  --c-secondary: #14b8a6;
+  --c-warning: #f59e0b;
+  --c-danger: #ef4444;
+  --c-code-bg: #1a2942;
+  --c-border: #1f3a5f;
+  --c-card: #122538;
+}
+* {
+  box-sizing: border-box;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 720px;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: 'Inter', 'Noto Sans SC', sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+@media screen {
+  html {
+    height: auto;
+    display: flex;
+    justify-content: center;
+    background: #1a1a1a;
+  }
+  body {
+    margin: 20px auto;
+    box-shadow: 0 0 40px rgba(0,0,0,0.5);
+  }
+}
+
+/* === COVER === */
+.cover {
+  width: 720px;
+  height: 1020px;
+  box-sizing: border-box;
+  break-after: page;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0a1628 0%, #0f2942 50%, #10b981 200%);
+  position: relative;
+  padding: 70px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.cover::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  right: -200px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(16,185,129,0.25) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cover::after {
+  content: '';
+  position: absolute;
+  bottom: -150px;
+  left: -150px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(20,184,166,0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cover-top {
+  position: relative;
+  z-index: 2;
+}
+.cover-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16,185,129,0.15);
+  border: 1px solid rgba(16,185,129,0.4);
+  color: var(--c-accent-soft);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.cover-title {
+  font-size: 56px;
+  font-weight: 900;
+  line-height: 1.05;
+  color: #fff;
+  margin-top: 40px;
+  letter-spacing: -1.5px;
+}
+.cover-title .accent {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.cover-subtitle {
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--c-text-soft);
+  margin-top: 24px;
+  max-width: 540px;
+}
+.cover-bottom {
+  position: relative;
+  z-index: 2;
+}
+.cover-meta {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+.cover-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.cover-meta-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+}
+.cover-meta-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* === MAIN CONTENT === */
+.main-content {
+  padding: 50px 55px 30px 55px;
+}
+
+.section-tag {
+  display: inline-block;
+  background: rgba(16,185,129,0.12);
+  color: var(--c-accent-soft);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.section-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 6px 0;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+.divider {
+  height: 2px;
+  background: linear-gradient(90deg, var(--c-accent) 0%, transparent 80%);
+  margin: 12px 0 18px 0;
+  border-radius: 2px;
+}
+.body-text {
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: var(--c-text-soft);
+  margin: 0 0 12px 0;
+}
+.body-text strong {
+  color: #fff;
+  font-weight: 600;
+}
+.body-text code {
+  background: var(--c-code-bg);
+  color: var(--c-accent-soft);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+.chapter-header {
+  break-after: avoid;
+  break-inside: avoid;
+  margin-top: 28px;
+}
+
+/* === CARDS === */
+.card {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  break-inside: avoid;
+}
+.card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-number {
+  background: var(--c-accent);
+  color: #062416;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.card-text {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--c-text-soft);
+  margin: 0;
+}
+.card-text code, .card-text .mono {
+  background: var(--c-code-bg);
+  color: var(--c-accent-soft);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+}
+
+/* === CODE BLOCK === */
+.code-block {
+  background: var(--c-code-bg);
+  border: 1px solid var(--c-border);
+  border-left: 3px solid var(--c-accent);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin: 10px 0 14px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #b8d4e8;
+  overflow-x: auto;
+  break-inside: avoid;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.code-block .comment { color: #6b8aa8; }
+.code-block .keyword { color: #c678dd; }
+.code-block .string { color: #98c379; }
+.code-block .number { color: #d19a66; }
+
+/* === CALLOUT === */
+.callout {
+  border-left: 3px solid var(--c-warning);
+  background: rgba(245, 158, 11, 0.08);
+  padding: 12px 14px;
+  border-radius: 4px;
+  margin: 12px 0;
+  break-inside: avoid;
+}
+.callout-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-warning);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.callout-text {
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--c-text-soft);
+  margin: 0;
+}
+.callout-danger {
+  border-left-color: var(--c-danger);
+  background: rgba(239, 68, 68, 0.08);
+}
+.callout-danger .callout-title { color: var(--c-danger); }
+.callout-success {
+  border-left-color: var(--c-accent);
+  background: rgba(16, 185, 129, 0.08);
+}
+.callout-success .callout-title { color: var(--c-accent); }
+
+/* === TABLE === */
+.table-wrap {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 10px 0 14px 0;
+  break-inside: avoid;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+th {
+  background: var(--c-bg-alt);
+  color: #fff;
+  font-weight: 600;
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+td {
+  padding: 8px 12px;
+  color: var(--c-text-soft);
+  border-top: 1px solid var(--c-border);
+  vertical-align: top;
+}
+td strong { color: #fff; }
+
+/* === STEP === */
+.step {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 14px;
+  break-inside: avoid;
+}
+.step-num {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, var(--c-accent) 0%, var(--c-secondary) 100%);
+  color: #062416;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+}
+.step-body { flex: 1; }
+.step-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  margin: 4px 0 4px 0;
+}
+.step-text {
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--c-text-soft);
+  margin: 0 0 6px 0;
+}
+.step-text code {
+  background: var(--c-code-bg);
+  color: var(--c-accent-soft);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+
+/* === ENDING === */
+.ending {
+  width: 720px;
+  height: 1020px;
+  box-sizing: border-box;
+  break-before: page;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0a1628 0%, #10b981 250%);
+  position: relative;
+  padding: 70px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.ending::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+.ending-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, var(--c-accent) 0%, var(--c-secondary) 100%);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 20px 60px rgba(16,185,129,0.4);
+}
+.ending-icon::after {
+  content: '✓';
+  color: #fff;
+  font-size: 40px;
+  font-weight: 900;
+}
+.ending-title {
+  font-size: 38px;
+  font-weight: 900;
+  color: #fff;
+  margin: 0 0 16px 0;
+  position: relative;
+  z-index: 2;
+  letter-spacing: -0.5px;
+}
+.ending-text {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--c-text-soft);
+  max-width: 480px;
+  position: relative;
+  z-index: 2;
+  margin: 0 0 32px 0;
+}
+.ending-meta {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.15);
+  width: 100%;
+  max-width: 400px;
+}
+.ending-meta-item {
+  text-align: center;
+}
+.ending-meta-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+.ending-meta-value {
+  font-size: 13px;
+  color: #fff;
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<!-- ============ COVER ============ -->
+<div class="cover">
+  <div class="cover-top">
+    <div class="cover-badge">📡 Database Cloud Setup</div>
+    <h1 class="cover-title">Panduan Setup<br><span class="accent">Database Supabase</span></h1>
+    <p class="cover-subtitle">
+      Migrasi database aplikasi Latihan Mengetik &amp; Berpikir Komputasional
+      dari SQLite lokal ke Supabase cloud — gratis selamanya, dapat diakses
+      kapan saja, dan tahan terhadap reset sandbox.
+    </p>
+  </div>
+  <div class="cover-bottom">
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Estimasi Waktu</div>
+        <div class="cover-meta-value">10–15 menit</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Tingkat Kesulitan</div>
+        <div class="cover-meta-value">Pemula</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Biaya</div>
+        <div class="cover-meta-value">Gratis (Free Tier)</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Versi</div>
+        <div class="cover-meta-value">1.0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MAIN CONTENT ============ -->
+<div class="main-content">
+
+  <!-- ===== BAB 1: Mengapa Supabase? ===== -->
+  <div class="chapter-header">
+    <div class="section-tag">Bab 1</div>
+    <h2 class="section-title">Mengapa Pilih Supabase?</h2>
+    <div class="divider"></div>
+  </div>
+
+  <p class="body-text">
+    Saat ini aplikasi menggunakan <strong>SQLite lokal</strong> yang tersimpan
+    di file <code>db/custom.db</code>. Database ini hanya bertahan selama
+    sandbox aktif — jika sandbox di-reset, semua data siswa, nilai, akun guru,
+    bank soal, dan teks bacaan akan hilang. Untuk mengatasi masalah ini, kita
+    perlu memindahkan database ke layanan cloud yang persisten.
+  </p>
+
+  <p class="body-text">
+    <strong>Supabase</strong> adalah layanan backend-as-a-service berbasis
+    PostgreSQL yang menawarkan free tier sangat dermawan. Berikut perbandingan
+    dengan alternatif lain:
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:25%">Layanan</th>
+          <th style="width:30%">Free Tier</th>
+          <th style="width:45%">Kelebihan</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Supabase</strong> ⭐</td>
+          <td>500 MB DB<br>50K req/bulan</td>
+          <td>Dashboard web, mudah dipakai, fitur lengkap (auth, storage, realtime)</td>
+        </tr>
+        <tr>
+          <td>Neon</td>
+          <td>0.5 GB<br>100 jam compute/bln</td>
+          <td>Performa PostgreSQL murni, branching untuk dev</td>
+        </tr>
+        <tr>
+          <td>Turso</td>
+          <td>9 GB, 500 DB<br>Edge global</td>
+          <td>Migrasi paling mudah dari SQLite, latency rendah</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="body-text">
+    Saya merekomendasikan <strong>Supabase</strong> karena: (1) gratis
+    selamanya selama akun aktif, (2) punya dashboard web untuk melihat data
+    langsung tanpa coding, (3) kapasitas 500 MB cukup untuk puluhan ribu
+    siswa, dan (4) dokumentasi dan komunitasnya sangat baik.
+  </p>
+
+  <!-- ===== BAB 2: Persiapan ===== -->
+  <div class="chapter-header">
+    <div class="section-tag">Bab 2</div>
+    <h2 class="section-title">Persiapan Sebelum Mulai</h2>
+    <div class="divider"></div>
+  </div>
+
+  <p class="body-text">
+    Sebelum memulai migrasi, pastikan Anda sudah menyiapkan hal-hal berikut.
+    Persiapan yang baik akan membuat proses migrasi berjalan lancar tanpa
+    kendala.
+  </p>
+
+  <div class="card">
+    <h3 class="card-title"><span class="card-number">1</span>Akun Email</h3>
+    <p class="card-text">
+      Siapkan akun email aktif (Gmail, Outlook, atau lainnya) untuk daftar
+      Supabase. Email ini akan menjadi akun utama untuk mengelola database.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title"><span class="card-number">2</span>Browser Modern</h3>
+    <p class="card-text">
+      Gunakan Chrome, Edge, atau Firefox versi terbaru untuk mengakses
+      dashboard Supabase. Hindari browser lama atau tidak umum.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title"><span class="card-number">3</span>Koneksi Internet Stabil</h3>
+    <p class="card-text">
+      Pastikan internet stabil selama setup (sekitar 10–15 menit). Koneksi
+      terputus di tengah proses bisa menyebabkan konfigurasi gagal.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title"><span class="card-number">4</span>Backup Data Lama</h3>
+    <p class="card-text">
+      Jika sudah ada data siswa di SQLite, lakukan <strong>Export CSV</strong>
+      dari dashboard guru (tab "Hasil Siswa" → tombol "Export CSV"). Simpan
+      file CSV sebagai backup.
+    </p>
+  </div>
+
+  <!-- ===== BAB 3: Daftar & Buat Project ===== -->
+  <div class="chapter-header">
+    <div class="section-tag">Bab 3</div>
+    <h2 class="section-title">Daftar &amp; Buat Project Supabase</h2>
+    <div class="divider"></div>
+  </div>
+
+  <p class="body-text">
+    Pada bab ini kita akan mendaftar akun Supabase dan membuat project database
+    baru. Ikuti setiap langkah dengan teliti.
+  </p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4 class="step-title">Buka Website Supabase</h4>
+      <p class="step-text">
+        Kunjungi <code>https://supabase.com</code> di browser. Klik tombol
+        <strong>"Start your project"</strong> di pojok kanan atas.
+      </p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4 class="step-title">Login dengan GitHub</h4>
+      <p class="step-text">
+        Supabase menyarankan login dengan akun GitHub (paling mudah). Klik
+        <strong>"Sign in with GitHub"</strong>. Jika belum punya akun GitHub,
+        daftar dulu di <code>github.com</code> (gratis). Alternatif: klik
+        <strong>"Sign in with Email"</strong> untuk pakai email langsung.
+      </p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4 class="step-title">Authorize Supabase</h4>
+      <p class="step-text">
+        Jika pakai GitHub, akan muncul halaman otorisasi. Klik
+        <strong>"Authorize supabase"</strong>. Anda akan diarahkan kembali ke
+        dashboard Supabase.
+      </p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4 class="step-title">Buat Project Baru</h4>
+      <p class="step-text">
+        Di dashboard, klik tombol <strong>"New project"</strong>. Pilih
+        organization (default: akun Anda). Isi form project:
+      </p>
+      <div class="code-block"><span class="comment"># Contoh pengisian:</span>
+Name:         Latihan Komputasional SMP
+Database Password: buat password kuat (12+ karakter,
+                 campuran huruf, angka, simbol)
+                 ⚠️ SIMPAN PASSWORD INI AMAN!
+Region:       Southeast Asia (Singapore)
+                 ← pilih terdekat untuk latency rendah
+Pricing Plan: Free tier ($0/month)</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h4 class="step-title">Tunggu Provisioning</h4>
+      <p class="step-text">
+        Klik <strong>"Create new project"</strong>. Supabase akan menyiapkan
+        database (sekitar 2–3 menit). Jangan tutup halaman sampai status
+        berubah dari "Setting up project" menjadi hijau "Ready".
+      </p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="callout-title">⚠️ Penting: Simpan Password</div>
+    <p class="callout-text">
+      <strong>Database password tidak bisa dilihat lagi</strong> setelah dibuat.
+      Catat di tempat aman (password manager / catatan). Jika lupa, harus reset
+      password dan update konfigurasi aplikasi.
+    </p>
+  </div>
+
+  <!-- ===== BAB 4: Ambil Connection String ===== -->
+  <div class="chapter-header">
+    <div class="section-tag">Bab 4</div>
+    <h2 class="section-title">Ambil Connection String</h2>
+    <div class="divider"></div>
+  </div>
+
+  <p class="body-text">
+    Setelah project siap, kita perlu mengambil <strong>connection string</strong>
+    — URL yang dipakai aplikasi untuk terhubung ke database Supabase.
+  </p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4 class="step-title">Buka Settings Database</h4>
+      <p class="step-text">
+        Di sidebar kiri dashboard Supabase, klik icon <strong>⚙️ Settings</strong>
+        (paling bawah). Lalu pilih menu <strong>"Database"</strong>.
+      </p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4 class="step-title">Cari Connection String</h4>
+      <p class="step-text">
+        Scroll ke bawah sampai menemukan bagian
+        <strong>"Connection string"</strong>. Pilih tab
+        <strong>"URI"</strong>. Anda akan melihat URL dengan format:
+      </p>
+      <div class="code-block">postgresql://postgres.[PROJECT-REF]:[YOUR-PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4 class="step-title">Copy &amp; Ganti Password</h4>
+      <p class="step-text">
+        Copy URL tersebut. Ganti bagian <code>[YOUR-PASSWORD]</code> dengan
+        password yang Anda buat di Bab 3 langkah 4. Hasil akhir:
+      </p>
+      <div class="code-block">postgresql://postgres.abc123xyz:MyStr0ng!Pass@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres</div>
+    </div>
+  </div>
+
+  <div class="callout callout-danger">
+    <div class="callout-title">🚫 Jangan Share URL Ini</div>
+    <p class="callout-text">
+      Connection string berisi password database Anda. <strong>Jangan pernah</strong>
+      share di grup WhatsApp, screenshot publik, atau commit ke repository Git
+      publik. Hanya untuk konfigurasi aplikasi.
+    </p>
+  </div>
+
+  <!-- ===== BAB 5: Migrasi Aplikasi ===== -->
+  <div class="chapter-header">
+    <div class="section-tag">Bab 5</div>
+    <h2 class="section-title">Migrasi Aplikasi ke Supabase</h2>
+    <div class="divider"></div>
+  </div>
+
+  <p class="body-text">
+    Saya sudah menyiapkan <strong>script otomatis</strong> yang akan
+    mengkonfigurasi aplikasi Anda untuk terhubung ke Supabase. Script ini akan:
+    backup SQLite lama, update schema, update .env, push tabel, dan seed data
+    awal (akun guru + 60 soal + 5 teks bacaan).
+  </p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4 class="step-title">Jalankan Script Migrasi</h4>
+      <p class="step-text">
+        Buka terminal di project, jalankan perintah berikut. Script akan
+        meminta Anda memasukkan connection string Supabase:
+      </p>
+      <div class="code-block"><span class="keyword">npx</span> tsx scripts/migrate-to-supabase.ts</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4 class="step-title">Masukkan DATABASE_URL</h4>
+      <p class="step-text">
+        Saat muncul prompt <code>"Masukkan DATABASE_URL Supabase Anda:"</code>,
+        paste connection string dari Bab 4 langkah 3, lalu tekan Enter.
+      </p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4 class="step-title">Konfirmasi Migrasi</h4>
+      <p class="step-text">
+        Script akan konfirmasi <code>"Lanjutkan? (ketik 'ya')"</code>. Ketik
+        <strong>ya</strong> dan Enter. Tunggu 1–2 menit sampai muncul pesan
+        <strong>"✅ MIGRASI BERHASIL!"</strong>.
+      </p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4 class="step-title">Restart Server</h4>
+      <p class="step-text">
+        Setelah migrasi sukses, restart server dengan:
+      </p>
+      <div class="code-block"><span class="comment"># Stop server lama (Ctrl+C), lalu jalankan:</span>
+<span class="keyword">bun</span> run dev</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h4 class="step-title">Verifikasi di Dashboard Guru</h4>
+      <p class="step-text">
+        Buka aplikasi → login sebagai guru (<code>guru</code> /
+        <code>guru123</code>) → tab "Bank Soal". Pastikan 60 soal muncul.
+        Cek juga tab "Teks Bacaan" — harus ada 5 teks (8A, 8B, 8C, 9A, 9B).
+      </p>
+    </div>
+  </div>
+
+  <div class="callout callout-success">
+    <div class="callout-title">✅ Migrasi Selesai!</div>
+    <p class="callout-text">
+      Database Supabase sekarang berisi: 1 akun guru, 60 soal HOTS, 5 teks
+      bacaan. Data siswa baru yang mengerjakan latihan akan langsung tersimpan
+      ke Supabase — tahan terhadap reset sandbox.
+    </p>
+  </div>
+
+  <!-- ===== BAB 6: Cara Manual (Alternatif) ===== -->
+  <div class="chapter-header">
+    <div class="section-tag">Bab 6</div>
+    <h2 class="section-title">Cara Manual (Jika Script Gagal)</h2>
+    <div class="divider"></div>
+  </div>
+
+  <p class="body-text">
+    Jika script otomatis gagal atau Anda ingin kontrol penuh, lakukan migrasi
+    manual dengan 3 langkah berikut.
+  </p>
+
+  <div class="card">
+    <h3 class="card-title"><span class="card-number">A</span>Edit prisma/schema.prisma</h3>
+    <p class="card-text">
+      Buka file <code>prisma/schema.prisma</code>. Ubah provider dari
+      <code>sqlite</code> menjadi <code>postgresql</code>:
+    </p>
+    <div class="code-block"><span class="comment"># Sebelum:</span>
+datasource db {
+  provider = <span class="string">"sqlite"</span>
+  url      = env(<span class="string">"DATABASE_URL"</span>)
+}
+
+<span class="comment"># Sesudah:</span>
+datasource db {
+  provider = <span class="string">"postgresql"</span>
+  url      = env(<span class="string">"DATABASE_URL"</span>)
+}</div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title"><span class="card-number">B</span>Edit file .env</h3>
+    <p class="card-text">
+      Buka file <code>.env</code> di root project. Ganti baris
+      <code>DATABASE_URL</code> dengan connection string Supabase Anda:
+    </p>
+    <div class="code-block"><span class="comment"># Sebelum:</span>
+DATABASE_URL=<span class="string">"file:./db/custom.db"</span>
+
+<span class="comment"># Sesudah (ganti dengan URL Anda):</span>
+DATABASE_URL=<span class="string">"postgresql://postgres.abc123:PasswordAnda@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres"</span></div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title"><span class="card-number">C</span>Jalankan 3 Perintah Ini</h3>
+    <p class="card-text">
+      Di terminal, jalankan perintah berikut secara berurutan:
+    </p>
+    <div class="code-block"><span class="comment"># 1. Buat tabel di Supabase</span>
+<span class="keyword">bun</span> run db:push
+
+<span class="comment"># 2. Buat akun guru default</span>
+npx tsx scripts/seed-teacher.ts
+
+<span class="comment"># 3. Isi 60 soal + 5 teks bacaan</span>
+npx tsx scripts/seed-content.ts
+
+<span class="comment"># 4. Restart server</span>
+<span class="keyword">bun</span> run dev</div>
+  </div>
+
+  <!-- ===== BAB 7: Verifikasi ===== -->
+  <div class="chapter-header">
+    <div class="section-tag">Bab 7</div>
+    <h2 class="section-title">Verifikasi &amp; Cek Database</h2>
+    <div class="divider"></div>
+  </div>
+
+  <p class="body-text">
+    Setelah migrasi, verifikasi bahwa data sudah tersimpan di Supabase dengan
+    benar. Ada 2 cara: via aplikasi dan via dashboard Supabase.
+  </p>
+
+  <div class="card">
+    <h3 class="card-title"><span class="card-number">1</span>Via Aplikasi</h3>
+    <p class="card-text">
+      Buka aplikasi siswa, coba daftar sebagai siswa baru. Setelah selesai
+      latihan, login sebagai guru dan cek apakah nilai siswa muncul di
+      "Hasil Siswa". Jika ya, integrasi Supabase berhasil.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title"><span class="card-number">2</span>Via Dashboard Supabase</h3>
+    <p class="card-text">
+      Di dashboard Supabase, klik <strong>📊 Table Editor</strong> di sidebar
+      kiri. Anda akan melihat daftar tabel:
+      <code>Student</code>, <code>Teacher</code>, <code>Question</code>,
+      <code>TypingText</code>, <code>Result</code>. Klik tabel mana pun untuk
+      lihat isinya langsung.
+    </p>
+  </div>
+
+  <div class="callout">
+    <div class="callout-title">💡 Tip: Tambah Akun Guru Lain</div>
+    <p class="callout-text">
+      Di dashboard Supabase → Table Editor → tabel <code>Teacher</code> →
+      klik "Insert row". Isi <code>username</code>, <code>password</code>
+      (hash SHA-256), dan <code>name</code>. Atau minta saya buatkan script
+      tambah guru via CLI.
+    </p>
+  </div>
+
+  <!-- ===== BAB 8: Backup & Maintenance ===== -->
+  <div class="chapter-header">
+    <div class="section-tag">Bab 8</div>
+    <h2 class="section-title">Backup &amp; Maintenance</h2>
+    <div class="divider"></div>
+  </div>
+
+  <p class="body-text">
+    Walaupun Supabase sangat reliable, tetap lakukan backup berkala untuk
+    berjaga-jaga. Berikut strategi backup yang direkomendasikan.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:25%">Frekuensi</th>
+          <th style="width:35%">Apa yang Dibackup</th>
+          <th style="width:40%">Cara</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Mingguan</strong></td>
+          <td>Data hasil siswa</td>
+          <td>Dashboard guru → Export CSV</td>
+        </tr>
+        <tr>
+          <td><strong>Bulanan</strong></td>
+          <td>Bank soal &amp; teks</td>
+          <td>Supabase → Settings → Database → Download backup</td>
+        </tr>
+        <tr>
+          <td><strong>Saat ubah konten</strong></td>
+          <td>Soal/teks baru</td>
+          <td>Export Excel dari dashboard guru</td>
+        </tr>
+        <tr>
+          <td><strong>Tahunan</strong></td>
+          <td>Seluruh database</td>
+          <td>Supabase backup + simpan CSV semua tabel</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-success">
+    <div class="callout-title">✅ Kapan Perlu Backup?</div>
+    <p class="callout-text">
+      Supabase free tier punya auto-backup harian selama 7 hari. Untuk backup
+      permanen, lakukan Export CSV secara berkala dari dashboard guru. Simpan
+      file CSV di Google Drive atau penyimpanan cloud lain.
+    </p>
+  </div>
+
+  <!-- ===== BAB 9: Troubleshooting ===== -->
+  <div class="chapter-header">
+    <div class="section-tag">Bab 9</div>
+    <h2 class="section-title">Troubleshooting</h2>
+    <div class="divider"></div>
+  </div>
+
+  <p class="body-text">
+    Berikut masalah yang sering muncul saat migrasi dan cara mengatasinya.
+  </p>
+
+  <div class="card">
+    <h3 class="card-title">Error: "Can't reach database server"</h3>
+    <p class="card-text">
+      <strong>Penyebab:</strong> Connection string salah atau network
+      memblokir port 6543.<br>
+      <strong>Solusi:</strong> Cek ulang connection string. Pastikan tidak ada
+      spasi. Coba pakai koneksi internet lain. Jika di sekolah/kantor,
+      tanyakan ke admin apakah port 6543 diblokir.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Error: "password authentication failed"</h3>
+    <p class="card-text">
+      <strong>Penyebab:</strong> Password salah atau ada karakter khusus yang
+      perlu di-encode.<br>
+      <strong>Solusi:</strong> Pastikan password sesuai. Jika password
+      mengandung <code>@ : / # ?</code>, encode ke URL format (mis.
+      <code>@</code> → <code>%40</code>). Atau ganti password jadi lebih sederhana
+      (hanya huruf+angka).
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Error: "database does not exist"</h3>
+    <p class="card-text">
+      <strong>Penyebab:</strong> Project Supabase belum selesai dibuat atau
+      salah pilih project.<br>
+      <strong>Solusi:</strong> Cek di dashboard Supabase apakah project status
+      "Ready". Pastikan copy connection string dari project yang benar.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Error: "relation already exists"</h3>
+    <p class="card-text">
+      <strong>Penyebab:</strong> Tabel sudah ada di database (dari percobaan
+      sebelumnya).<br>
+      <strong>Solusi:</strong> Aman, ini hanya warning. Lanjutkan ke step seed
+      data. Jika bermasalah, jalankan <code>bun run db:reset</code> untuk
+      reset database (⚠️ hapus semua data!).
+    </p>
+  </div>
+
+  <div class="callout callout-danger">
+    <div class="callout-title">⚠️ Jangan Reset Database Production</div>
+    <p class="callout-text">
+      Perintah <code>bun run db:reset</code> akan <strong>menghapus semua
+      data</strong> (siswa, nilai, soal, teks). Hanya jalankan jika yakin
+      ingin mulai dari nol. Selalu backup dulu!
+    </p>
+  </div>
+
+  <!-- ===== BAB 10: Rollback ===== -->
+  <div class="chapter-header">
+    <div class="section-tag">Bab 10</div>
+    <h2 class="section-title">Rollback ke SQLite (Jika Perlu)</h2>
+    <div class="divider"></div>
+  </div>
+
+  <p class="body-text">
+    Jika Supabase bermasalah dan ingin kembali ke SQLite lokal, lakukan
+    langkah berikut. Data SQLite lama sudah dibackup otomatis oleh script
+    migrasi.
+  </p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4 class="step-title">Edit prisma/schema.prisma</h4>
+      <p class="step-text">
+        Ubah provider kembali ke <code>sqlite</code>:
+      </p>
+      <div class="code-block">datasource db {
+  provider = <span class="string">"sqlite"</span>
+  url      = env(<span class="string">"DATABASE_URL"</span>)
+}</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4 class="step-title">Edit file .env</h4>
+      <p class="step-text">
+        Kembalikan DATABASE_URL ke SQLite:
+      </p>
+      <div class="code-block">DATABASE_URL=<span class="string">"file:./db/custom.db"</span></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4 class="step-title">Restore SQLite Backup</h4>
+      <p class="step-text">
+        Cari file backup di folder <code>db/</code> dengan nama
+        <code>custom.db.backup-XXXXXX</code>. Rename kembali ke
+        <code>custom.db</code>.
+      </p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4 class="step-title">Regenerate &amp; Restart</h4>
+      <p class="step-text">
+        Jalankan perintah berikut:
+      </p>
+      <div class="code-block"><span class="keyword">bun</span> run db:generate
+<span class="keyword">bun</span> run db:push
+<span class="keyword">bun</span> run dev</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ ENDING ============ -->
+<div class="ending">
+  <div class="ending-icon"></div>
+  <h2 class="ending-title">Database Siap Digunakan</h2>
+  <p class="ending-text">
+    Selamat! Database Supabase Anda sudah terintegrasi dengan aplikasi.
+    Data sekarang tersimpan permanen di cloud — aman dari reset sandbox,
+    dapat diakses kapan saja, dan gratis selamanya.
+  </p>
+  <div class="ending-meta">
+    <div class="ending-meta-item">
+      <div class="ending-meta-label">Storage</div>
+      <div class="ending-meta-value">500 MB Free</div>
+    </div>
+    <div class="ending-meta-item">
+      <div class="ending-meta-label">Uptime</div>
+      <div class="ending-meta-value">99.9%</div>
+    </div>
+    <div class="ending-meta-item">
+      <div class="ending-meta-label">Auto Backup</div>
+      <div class="ending-meta-value">7 Harian</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
