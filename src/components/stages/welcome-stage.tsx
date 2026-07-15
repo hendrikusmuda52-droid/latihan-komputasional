@@ -32,6 +32,7 @@ import {
   CheckCircle2,
   History,
   RefreshCw,
+  GraduationCap,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -211,7 +212,14 @@ export function WelcomeStage() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-emerald-50 via-white to-teal-50">
       <div className="bg-white/60 backdrop-blur border-b border-slate-200">
-        <div className="container max-w-5xl mx-auto px-4 py-2 flex justify-end">
+        <div className="container max-w-5xl mx-auto px-4 py-2 flex justify-end gap-4">
+          <a
+            href="/?view=student-login"
+            className="inline-flex items-center gap-2 text-xs font-medium text-emerald-700 hover:text-emerald-900 transition-colors"
+          >
+            <GraduationCap className="w-4 h-4" />
+            Login Siswa →
+          </a>
           <a
             href="/?view=teacher"
             className="inline-flex items-center gap-2 text-xs font-medium text-slate-600 hover:text-emerald-700 transition-colors"

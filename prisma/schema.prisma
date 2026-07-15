@@ -15,9 +15,11 @@ model Student {
   id           String     @id @default(cuid())
   namaLengkap  String
   nisn         String     @unique
+  password     String     @default("") // hash SHA-256, kosong = belum diset
   kelas        String
   sekolah      String
   jenisKelamin String
+  isActive     Boolean    @default(true) // guru bisa nonaktifkan siswa
   createdAt    DateTime   @default(now())
 
   results      Result[]
@@ -57,6 +59,18 @@ model TypingText {
   isActive     Boolean  @default(true)  // hanya 1 aktif per kelas yang dipakai
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// Tugas/Assignment yang dibuat guru untuk siswa
+model Assignment {
+  id          String    @id @default(cuid())
+  title       String
+  description String    @default("")
+  targetKelas String    @default("ALL") // "ALL" atau "8A,8B,9A" (comma separated)
+  isActive    Boolean   @default(true)
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 // Progress pengerjaan siswa - untuk resume jika error/keluar aplikasi

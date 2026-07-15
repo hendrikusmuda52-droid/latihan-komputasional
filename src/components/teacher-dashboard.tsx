@@ -72,6 +72,8 @@ import { TeacherLogin } from './teacher-login'
 import { QuestionBank } from './teacher/question-bank'
 import { TextManager } from './teacher/text-manager'
 import { TeacherProfile } from './teacher/teacher-profile'
+import { StudentsManager } from './teacher/students-manager'
+import { AssignmentsManager } from './teacher/assignments-manager'
 
 interface ResultRow {
   id: string
@@ -331,10 +333,18 @@ export function TeacherDashboard() {
 
       <main className="flex-1 container max-w-7xl mx-auto px-4 py-6">
         <Tabs defaultValue="results" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 mb-6">
             <TabsTrigger value="results" className="flex items-center gap-1">
               <FileCheck className="w-4 h-4" />
-              <span className="hidden sm:inline">Hasil Siswa</span>
+              <span className="hidden sm:inline">Hasil</span>
+            </TabsTrigger>
+            <TabsTrigger value="students" className="flex items-center gap-1">
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Siswa</span>
+            </TabsTrigger>
+            <TabsTrigger value="assignments" className="flex items-center gap-1">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Tugas</span>
             </TabsTrigger>
             <TabsTrigger value="questions" className="flex items-center gap-1">
               <BookOpen className="w-4 h-4" />
@@ -342,11 +352,11 @@ export function TeacherDashboard() {
             </TabsTrigger>
             <TabsTrigger value="texts" className="flex items-center gap-1">
               <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">Teks Bacaan</span>
+              <span className="hidden sm:inline">Teks</span>
             </TabsTrigger>
             <TabsTrigger value="profile" className="flex items-center gap-1">
               <UserCog className="w-4 h-4" />
-              <span className="hidden sm:inline">Profil Akun</span>
+              <span className="hidden sm:inline">Profil</span>
             </TabsTrigger>
           </TabsList>
 
@@ -679,6 +689,14 @@ export function TeacherDashboard() {
             </CardContent>
           </Card>
         </div>
+          </TabsContent>
+
+          <TabsContent value="students">
+            <StudentsManager />
+          </TabsContent>
+
+          <TabsContent value="assignments">
+            <AssignmentsManager />
           </TabsContent>
 
           <TabsContent value="questions">
