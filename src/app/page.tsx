@@ -3,7 +3,6 @@
 import { useEffect, Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAppStore } from '@/lib/store'
-import { WelcomeStage } from '@/components/stages/welcome-stage'
 import { TypingStage } from '@/components/stages/typing-stage'
 import { TypingFinishedStage } from '@/components/stages/typing-finished-stage'
 import { QuizStage } from '@/components/stages/quiz-stage'
