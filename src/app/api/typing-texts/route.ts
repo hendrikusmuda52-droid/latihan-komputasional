@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     if (!gradeLevel || !title || !content) {
       return NextResponse.json({ error: 'Grade, judul, dan isi wajib diisi' }, { status: 400 })
     }
-    if (!['8A', '8B', '8C', '9A', '9B'].includes(gradeLevel)) {
+    if (!['7A', '7B', '7C', '8A', '8B', '8C', '9A', '9B'].includes(gradeLevel)) {
       return NextResponse.json({ error: 'Grade tidak valid' }, { status: 400 })
     }
 

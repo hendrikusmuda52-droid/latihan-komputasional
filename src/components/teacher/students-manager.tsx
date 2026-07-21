@@ -39,7 +39,7 @@ interface StudentRow {
   createdAt: string
 }
 
-const GRADE_OPTIONS = ['8A', '8B', '8C', '9A', '9B']
+const GRADE_OPTIONS = ['7A', '7B', '7C', '8A', '8B', '8C', '9A', '9B']
 
 export function StudentsManager() {
   const [students, setStudents] = useState<StudentRow[]>([])
@@ -511,7 +511,7 @@ function StudentForm({
     namaLengkap: student?.namaLengkap ?? '',
     nisn: student?.nisn ?? '',
     password: '',
-    kelas: student?.kelas ?? '8A',
+    kelas: student?.kelas ?? '7A',
     sekolah: student?.sekolah ?? '',
     jenisKelamin: student?.jenisKelamin ?? 'Laki-laki',
     isActive: student?.isActive ?? true,

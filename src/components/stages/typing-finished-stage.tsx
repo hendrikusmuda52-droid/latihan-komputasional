@@ -2,95 +2,52 @@
 
 import { useAppStore } from '@/lib/store'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Gauge, Target, Type, Clock, ArrowRight, Brain } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Type, Clock, ArrowRight, Brain, CheckCircle2, Lock } from 'lucide-react'
 
 export function TypingFinishedStage() {
-  const { typingResult, setStage } = useAppStore()
-
-  if (!typingResult) return null
-
-  const formatDuration = (sec: number) => {
-    const m = Math.floor(sec / 60)
-    const s = sec % 60
-    return `${m}m ${s}s`
-  }
-
-  const scoreColor =
-    typingResult.typingScore >= 80
-      ? 'text-emerald-600'
-      : typingResult.typingScore >= 60
-      ? 'text-amber-600'
-      : 'text-red-600'
+  const { setStage } = useAppStore()
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-emerald-50 via-white to-teal-50">
       <main className="flex-1 container max-w-4xl mx-auto px-4 py-10">
         <div className="text-center mb-8">
+          <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-12 h-12 text-emerald-600" />
+          </div>
           <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-full text-sm font-medium mb-4">
             <Type className="w-4 h-4" />
             Tahap 1 Selesai
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-3">
-            Hasil Latihan Mengetik
+            Bagus! Tahap Mengetik Selesai
           </h1>
           <p className="text-slate-600">
-            Berikut ringkasan performa mengetikmu. Lanjutkan ke tahap soal
-            HOTS berpikir komputasional.
+            Kamu telah menyelesaikan tahap mengetik. Sekarang lanjutkan ke
+            tahap soal HOTS berpikir komputasional.
           </p>
         </div>
 
-        <Card className="border-slate-200 shadow-lg mb-6">
-          <CardHeader className="bg-slate-50 rounded-t-lg">
-            <CardTitle>Statistik Mengetik</CardTitle>
-          </CardHeader>
+        {/* Info: nilai dirahasiakan */}
+        <Card className="border-amber-200 bg-amber-50/50 mb-6">
           <CardContent className="pt-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-emerald-50 rounded-lg">
-                <Type className="w-6 h-6 mx-auto text-emerald-600 mb-2" />
-                <p className="text-2xl font-bold text-slate-900">
-                  {typingResult.charCount.toLocaleString('id-ID')}
+            <div className="flex items-start gap-3">
+              <Lock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-amber-900 mb-1">
+                  Nilai Mengetik Dirahasiakan
                 </p>
-                <p className="text-xs text-slate-500">Karakter Diketik</p>
-              </div>
-              <div className="text-center p-4 bg-teal-50 rounded-lg">
-                <Gauge className="w-6 h-6 mx-auto text-teal-600 mb-2" />
-                <p className="text-2xl font-bold text-slate-900">
-                  {typingResult.typingSpeedWPM}
+                <p className="text-xs text-amber-700">
+                  Performa mengetikmu telah dicatat dan akan dinilai oleh guru.
+                  Nilai akan tersedia di dashboard setelah guru merilis hasil
+                  akhir latihan.
                 </p>
-                <p className="text-xs text-slate-500">WPM (Kecepatan)</p>
               </div>
-              <div className="text-center p-4 bg-amber-50 rounded-lg">
-                <Target className="w-6 h-6 mx-auto text-amber-600 mb-2" />
-                <p className="text-2xl font-bold text-slate-900">
-                  {typingResult.typingAccuracy}%
-                </p>
-                <p className="text-xs text-slate-500">Akurasi</p>
-              </div>
-              <div className="text-center p-4 bg-slate-100 rounded-lg">
-                <Clock className="w-6 h-6 mx-auto text-slate-600 mb-2" />
-                <p className="text-2xl font-bold text-slate-900">
-                  {formatDuration(typingResult.typingDuration)}
-                </p>
-                <p className="text-xs text-slate-500">Durasi</p>
-              </div>
-            </div>
-
-            <div className="mt-6 p-6 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl text-white text-center">
-              <p className="text-sm opacity-90 mb-1">Nilai Latihan Mengetik</p>
-              <p className={`text-6xl font-bold ${scoreColor}`}>
-                {typingResult.typingScore}
-              </p>
-              <p className="text-sm opacity-90 mt-1">dari 100</p>
-              <p className="text-xs opacity-75 mt-2">
-                Karakter benar: {typingResult.correctChars} /{' '}
-                {typingResult.charCount} • Peringatan copy-paste:{' '}
-                {typingResult.copyWarnings}
-              </p>
             </div>
           </CardContent>
         </Card>
 
+        {/* Card: Lanjut ke Tahap 2 */}
         <Card className="border-teal-200 bg-teal-50/50">
           <CardContent className="pt-6">
             <div className="flex items-start gap-4">
@@ -103,7 +60,8 @@ export function TypingFinishedStage() {
                 </h3>
                 <p className="text-sm text-slate-600 mb-4">
                   Kamu akan mengerjakan 30 soal pilihan ganda tentang berpikir
-                  komputasional dengan waktu 25 menit. Persiapkan dirimu.
+                  komputasional dengan waktu 25 menit. Baca pertanyaan dengan
+                  teliti sebelum menjawab.
                 </p>
                 <div className="flex flex-wrap gap-4 text-sm text-slate-700 mb-4">
                   <span className="flex items-center gap-1">
@@ -129,7 +87,7 @@ export function TypingFinishedStage() {
 
       <footer className="bg-slate-900 text-slate-400 py-4 mt-auto">
         <div className="container max-w-4xl mx-auto px-4 text-center text-xs">
-          Latihan Mengetik & Berpikir Komputasional - SMP Kelas 9
+          Latihan Mengetik & Berpikir Komputasional - SMP
         </div>
       </footer>
     </div>

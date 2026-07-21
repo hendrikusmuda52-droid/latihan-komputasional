@@ -34,7 +34,7 @@ interface Assignment {
   createdAt: string
 }
 
-const GRADE_OPTIONS = ['8A', '8B', '8C', '9A', '9B']
+const GRADE_OPTIONS = ['7A', '7B', '7C', '8A', '8B', '8C', '9A', '9B']
 
 export function AssignmentsManager() {
   const [assignments, setAssignments] = useState<Assignment[]>([])

@@ -232,7 +232,7 @@ export function QuizStage() {
       useAppStore.getState().setTotalScore(totalScore)
     } finally {
       setSaving(false)
-      setStage('results')
+      setStage('completed')
     }
   }
 

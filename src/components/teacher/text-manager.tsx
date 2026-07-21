@@ -46,7 +46,7 @@ interface TypingText {
   updatedAt: string
 }
 
-const GRADE_OPTIONS = ['8A', '8B', '8C', '9A', '9B']
+const GRADE_OPTIONS = ['7A', '7B', '7C', '8A', '8B', '8C', '9A', '9B']
 
 export function TextManager() {
   const [texts, setTexts] = useState<TypingText[]>([])
@@ -271,7 +271,7 @@ function TextForm({
   onSaved: () => void
 }) {
   const [form, setForm] = useState({
-    gradeLevel: text?.gradeLevel ?? '8A',
+    gradeLevel: text?.gradeLevel ?? '7A',
     title: text?.title ?? '',
     content: text?.content ?? '',
     isStructured: text?.isStructured ?? false,

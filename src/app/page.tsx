@@ -6,6 +6,7 @@ import { useAppStore } from '@/lib/store'
 import { TypingStage } from '@/components/stages/typing-stage'
 import { TypingFinishedStage } from '@/components/stages/typing-finished-stage'
 import { QuizStage } from '@/components/stages/quiz-stage'
+import { CompletedStage } from '@/components/stages/completed-stage'
 import { ResultsStage } from '@/components/stages/results-stage'
 import { TeacherDashboard } from '@/components/teacher-dashboard'
 import { StudentLogin } from '@/components/student/student-login'
@@ -103,6 +104,7 @@ function HomeContent() {
         {stage === 'typing' && <TypingStage />}
         {stage === 'typing-finished' && <TypingFinishedStage />}
         {stage === 'quiz' && <QuizStage />}
+        {stage === 'completed' && <CompletedStage />}
         {stage === 'results' && <ResultsStage />}
       </>
     )

@@ -6,7 +6,7 @@ import { db } from '@/lib/db'
 export async function GET(req: NextRequest) {
   try {
     const grade = req.nextUrl.searchParams.get('grade')
-    if (!grade || !['8', '9'].includes(grade)) {
+    if (!grade || !['7', '8', '9'].includes(grade)) {
       return NextResponse.json({ error: 'Grade tidak valid' }, { status: 400 })
     }
 

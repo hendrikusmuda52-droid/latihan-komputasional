@@ -43,7 +43,7 @@ export async function GET() {
       rataTotal: results.length
         ? Math.round((results.reduce((a, b) => a + b.totalScore, 0) / results.length) * 10) / 10
         : 0,
-      perKelas: ['8A', '8B', '8C', '9A', '9B'].map((k) => {
+      perKelas: ['7A', '7B', '7C', '8A', '8B', '8C', '9A', '9B'].map((k) => {
         const kelasResults = results.filter((r) => r.student.kelas === k)
         return {
           kelas: k,

@@ -49,12 +49,12 @@ interface Question {
   isActive: boolean
 }
 
-const CATEGORIES = ['Dekomposisi', 'Pengenalan Pola', 'Abstraksi', 'Algoritma', 'Konsep Dasar']
+const CATEGORIES = ['Dekomposisi', 'Pengenalan Pola', 'Abstraksi', 'Algoritma', 'Konsep Dasar', 'Internet', 'Etika Digital', 'Keamanan Digital', 'Kesehatan Digital']
 
 export function QuestionBank() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
-  const [filterGrade, setFilterGrade] = useState<string>('8')
+  const [filterGrade, setFilterGrade] = useState<string>('7')
   const [editing, setEditing] = useState<Question | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [showImport, setShowImport] = useState(false)
@@ -128,6 +128,7 @@ export function QuestionBank() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="7">Kelas 7</SelectItem>
                   <SelectItem value="8">Kelas 8</SelectItem>
                   <SelectItem value="9">Kelas 9</SelectItem>
                 </SelectContent>
@@ -584,6 +585,7 @@ function QuestionForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="7">Kelas 7</SelectItem>
                   <SelectItem value="8">Kelas 8</SelectItem>
                   <SelectItem value="9">Kelas 9</SelectItem>
                 </SelectContent>

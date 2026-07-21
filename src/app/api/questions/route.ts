@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         correctAnswer === undefined || !explanation || !category) {
       return NextResponse.json({ error: 'Semua field wajib diisi' }, { status: 400 })
     }
-    if (!['8', '9'].includes(gradeLevel)) {
+    if (!['7', '8', '9'].includes(gradeLevel)) {
       return NextResponse.json({ error: 'Grade harus 8 atau 9' }, { status: 400 })
     }
     if (correctAnswer < 0 || correctAnswer > 3) {

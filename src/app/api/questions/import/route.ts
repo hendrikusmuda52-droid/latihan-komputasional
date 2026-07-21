@@ -17,6 +17,10 @@ const VALID_CATEGORIES = [
   'Abstraksi',
   'Algoritma',
   'Konsep Dasar',
+  'Internet',
+  'Etika Digital',
+  'Keamanan Digital',
+  'Kesehatan Digital',
 ]
 
 interface ParsedRow {
@@ -92,7 +96,7 @@ export async function POST(req: NextRequest) {
       const isActiveRaw = raw(row.isActive || row.aktif).toLowerCase()
 
       // Validasi
-      if (!['8', '9'].includes(gradeLevel)) {
+      if (!['7', '8', '9'].includes(gradeLevel)) {
         errors.push('gradeLevel harus 8 atau 9')
       }
       if (!VALID_CATEGORIES.includes(category)) {

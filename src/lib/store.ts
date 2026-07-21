@@ -6,6 +6,7 @@ export type AppStage =
   | 'typing'
   | 'typing-finished'
   | 'quiz'
+  | 'completed'
   | 'results'
 
 export interface StudentInfo {

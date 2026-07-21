@@ -572,6 +572,9 @@ export function TeacherDashboard() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ALL">Semua kelas</SelectItem>
+                    <SelectItem value="7A">7A</SelectItem>
+                    <SelectItem value="7B">7B</SelectItem>
+                    <SelectItem value="7C">7C</SelectItem>
                     <SelectItem value="8A">8A</SelectItem>
                     <SelectItem value="8B">8B</SelectItem>
                     <SelectItem value="8C">8C</SelectItem>

@@ -12,7 +12,7 @@ async function requireAuth(req: NextRequest) {
   return !!(token && g.__teacherSessions?.has(token))
 }
 
-const VALID_KELAS = ['8A', '8B', '8C', '9A', '9B']
+const VALID_KELAS = ['7A', '7B', '7C', '8A', '8B', '8C', '9A', '9B']
 const VALID_JK = ['Laki-laki', 'Perempuan']
 
 interface ParsedRow {
