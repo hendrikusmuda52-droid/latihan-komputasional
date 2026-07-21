@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, Suspense, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useEffect, Suspense, useState, useCallback } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useAppStore } from '@/lib/store'
 import { TypingStage } from '@/components/stages/typing-stage'
 import { TypingFinishedStage } from '@/components/stages/typing-finished-stage'
@@ -21,29 +21,30 @@ interface StudentInfo {
   jenisKelamin: string
 }
 
-function RedirectToLogin() {
-  useEffect(() => {
-    window.location.href = '/'
-  }, [])
-  return null
-}
-
 function HomeContent() {
   const stage = useAppStore((s) => s.stage)
   const searchParams = useSearchParams()
+  const router = useRouter()
   const view = searchParams.get('view')
   const isTeacherView = view === 'teacher'
   const isStudentDashboard = view === 'student-dashboard'
-  // Flag untuk menandakan sedang dalam mode latihan (typing/quiz/results)
-  const isLatihanMode = stage !== 'welcome'
+
+  // Tentukan mode berdasarkan URL & stage sekali saja (stabil)
+  // Pakai stage hanya untuk menentukan apakah sedang latihan, tapi tidak masuk dependency
+  const isLatihanMode = !isTeacherView && !isStudentDashboard && stage !== 'welcome'
 
   // State untuk student session
   const [studentSession, setStudentSession] = useState<StudentInfo | null>(null)
-  const [authChecked, setAuthChecked] = useState(!isStudentDashboard && !isLatihanMode)
+  const [authChecked, setAuthChecked] = useState(false)
 
-  // Cek session siswa saat mount
+  // Cek session siswa HANYA SEKALI saat mount (empty dependency)
+  // Tidak re-fetch saat stage berubah
   useEffect(() => {
-    if (!isStudentDashboard && !isLatihanMode) return
+    // Hanya cek auth jika butuh session (student-dashboard atau latihan mode)
+    if (!isStudentDashboard && !isLatihanMode) {
+      setAuthChecked(true)
+      return
+    }
     let cancelled = false
     fetch('/api/student/auth')
       .then((r) => r.json())
@@ -52,18 +53,31 @@ function HomeContent() {
           setStudentSession(data.student)
         }
       })
+      .catch(() => {})
       .finally(() => {
         if (!cancelled) setAuthChecked(true)
       })
     return () => { cancelled = true }
-  }, [isStudentDashboard, isLatihanMode])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // EMPTY DEPENDENCY - jalan sekali saat mount
 
   // Scroll to top saat stage berubah
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [stage])
 
-  // Routing berdasarkan query param atau stage
+  // Stable callbacks (tidak recreate tiap render)
+  const handleStudentLogin = useCallback((s: StudentInfo) => {
+    setStudentSession(s)
+    router.push('/?view=student-dashboard')
+  }, [router])
+
+  const handleStudentLogout = useCallback(() => {
+    setStudentSession(null)
+    router.push('/')
+  }, [router])
+
+  // Routing berdasarkan query param
   if (isTeacherView) return <TeacherDashboard />
 
   // Mode latihan (typing/quiz/results) - butuh session siswa
@@ -76,7 +90,13 @@ function HomeContent() {
       )
     }
     if (!studentSession) {
-      return <RedirectToLogin />
+      // Tidak ada session - kembali ke login (pakai router, bukan location.href)
+      router.push('/')
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-50">
+          <div className="w-10 h-10 animate-spin text-emerald-500" />
+        </div>
+      )
     }
     return (
       <>
@@ -98,28 +118,23 @@ function HomeContent() {
       )
     }
     if (!studentSession) {
-      return <RedirectToLogin />
+      router.push('/')
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-50">
+          <div className="w-10 h-10 animate-spin text-emerald-500" />
+        </div>
+      )
     }
     return (
       <StudentDashboard
         student={studentSession}
-        onLogout={() => {
-          setStudentSession(null)
-          window.location.href = '/'
-        }}
+        onLogout={handleStudentLogout}
       />
     )
   }
 
-  // DEFAULT: halaman login siswa (halaman pertama yang muncul)
-  return (
-    <StudentLogin
-      onLogin={(s) => {
-        setStudentSession(s)
-        window.location.href = '/?view=student-dashboard'
-      }}
-    />
-  )
+  // DEFAULT: halaman login siswa
+  return <StudentLogin onLogin={handleStudentLogin} />
 }
 
 export default function Home() {
