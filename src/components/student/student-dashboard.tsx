@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -59,6 +60,7 @@ export function StudentDashboard({
   onLogout: () => void
 }) {
   const { setStudent, setStage, setProgress } = useAppStore()
+  const router = useRouter()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -94,6 +96,10 @@ export function StudentDashboard({
       toast.success(`Memulai tugas: ${assignment.title}`)
       setStage('typing')
     }
+
+    // PENTING: Redirect URL ke / (tanpa view) agar masuk "latihan mode"
+    // Kalau URL masih ?view=student-dashboard, routing tidak akan tampilkan typing stage
+    router.push('/')
   }
 
   const handleLogout = async () => {

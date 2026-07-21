@@ -38,11 +38,15 @@ function HomeContent() {
   const [studentSession, setStudentSession] = useState<StudentInfo | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
 
-  // Cek session siswa HANYA SEKALI saat mount (empty dependency)
-  // Tidak re-fetch saat stage berubah
+  // Cek session siswa saat mount ATAU saat masuk latihan mode (stage berubah)
   useEffect(() => {
     // Hanya cek auth jika butuh session (student-dashboard atau latihan mode)
     if (!isStudentDashboard && !isLatihanMode) {
+      setAuthChecked(true)
+      return
+    }
+    // Jika sudah ada session, tidak perlu fetch lagi
+    if (studentSession) {
       setAuthChecked(true)
       return
     }
@@ -60,7 +64,7 @@ function HomeContent() {
       })
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // EMPTY DEPENDENCY - jalan sekali saat mount
+  }, [isStudentDashboard, isLatihanMode])
 
   // Scroll to top saat stage berubah
   useEffect(() => {
