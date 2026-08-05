@@ -10,8 +10,9 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
-import { Plus, Pencil, Trash2, RefreshCw, ToggleLeft, ToggleRight, BookOpen, FileText } from 'lucide-react'
+import { Plus, Pencil, Trash2, RefreshCw, ToggleLeft, ToggleRight, BookOpen, FileText, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
+import { AIMaterialDialog } from './ai-material-dialog'
 
 interface Material {
   id: string; title: string; content: string; targetKelas: string;
@@ -26,6 +27,7 @@ export function MaterialsManager() {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<Material | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [showAIGenerate, setShowAIGenerate] = useState(false)
 
   const fetchMaterials = async () => {
     setLoading(true)
@@ -66,6 +68,9 @@ export function MaterialsManager() {
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={fetchMaterials} disabled={loading}>
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              </Button>
+              <Button size="sm" className="bg-purple-600 hover:bg-purple-700" onClick={() => setShowAIGenerate(true)}>
+                <Sparkles className="w-4 h-4 mr-1" /> AI Generate
               </Button>
               <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => { setEditing(null); setShowForm(true) }}>
                 <Plus className="w-4 h-4 mr-1" /> Tambah Materi
@@ -118,6 +123,7 @@ export function MaterialsManager() {
         </CardContent>
       </Card>
       {showForm && <MaterialForm material={editing} onClose={() => { setShowForm(false); setEditing(null) }} onSaved={() => { setShowForm(false); setEditing(null); fetchMaterials() }} />}
+      {showAIGenerate && <AIMaterialDialog onClose={() => setShowAIGenerate(false)} onSaved={() => { setShowAIGenerate(false); fetchMaterials() }} />}
     </div>
   )
 }
