@@ -28,6 +28,11 @@ interface Assignment {
   description: string
   dueDate: string | null
   createdAt: string
+  exerciseType: string
+  questionCount: number
+  taskType: string
+  canRetake: boolean
+  hasCompleted: boolean
 }
 
 interface ResultItem {
@@ -84,6 +89,12 @@ export function StudentDashboard({
   }, [])
 
   const handleStartAssignment = (assignment: Assignment) => {
+    // Cek apakah siswa bisa mengerjakan tugas ini
+    if (assignment.hasCompleted && assignment.exerciseType === 'wajib' && !assignment.canRetake) {
+      toast.error('Tugas wajib ini sudah dikerjakan. Hubungi guru untuk membuka akses ulang.')
+      return
+    }
+
     // Set student di store & mulai latihan dari tugas yang dipilih
     setStudent(student)
     setProgress(null)
@@ -93,12 +104,16 @@ export function StudentDashboard({
       toast.info(`Melanjutkan dari ${data.activeProgressStage}`)
       setStage(data.activeProgressStage as 'typing' | 'quiz')
     } else {
-      toast.success(`Memulai tugas: ${assignment.title}`)
-      setStage('typing')
+      // Sesuaikan stage awal berdasarkan taskType
+      if (assignment.taskType === 'quiz_only') {
+        toast.success(`Memulai soal: ${assignment.title}`)
+        setStage('quiz')
+      } else {
+        toast.success(`Memulai tugas: ${assignment.title}`)
+        setStage('typing')
+      }
     }
 
-    // PENTING: Redirect URL ke / (tanpa view) agar masuk "latihan mode"
-    // Kalau URL masih ?view=student-dashboard, routing tidak akan tampilkan typing stage
     router.push('/')
   }
 
@@ -218,11 +233,25 @@ export function StudentDashboard({
                         )}
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        <Badge className="bg-emerald-100 text-emerald-700">Aktif</Badge>
-                        <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 opacity-90 group-hover:opacity-100">
-                          <Play className="w-3 h-3 mr-1" />
-                          {data.hasActiveProgress ? 'Lanjutkan' : 'Mulai'}
-                        </Button>
+                        <div className="flex gap-1">
+                          <Badge className={a.exerciseType === 'wajib' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}>
+                            {a.exerciseType === 'wajib' ? 'Wajib' : 'Persiapan'}
+                          </Badge>
+                          {a.hasCompleted && a.exerciseType === 'wajib' && !a.canRetake && (
+                            <Badge className="bg-slate-200 text-slate-600">Selesai</Badge>
+                          )}
+                        </div>
+                        {a.hasCompleted && a.exerciseType === 'wajib' && !a.canRetake ? (
+                          <Button size="sm" variant="outline" disabled className="opacity-50 cursor-not-allowed">
+                            <Lock className="w-3 h-3 mr-1" />
+                            Terkunci
+                          </Button>
+                        ) : (
+                          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 opacity-90 group-hover:opacity-100">
+                            <Play className="w-3 h-3 mr-1" />
+                            {data.hasActiveProgress ? 'Lanjutkan' : 'Mulai'}
+                          </Button>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-slate-500 mt-2">

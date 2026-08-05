@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Tidak terautentikasi' }, { status: 401 })
     }
     const body = await req.json()
-    const { title, description, targetKelas, dueDate, isActive } = body
+    const { title, description, targetKelas, dueDate, isActive, exerciseType, questionCount, taskType } = body
 
     if (!title) {
       return NextResponse.json({ error: 'Judul wajib diisi' }, { status: 400 })
@@ -46,6 +46,9 @@ export async function POST(req: NextRequest) {
         targetKelas: targetKelas || 'ALL',
         isActive: isActive !== false,
         dueDate: dueDate ? new Date(dueDate) : null,
+        exerciseType: exerciseType || 'wajib',
+        questionCount: questionCount || 0,
+        taskType: taskType || 'typing_quiz',
       },
     })
 

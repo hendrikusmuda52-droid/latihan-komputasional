@@ -36,7 +36,7 @@ model Teacher {
 
 model Question {
   id            String   @id @default(cuid())
-  gradeLevel    String   // '8' atau '9'
+  gradeLevel    String   // '7', '8', atau '9'
   question      String
   optionA       String
   optionB       String
@@ -46,6 +46,7 @@ model Question {
   explanation   String
   category      String
   isActive      Boolean  @default(true)
+  imageUrl      String?  // URL atau base64 gambar soal (opsional)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

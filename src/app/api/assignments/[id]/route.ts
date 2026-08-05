@@ -30,6 +30,9 @@ export async function PUT(
     if (body.dueDate !== undefined) {
       updateData.dueDate = body.dueDate ? new Date(body.dueDate) : null
     }
+    if (body.exerciseType !== undefined) updateData.exerciseType = body.exerciseType
+    if (body.questionCount !== undefined) updateData.questionCount = body.questionCount
+    if (body.taskType !== undefined) updateData.taskType = body.taskType
 
     const updated = await db.assignment.update({
       where: { id },

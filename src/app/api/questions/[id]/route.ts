@@ -33,6 +33,7 @@ export async function PUT(
     if (body.explanation !== undefined) updateData.explanation = body.explanation
     if (body.category !== undefined) updateData.category = body.category
     if (body.isActive !== undefined) updateData.isActive = body.isActive
+    if (body.imageUrl !== undefined) updateData.imageUrl = body.imageUrl || null
 
     const updated = await db.question.update({
       where: { id },

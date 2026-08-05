@@ -28,6 +28,13 @@ export async function GET(req: NextRequest) {
       return kelasList.includes(studentKelas)
     })
 
+    // Cek apakah siswa sudah pernah mengerjakan latihan (untuk tugas wajib)
+    const allResults = await db.result.findMany({
+      where: { studentId: session.studentId },
+      select: { id: true, completedAt: true },
+    })
+    const hasCompletedAny = allResults.length > 0
+
     // Ambil hasil latihan siswa yang SUDAH DIRILIS guru saja
     const results = await db.result.findMany({
       where: { studentId: session.studentId, isReleased: true },
@@ -60,6 +67,12 @@ export async function GET(req: NextRequest) {
         description: a.description,
         dueDate: a.dueDate,
         createdAt: a.createdAt,
+        exerciseType: a.exerciseType,
+        questionCount: a.questionCount,
+        taskType: a.taskType,
+        // Tugas wajib: siswa sudah pernah mengerjakan → tidak bisa ulang tanpa izin guru
+        canRetake: a.exerciseType === 'persiapan' || !hasCompletedAny,
+        hasCompleted: hasCompletedAny,
       })),
       results: results.map((r) => ({
         id: r.id,
@@ -76,6 +89,7 @@ export async function GET(req: NextRequest) {
       pendingResultsCount: pendingResults,
       hasActiveProgress: !!activeProgress,
       activeProgressStage: activeProgress?.currentStage || null,
+      hasCompletedAnyExercise: hasCompletedAny,
     })
   } catch (error) {
     console.error('Error fetching student assignments:', error)

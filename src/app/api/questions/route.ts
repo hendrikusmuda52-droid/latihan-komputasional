@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Tidak terautentikasi' }, { status: 401 })
     }
     const body = await req.json()
-    const { gradeLevel, question, optionA, optionB, optionC, optionD, correctAnswer, explanation, category } = body
+    const { gradeLevel, question, optionA, optionB, optionC, optionD, correctAnswer, explanation, category, imageUrl } = body
 
     if (!gradeLevel || !question || !optionA || !optionB || !optionC || !optionD ||
         correctAnswer === undefined || !explanation || !category) {
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     }
 
     const created = await db.question.create({
-      data: { gradeLevel, question, optionA, optionB, optionC, optionD, correctAnswer, explanation, category, isActive: true },
+      data: { gradeLevel, question, optionA, optionB, optionC, optionD, correctAnswer, explanation, category, isActive: true, imageUrl: imageUrl || null },
     })
     return NextResponse.json({ success: true, question: created })
   } catch (error) {

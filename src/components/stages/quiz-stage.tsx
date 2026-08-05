@@ -350,9 +350,18 @@ export function QuizStage() {
               </div>
             </CardHeader>
             <CardContent className="pt-6">
-              <p className="text-slate-900 leading-relaxed mb-6 text-base">
+              <p className="text-slate-900 leading-relaxed mb-4 text-base">
                 {currentQ.question}
               </p>
+              {currentQ.imageUrl && (
+                <div className="mb-6">
+                  <img
+                    src={currentQ.imageUrl}
+                    alt="Gambar soal"
+                    className="max-w-full max-h-72 rounded-lg border border-slate-200 mx-auto"
+                  />
+                </div>
+              )}
 
               <RadioGroup
                 value={

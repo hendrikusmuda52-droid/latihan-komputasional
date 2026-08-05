@@ -307,6 +307,11 @@ export function ResultsStage() {
                           )}
                         </div>
                         <p className="text-sm text-slate-800 mb-3">{q.question}</p>
+                        {q.imageUrl && (
+                          <div className="mb-3">
+                            <img src={q.imageUrl} alt="Gambar soal" className="max-w-full max-h-48 rounded-lg border border-slate-200" />
+                          </div>
+                        )}
                         <div className="space-y-1 text-xs">
                           {!isUnanswered && (
                             <div

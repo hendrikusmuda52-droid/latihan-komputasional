@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
       correctAnswer: q.correctAnswer,
       explanation: q.explanation,
       category: q.category,
+      imageUrl: q.imageUrl || null,
     }))
 
     return NextResponse.json({ success: true, questions: formatted })

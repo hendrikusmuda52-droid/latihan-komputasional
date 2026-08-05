@@ -47,6 +47,7 @@ interface Question {
   explanation: string
   category: string
   isActive: boolean
+  imageUrl?: string | null
 }
 
 const CATEGORIES = ['Dekomposisi', 'Pengenalan Pola', 'Abstraksi', 'Algoritma', 'Konsep Dasar', 'Internet', 'Etika Digital', 'Keamanan Digital', 'Kesehatan Digital']
@@ -539,8 +540,23 @@ function QuestionForm({
     correctAnswer: question?.correctAnswer ?? 0,
     explanation: question?.explanation ?? '',
     category: question?.category ?? 'Dekomposisi',
+    imageUrl: question?.imageUrl ?? '',
   })
   const [saving, setSaving] = useState(false)
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 500000) {
+      toast.error('Ukuran gambar maksimal 500KB')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      setForm({ ...form, imageUrl: reader.result as string })
+    }
+    reader.readAsDataURL(file)
+  }
 
   const handleSave = async () => {
     if (!form.question || !form.optionA || !form.optionB || !form.optionC || !form.optionD || !form.explanation) {
@@ -652,6 +668,35 @@ function QuestionForm({
               rows={2}
               placeholder="Jelaskan mengapa jawaban tersebut benar..."
             />
+          </div>
+
+          {/* Upload Gambar Soal */}
+          <div className="space-y-1">
+            <Label className="text-xs">Gambar Soal (opsional)</Label>
+            <div className="flex items-center gap-3">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+                id="question-image"
+              />
+              <Button variant="outline" size="sm" onClick={() => document.getElementById('question-image')?.click()}>
+                <Upload className="w-3 h-3 mr-1" />Pilih Gambar
+              </Button>
+              {form.imageUrl && (
+                <Button variant="outline" size="sm" className="text-red-600" onClick={() => setForm({ ...form, imageUrl: '' })}>
+                  Hapus Gambar
+                </Button>
+              )}
+            </div>
+            {form.imageUrl && (
+              <div className="mt-2">
+                <img src={form.imageUrl} alt="Preview" className="max-h-32 rounded-lg border border-slate-200" />
+                <p className="text-xs text-slate-400 mt-1">Preview gambar soal</p>
+              </div>
+            )}
+            <p className="text-xs text-slate-400">Unggah gambar untuk soal bergambar (maks 500KB). Mendukung: flowchart, diagram, screenshot, dll.</p>
           </div>
         </div>
         <DialogFooter>

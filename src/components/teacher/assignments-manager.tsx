@@ -31,6 +31,9 @@ interface Assignment {
   targetKelas: string
   isActive: boolean
   dueDate: string | null
+  exerciseType: string
+  questionCount: number
+  taskType: string
   createdAt: string
 }
 
@@ -240,6 +243,9 @@ function AssignmentForm({
     targetKelas: assignment?.targetKelas ?? 'ALL',
     dueDate: assignment?.dueDate ? new Date(assignment.dueDate).toISOString().slice(0, 10) : '',
     isActive: assignment?.isActive ?? true,
+    exerciseType: assignment?.exerciseType ?? 'wajib',
+    questionCount: assignment?.questionCount ?? 0,
+    taskType: assignment?.taskType ?? 'typing_quiz',
   })
   const [saving, setSaving] = useState(false)
   const [selectedKelas, setSelectedKelas] = useState<string[]>(
@@ -262,6 +268,9 @@ function AssignmentForm({
         targetKelas,
         dueDate: form.dueDate || null,
         isActive: form.isActive,
+        exerciseType: form.exerciseType,
+        questionCount: parseInt(String(form.questionCount)) || 0,
+        taskType: form.taskType,
       }
       if (assignment) {
         const res = await fetch(`/api/assignments/${assignment.id}`, {
@@ -359,6 +368,46 @@ function AssignmentForm({
               onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
             />
           </div>
+
+          {/* Jenis Latihan */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Jenis Latihan</Label>
+              <Select value={form.exerciseType} onValueChange={(v) => setForm({ ...form, exerciseType: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="wajib">Wajib (sekali, butuh izin ulang)</SelectItem>
+                  <SelectItem value="persiapan">Persiapan (bisa dikerjakan ulang)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Jenis Tugas</Label>
+              <Select value={form.taskType} onValueChange={(v) => setForm({ ...form, taskType: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="typing_quiz">Mengetik + Soal HOTS</SelectItem>
+                  <SelectItem value="quiz_only">Soal HOTS Saja</SelectItem>
+                  <SelectItem value="typing_only">Mengetik Saja</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Jumlah Soal */}
+          <div className="space-y-1">
+            <Label className="text-xs">Jumlah Soal (0 = semua soal aktif)</Label>
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              value={form.questionCount}
+              onChange={(e) => setForm({ ...form, questionCount: parseInt(e.target.value) || 0 })}
+              placeholder="0 = gunakan semua soal"
+            />
+            <p className="text-xs text-slate-400">Isi 0 untuk menggunakan semua soal aktif, atau isi angka tertentu (mis: 10) untuk memilih 10 soal acak.</p>
+          </div>
+
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
