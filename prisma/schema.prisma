@@ -23,6 +23,7 @@ model Student {
 
   results      Result[]
   progresses   Progress[]
+  manualGrades ManualGrade[]
 }
 
 model Teacher {
@@ -62,14 +63,47 @@ model TypingText {
 
 // Tugas/Assignment yang dibuat guru untuk siswa
 model Assignment {
-  id          String    @id @default(cuid())
+  id           String    @id @default(cuid())
+  title        String
+  description  String    @default("")
+  targetKelas  String    @default("ALL")
+  isActive     Boolean   @default(true)
+  dueDate      DateTime?
+  // Jenis latihan: "wajib" (sekali, butuh izin ulang) atau "persiapan" (unlimited)
+  exerciseType String    @default("wajib")
+  // Jumlah soal yang ditugaskan (0 = pakai semua soal aktif)
+  questionCount Int      @default(0)
+  // Jenis tugas: "typing_quiz" (default), "game", "drawing", "essay"
+  taskType     String    @default("typing_quiz")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// Materi belajar untuk siswa
+model Material {
+  id          String   @id @default(cuid())
   title       String
-  description String    @default("")
-  targetKelas String    @default("ALL") // "ALL" atau "8A,8B,9A" (comma separated)
-  isActive    Boolean   @default(true)
-  dueDate     DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  content     String   // konten materi (mendukung markdown)
+  targetKelas String   @default("ALL")
+  category    String   @default("Umum") // kategori materi
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Nilai manual yang diinput guru (selain dari hasil latihan otomatis)
+model ManualGrade {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title       String   // nama penilaian, mis: "Ulangan Harian 1"
+  score       Float    // nilai 0-100
+  description String   @default("")
+  isReleased  Boolean  @default(false) // siswa hanya lihat jika dirilis
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([studentId])
 }
 
 // Progress pengerjaan siswa - untuk resume jika error/keluar aplikasi

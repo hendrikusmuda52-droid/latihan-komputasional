@@ -1,0 +1,43 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/db'
+
+const g = globalThis as unknown as { __teacherSessions?: Map<string, unknown> }
+async function requireAuth(req: NextRequest) {
+  const token = req.cookies.get('teacher_token')?.value
+  return !!(token && g.__teacherSessions?.has(token))
+}
+
+export async function GET(req: NextRequest) {
+  if (!(await requireAuth(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const kelas = req.nextUrl.searchParams.get('kelas')
+  const studentId = req.nextUrl.searchParams.get('studentId')
+  
+  let where: Record<string, unknown> = {}
+  if (studentId) where.studentId = studentId
+  if (kelas && kelas !== 'ALL') {
+    const students = await db.student.findMany({ where: { kelas }, select: { id: true } })
+    where.studentId = { in: students.map(s => s.id) }
+  }
+  
+  const grades = await db.manualGrade.findMany({
+    where,
+    include: { student: { select: { namaLengkap: true, nisn: true, kelas: true, sekolah: true } } },
+    orderBy: { createdAt: 'desc' },
+  })
+  return NextResponse.json({ success: true, grades })
+}
+
+export async function POST(req: NextRequest) {
+  if (!(await requireAuth(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { studentId, title, score, description, isReleased } = await req.json()
+  if (!studentId || !title || score === undefined) {
+    return NextResponse.json({ error: 'studentId, title, dan score wajib diisi' }, { status: 400 })
+  }
+  if (score < 0 || score > 100) {
+    return NextResponse.json({ error: 'Score harus 0-100' }, { status: 400 })
+  }
+  const grade = await db.manualGrade.create({
+    data: { studentId, title, score: parseFloat(score), description: description || '', isReleased: isReleased || false }
+  })
+  return NextResponse.json({ success: true, grade })
+}

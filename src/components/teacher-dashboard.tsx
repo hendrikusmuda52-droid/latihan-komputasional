@@ -54,6 +54,7 @@ import {
   UserCog,
   Send,
   Lock,
+  ClipboardList,
 } from 'lucide-react'
 import {
   BarChart,
@@ -77,6 +78,8 @@ import { TextManager } from './teacher/text-manager'
 import { TeacherProfile } from './teacher/teacher-profile'
 import { StudentsManager } from './teacher/students-manager'
 import { AssignmentsManager } from './teacher/assignments-manager'
+import { MaterialsManager } from './teacher/materials-manager'
+import { GradeBook } from './teacher/grade-book'
 
 interface ResultRow {
   id: string
@@ -127,6 +130,7 @@ const COLORS = ['#10b981', '#14b8a6', '#f59e0b', '#ef4444', '#6366f1']
 
 export function TeacherDashboard() {
   const [teacher, setTeacher] = useState<Teacher | null>(null)
+  const [activeMenu, setActiveMenu] = useState('results')
   const [authChecked, setAuthChecked] = useState(false)
   const [results, setResults] = useState<ResultRow[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
@@ -340,83 +344,104 @@ export function TeacherDashboard() {
     return <TeacherLogin onLogin={setTeacher} />
   }
 
+  const menuItems = [
+    { id: 'results', label: 'Hasil Latihan', icon: FileCheck },
+    { id: 'grades', label: 'Daftar Nilai', icon: ClipboardList },
+    { id: 'students', label: 'Data Siswa', icon: Users },
+    { id: 'assignments', label: 'Tugas', icon: FileText },
+    { id: 'materials', label: 'Materi Belajar', icon: BookOpen },
+    { id: 'questions', label: 'Bank Soal', icon: BookOpen },
+    { id: 'texts', label: 'Teks Bacaan', icon: FileText },
+    { id: 'profile', label: 'Profil Akun', icon: UserCog },
+  ]
+
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-white border-b shadow-sm">
-        <div className="container max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+    <div className="min-h-screen flex bg-slate-50">
+      {/* Sidebar */}
+      <aside className="w-64 bg-slate-900 text-white flex flex-col fixed h-screen z-50">
+        {/* Logo */}
+        <div className="p-5 border-b border-slate-700">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center">
               <School className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-900">Dashboard Guru</p>
-              <p className="text-xs text-slate-500">
-                Masuk sebagai: <strong>{teacher.name}</strong> ({teacher.username})
-              </p>
+              <p className="text-sm font-bold">Dashboard Guru</p>
+              <p className="text-xs text-slate-400">Latihan Komputasional</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
-              <RefreshCw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-            <Button
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700"
-              onClick={handleBulkRelease}
-            >
-              <Send className="w-4 h-4 mr-1" />
-              Rilis Semua
-            </Button>
-            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={handleExportCSV}>
-              <Download className="w-4 h-4 mr-1" />
-              Export CSV
-            </Button>
-            <a href="/">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-1" />
-                Halaman Siswa
-              </Button>
-            </a>
-            <Button variant="outline" size="sm" onClick={handleLogout} className="text-red-600 hover:bg-red-50">
-              <LogOut className="w-4 h-4 mr-1" />
-              Logout
-            </Button>
-          </div>
         </div>
-      </header>
 
-      <main className="flex-1 container max-w-7xl mx-auto px-4 py-6">
-        <Tabs defaultValue="results" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 mb-6">
-            <TabsTrigger value="results" className="flex items-center gap-1">
-              <FileCheck className="w-4 h-4" />
-              <span className="hidden sm:inline">Hasil</span>
-            </TabsTrigger>
-            <TabsTrigger value="students" className="flex items-center gap-1">
-              <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Siswa</span>
-            </TabsTrigger>
-            <TabsTrigger value="assignments" className="flex items-center gap-1">
-              <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">Tugas</span>
-            </TabsTrigger>
-            <TabsTrigger value="questions" className="flex items-center gap-1">
-              <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Bank Soal</span>
-            </TabsTrigger>
-            <TabsTrigger value="texts" className="flex items-center gap-1">
-              <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">Teks</span>
-            </TabsTrigger>
-            <TabsTrigger value="profile" className="flex items-center gap-1">
-              <UserCog className="w-4 h-4" />
-              <span className="hidden sm:inline">Profil</span>
-            </TabsTrigger>
-          </TabsList>
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+          {menuItems.map((item) => {
+            const Icon = item.icon
+            const isActive = activeMenu === item.id
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveMenu(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  isActive
+                    ? 'bg-emerald-600 text-white shadow-lg'
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                <span>{item.label}</span>
+              </button>
+            )
+          })}
+        </nav>
 
-          <TabsContent value="results" className="space-y-6">
+        {/* User info + actions */}
+        <div className="p-3 border-t border-slate-700 space-y-2">
+          <div className="px-3 py-2 bg-slate-800 rounded-lg">
+            <p className="text-xs text-slate-400">Login sebagai:</p>
+            <p className="text-sm font-semibold truncate">{teacher.name}</p>
+            <p className="text-xs text-slate-500">@{teacher.username}</p>
+          </div>
+          <a href="/" className="block">
+            <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
+              <ArrowLeft className="w-3 h-3" /> Halaman Siswa
+            </button>
+          </a>
+          <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-red-400 hover:bg-red-900/30 transition-colors">
+            <LogOut className="w-3 h-3" /> Logout
+          </button>
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <div className="flex-1 ml-64 flex flex-col min-h-screen">
+        {/* Top bar */}
+        <header className="sticky top-0 z-40 bg-white border-b shadow-sm">
+          <div className="px-6 py-3 flex items-center justify-between gap-3">
+            <h1 className="text-lg font-bold text-slate-900">
+              {menuItems.find(m => m.id === activeMenu)?.label || 'Dashboard'}
+            </h1>
+            <div className="flex items-center gap-2">
+              {activeMenu === 'results' && (
+                <>
+                  <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
+                    <RefreshCw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} />Refresh
+                  </Button>
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={handleBulkRelease}>
+                    <Send className="w-4 h-4 mr-1" />Rilis Semua
+                  </Button>
+                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={handleExportCSV}>
+                    <Download className="w-4 h-4 mr-1" />Export CSV
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Content area */}
+        <main className="flex-1 px-6 py-6">
+          {activeMenu === 'results' && (
+        <>
         {/* Statistik Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <Card>
@@ -783,38 +808,26 @@ export function TeacherDashboard() {
             </CardContent>
           </Card>
         </div>
-          </TabsContent>
+        </>
+      )}
 
-          <TabsContent value="students">
-            <StudentsManager />
-          </TabsContent>
+      {activeMenu === 'grades' && <GradeBook />}
+      {activeMenu === 'students' && <StudentsManager />}
+      {activeMenu === 'assignments' && <AssignmentsManager />}
+      {activeMenu === 'materials' && <MaterialsManager />}
+      {activeMenu === 'questions' && <QuestionBank />}
+      {activeMenu === 'texts' && <TextManager />}
+      {activeMenu === 'profile' && (
+        <TeacherProfile teacher={teacher} onUpdated={setTeacher} />
+      )}
+        </main>
 
-          <TabsContent value="assignments">
-            <AssignmentsManager />
-          </TabsContent>
-
-          <TabsContent value="questions">
-            <QuestionBank />
-          </TabsContent>
-
-          <TabsContent value="texts">
-            <TextManager />
-          </TabsContent>
-
-          <TabsContent value="profile">
-            <TeacherProfile
-              teacher={teacher}
-              onUpdated={(t) => setTeacher(t)}
-            />
-          </TabsContent>
-        </Tabs>
-      </main>
-
-      <footer className="bg-slate-900 text-slate-400 py-4 mt-auto">
-        <div className="container max-w-7xl mx-auto px-4 text-center text-xs">
-          Dashboard Guru — Latihan Mengetik & Berpikir Komputasional SMP
-        </div>
-      </footer>
+        <footer className="bg-slate-900 text-slate-400 py-4 mt-auto">
+          <div className="px-6 text-center text-xs">
+            Dashboard Guru — Latihan Mengetik & Berpikir Komputasional SMP
+          </div>
+        </footer>
+      </div>
     </div>
   )
 }
