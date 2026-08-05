@@ -126,17 +126,16 @@ bun install
 log_step_end "bun install"
 
 log_step_start "bun run db:push"
-echo "[BUN] Setting up database (skip jika sudah dimigrasi)..."
-# Unset env vars lama agar Prisma pakai .env yang baru (Supabase)
-unset DATABASE_URL
-unset DIRECT_URL
+echo "[BUN] Setting up database (Supabase)..."
+export DATABASE_URL="postgresql://postgres.wkvtjcvsttxypouzdwys:dKBgDddtxAyyrZ6r@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
+export DIRECT_URL="postgresql://postgres.wkvtjcvsttxypouzdwys:dKBgDddtxAyyrZ6r@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
 bun run db:push || echo "[BUN] db:push skipped/failed - lanjut"
 log_step_end "bun run db:push"
 
 log_step_start "Starting Next.js dev server"
 echo "[BUN] Starting development server..."
-unset DATABASE_URL
-unset DIRECT_URL
+export DATABASE_URL="postgresql://postgres.wkvtjcvsttxypouzdwys:dKBgDddtxAyyrZ6r@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
+export DIRECT_URL="postgresql://postgres.wkvtjcvsttxypouzdwys:dKBgDddtxAyyrZ6r@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
 bun run dev &
 DEV_PID=$!
 log_step_end "Starting Next.js dev server"
