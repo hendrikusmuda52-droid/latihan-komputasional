@@ -108,6 +108,12 @@ export function StudentDashboard({
       if (assignment.taskType === 'quiz_only') {
         toast.success(`Memulai soal: ${assignment.title}`)
         setStage('quiz')
+      } else if (assignment.taskType === 'game') {
+        toast.success(`Memulai game: ${assignment.title}`)
+        setStage('game')
+      } else if (assignment.taskType === 'drawing') {
+        toast.success(`Memulai tugas menggambar: ${assignment.title}`)
+        setStage('drawing')
       } else {
         toast.success(`Memulai tugas: ${assignment.title}`)
         setStage('typing')

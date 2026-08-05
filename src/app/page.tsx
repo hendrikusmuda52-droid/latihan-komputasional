@@ -8,6 +8,8 @@ import { TypingFinishedStage } from '@/components/stages/typing-finished-stage'
 import { QuizStage } from '@/components/stages/quiz-stage'
 import { CompletedStage } from '@/components/stages/completed-stage'
 import { ResultsStage } from '@/components/stages/results-stage'
+import { GameStage } from '@/components/stages/game-stage'
+import { DrawingStage } from '@/components/stages/drawing-stage'
 import { TeacherDashboard } from '@/components/teacher-dashboard'
 import { StudentLogin } from '@/components/student/student-login'
 import { StudentDashboard } from '@/components/student/student-dashboard'
@@ -110,6 +112,8 @@ function HomeContent() {
         {stage === 'quiz' && <QuizStage />}
         {stage === 'completed' && <CompletedStage />}
         {stage === 'results' && <ResultsStage />}
+        {stage === 'game' && <GameStage />}
+        {stage === 'drawing' && <DrawingStage />}
       </>
     )
   }

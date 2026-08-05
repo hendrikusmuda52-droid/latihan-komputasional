@@ -32,8 +32,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, RefreshCw, Download, Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertCircle } from 'lucide-react'
+import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, RefreshCw, Download, Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertCircle, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
+import { AIGenerateDialog } from './ai-generate-dialog'
 
 interface Question {
   id: string
@@ -59,6 +60,7 @@ export function QuestionBank() {
   const [editing, setEditing] = useState<Question | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [showImport, setShowImport] = useState(false)
+  const [showAIGenerate, setShowAIGenerate] = useState(false)
 
   const handleDownloadTemplate = () => {
     // Trigger download dari API
@@ -153,6 +155,14 @@ export function QuestionBank() {
               >
                 <Upload className="w-4 h-4 mr-1" />
                 <span className="hidden sm:inline">Import</span>
+              </Button>
+              <Button
+                size="sm"
+                className="bg-purple-600 hover:bg-purple-700"
+                onClick={() => setShowAIGenerate(true)}
+              >
+                <Sparkles className="w-4 h-4 mr-1" />
+                <span className="hidden sm:inline">AI Generate</span>
               </Button>
               <Button
                 size="sm"
@@ -298,6 +308,14 @@ export function QuestionBank() {
             setShowImport(false)
             fetchQuestions()
           }}
+        />
+      )}
+
+      {showAIGenerate && (
+        <AIGenerateDialog
+          defaultGrade={filterGrade}
+          onClose={() => setShowAIGenerate(false)}
+          onSaved={() => { setShowAIGenerate(false); fetchQuestions() }}
         />
       )}
     </div>

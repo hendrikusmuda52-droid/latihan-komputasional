@@ -389,6 +389,8 @@ function AssignmentForm({
                   <SelectItem value="typing_quiz">Mengetik + Soal HOTS</SelectItem>
                   <SelectItem value="quiz_only">Soal HOTS Saja</SelectItem>
                   <SelectItem value="typing_only">Mengetik Saja</SelectItem>
+                  <SelectItem value="game">Game Interaktif (Benar/Salah)</SelectItem>
+                  <SelectItem value="drawing">Tugas Menggambar / Peta Konsep</SelectItem>
                 </SelectContent>
               </Select>
             </div>

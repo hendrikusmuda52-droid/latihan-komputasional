@@ -8,6 +8,8 @@ export type AppStage =
   | 'quiz'
   | 'completed'
   | 'results'
+  | 'game'
+  | 'drawing'
 
 export interface StudentInfo {
   id?: string
