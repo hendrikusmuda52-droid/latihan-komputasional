@@ -1,0 +1,8 @@
+{
+  "buildCommand": "next build",
+  "framework": "nextjs",
+  "regions": ["sin1"],
+  "github": {
+    "silent": true
+  }
+}
