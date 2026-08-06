@@ -7,18 +7,25 @@ import { CheckCircle2, LogOut, Clock, MessageSquare, Home } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export function CompletedStage() {
-  const { student, reset } = useAppStore()
+  const { student, setStage, setTypingResult, setQuizResult, setProgress } = useAppStore()
   const router = useRouter()
 
   const handleBackToLogin = () => {
-    // Reset state aplikasi
-    reset()
-    // Redirect ke halaman login siswa
+    // Reset semua state + redirect ke login
+    setStage('welcome')
+    setTypingResult(null as never)
+    setQuizResult(null as never)
+    setProgress(null)
     router.push('/')
   }
 
   const handleGoToDashboard = () => {
-    reset()
+    // JANGANGAN reset student! Cukup clear stage-specific data
+    // Biarkan session cookie tetap valid sehingga dashboard bisa re-fetch
+    setStage('welcome')
+    setTypingResult(null as never)
+    setQuizResult(null as never)
+    setProgress(null)
     router.push('/?view=student-dashboard')
   }
 

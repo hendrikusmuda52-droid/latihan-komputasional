@@ -40,9 +40,9 @@ function HomeContent() {
   const [studentSession, setStudentSession] = useState<StudentInfo | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
 
-  // Cek session siswa saat mount ATAU saat masuk latihan mode (stage berubah)
+  // Cek session siswa saat mount ATAU saat URL/stage berubah
+  // Selalu re-check ketika masuk dashboard/latihan mode dan belum ada session
   useEffect(() => {
-    // Hanya cek auth jika butuh session (student-dashboard atau latihan mode)
     if (!isStudentDashboard && !isLatihanMode) {
       setAuthChecked(true)
       return
@@ -52,6 +52,8 @@ function HomeContent() {
       setAuthChecked(true)
       return
     }
+    // Reset authChecked sebelum fetch
+    setAuthChecked(false)
     let cancelled = false
     fetch('/api/student/auth')
       .then((r) => r.json())

@@ -9,7 +9,7 @@ import { ArrowLeft, Palette } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function DrawingStage() {
-  const { student, reset } = useAppStore()
+  const { student, setStage, setTypingResult, setQuizResult, setProgress } = useAppStore()
   const router = useRouter()
 
   const handleSave = async (imageData: string, title: string) => {
@@ -43,7 +43,10 @@ export function DrawingStage() {
   }
 
   const handleFinish = () => {
-    reset()
+    setStage('welcome')
+    setTypingResult(null as never)
+    setQuizResult(null as never)
+    setProgress(null)
     router.push('/?view=student-dashboard')
   }
 

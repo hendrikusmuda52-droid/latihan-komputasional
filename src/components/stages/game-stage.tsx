@@ -33,7 +33,7 @@ const GAME_QUESTIONS: GameQuestion[] = [
 ]
 
 export function GameStage() {
-  const { student, setStage, reset } = useAppStore()
+  const { student, setStage, setTypingResult, setQuizResult, setProgress } = useAppStore()
   const router = useRouter()
   const [questions] = useState(() => [...GAME_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 8))
   const [currentIdx, setCurrentIdx] = useState(0)
@@ -93,7 +93,10 @@ export function GameStage() {
   }
 
   const handleFinish = () => {
-    reset()
+    setStage('welcome')
+    setTypingResult(null as never)
+    setQuizResult(null as never)
+    setProgress(null)
     router.push('/?view=student-dashboard')
   }
 
