@@ -741,7 +741,7 @@ export function TypingStage() {
 
       <footer className="bg-slate-900 text-slate-400 py-4 mt-auto">
         <div className="container max-w-7xl mx-auto px-4 text-center text-xs">
-          Latihan Mengetik & Berpikir Komputasional - SMP Kelas {gradeTier}
+          SAKOLA - SMP Santo Augustinus
         </div>
       </footer>
     </div>

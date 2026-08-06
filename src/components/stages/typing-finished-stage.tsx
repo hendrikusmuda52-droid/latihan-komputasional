@@ -87,7 +87,7 @@ export function TypingFinishedStage() {
 
       <footer className="bg-slate-900 text-slate-400 py-4 mt-auto">
         <div className="container max-w-4xl mx-auto px-4 text-center text-xs">
-          Latihan Mengetik & Berpikir Komputasional - SMP
+          SAKOLA - SMP Santo Augustinus
         </div>
       </footer>
     </div>

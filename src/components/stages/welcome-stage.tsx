@@ -561,7 +561,7 @@ export function WelcomeStage() {
 
       <footer className="bg-slate-900 text-slate-300 py-6 mt-auto">
         <div className="container max-w-5xl mx-auto px-4 text-center text-sm">
-          Aplikasi Latihan Mengetik & Berpikir Komputasional - SMP
+          SAKOLA - SMP Santo Augustinus
         </div>
       </footer>
     </div>

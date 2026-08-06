@@ -15,20 +15,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Latihan Mengetik & Berpikir Komputasional - SMP",
+  title: "SAKOLA - E-Learning Informatika & Koding SMP Santo Augustinus",
   description:
-    "Aplikasi latihan mengetik dan soal HOTS berpikir komputasional untuk siswa SMP. Dua tahap: mengetik 40 menit dan 30 soal pilihan ganda 25 menit.",
+    "SAKOLA - Santo Augustinus Komputasi Online Learning Aplikasi. Platform e-learning untuk latihan mengetik, berpikir komputasional, dan koding.",
   keywords: [
+    "SAKOLA",
+    "Santo Augustinus",
+    "e-learning",
+    "informatika",
+    "koding",
     "berpikir komputasional",
     "mengetik",
     "SMP",
-    "HOTS",
-    "dekomposisi",
-    "algoritma",
-    "abstraksi",
-    "pengenalan pola",
   ],
-  authors: [{ name: "Aplikasi Latihan Komputasional" }],
+  authors: [{ name: "SMP Santo Augustinus" }],
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

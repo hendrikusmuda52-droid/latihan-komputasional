@@ -105,7 +105,7 @@ export function CompletedStage() {
             </div>
 
             <p className="text-xs text-slate-400 mt-6">
-              Latihan Mengetik & Berpikir Komputasional - SMP
+              SAKOLA - SMP Santo Augustinus
             </p>
           </CardContent>
         </Card>

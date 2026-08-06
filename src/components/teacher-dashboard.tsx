@@ -366,8 +366,8 @@ export function TeacherDashboard() {
               <School className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="text-sm font-bold">Dashboard Guru</p>
-              <p className="text-xs text-slate-400">Latihan Komputasional</p>
+              <p className="text-sm font-bold">SAKOLA</p>
+              <p className="text-xs text-slate-400">Santo Augustinus E-Learning</p>
             </div>
           </div>
         </div>
@@ -824,7 +824,7 @@ export function TeacherDashboard() {
 
         <footer className="bg-slate-900 text-slate-400 py-4 mt-auto">
           <div className="px-6 text-center text-xs">
-            Dashboard Guru — Latihan Mengetik & Berpikir Komputasional SMP
+            SAKOLA — SMP Santo Augustinus
           </div>
         </footer>
       </div>

@@ -566,7 +566,7 @@ export function QuizStage() {
 
       <footer className="bg-slate-900 text-slate-400 py-4 mt-auto">
         <div className="container max-w-5xl mx-auto px-4 text-center text-xs">
-          Latihan Mengetik & Berpikir Komputasional - SMP Kelas 9
+          SAKOLA - SMP Santo Augustinus
         </div>
       </footer>
     </div>
