@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireTeacherAuth } from '@/lib/auth'
 
-const g = globalThis as unknown as {
-  __teacherSessions?: Map<string, unknown>
-}
-
-async function requireAuth(req: NextRequest) {
-  const token = req.cookies.get('teacher_token')?.value
-  return !!(token && g.__teacherSessions?.has(token))
-}
+// Auth via stateless JWT - see @/lib/auth
 
 // PUT: update soal (atau toggle isActive)
 export async function PUT(
@@ -16,7 +10,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    if (!(await requireAuth(req))) {
+    if (!(await requireTeacherAuth(req))) {
       return NextResponse.json({ error: 'Tidak terautentikasi' }, { status: 401 })
     }
     const { id } = await params
@@ -52,7 +46,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    if (!(await requireAuth(req))) {
+    if (!(await requireTeacherAuth(req))) {
       return NextResponse.json({ error: 'Tidak terautentikasi' }, { status: 401 })
     }
     const { id } = await params

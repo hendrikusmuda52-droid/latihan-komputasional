@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireTeacherAuth } from '@/lib/auth'
 
-const g = globalThis as unknown as { __teacherSessions?: Map<string, unknown> }
-async function requireAuth(req: NextRequest) {
-  const token = req.cookies.get('teacher_token')?.value
-  return !!(token && g.__teacherSessions?.has(token))
-}
+// Auth via stateless JWT - see @/lib/auth
 
 export async function GET(req: NextRequest) {
-  if (!(await requireAuth(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!(await requireTeacherAuth(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const kelas = req.nextUrl.searchParams.get('kelas')
   const studentId = req.nextUrl.searchParams.get('studentId')
   
@@ -28,7 +25,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await requireAuth(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!(await requireTeacherAuth(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { studentId, title, score, description, isReleased } = await req.json()
   if (!studentId || !title || score === undefined) {
     return NextResponse.json({ error: 'studentId, title, dan score wajib diisi' }, { status: 400 })

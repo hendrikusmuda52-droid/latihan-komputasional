@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import crypto from 'crypto'
+import { createStudentToken, getStudentFromToken } from '@/lib/auth'
 
-// Global session store untuk siswa
-const g = globalThis as unknown as {
-  __studentSessions?: Map<string, { studentId: string; nisn: string; namaLengkap: string; kelas: string }>
-}
-if (!g.__studentSessions) g.__studentSessions = new Map()
-export const studentSessions = g.__studentSessions
-
-// POST: login siswa dengan NISN + password
 export async function POST(req: NextRequest) {
   try {
     const { nisn, password } = await req.json()
@@ -21,9 +14,6 @@ export async function POST(req: NextRequest) {
     if (!student) {
       return NextResponse.json({ error: 'NISN tidak terdaftar' }, { status: 401 })
     }
-    if (!student.isActive) {
-      return NextResponse.json({ error: 'Akun Anda dinonaktifkan. Hubungi guru.' }, { status: 403 })
-    }
     if (!student.password) {
       return NextResponse.json({ error: 'Password belum diset oleh guru. Hubungi guru.' }, { status: 403 })
     }
@@ -33,8 +23,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Password salah' }, { status: 401 })
     }
 
-    const token = crypto.randomBytes(32).toString('hex')
-    studentSessions.set(token, {
+    // Buat JWT token (stateless)
+    const token = createStudentToken({
       studentId: student.id,
       nisn: student.nisn,
       namaLengkap: student.namaLengkap,
@@ -55,7 +45,7 @@ export async function POST(req: NextRequest) {
     res.cookies.set('student_token', token, {
       httpOnly: true,
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 hari
+      maxAge: 60 * 60 * 24 * 7,
       path: '/',
     })
     return res
@@ -65,26 +55,25 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET: cek session siswa
+// GET: cek session siswa (stateless)
 export async function GET(req: NextRequest) {
   try {
-    const token = req.cookies.get('student_token')?.value
-    if (!token || !studentSessions.has(token)) {
+    const student = getStudentFromToken(req)
+    if (!student) {
       return NextResponse.json({ authenticated: false })
     }
-    const session = studentSessions.get(token)!
-    const student = await db.student.findUnique({
-      where: { id: session.studentId },
+    // Fetch fresh data from DB
+    const dbStudent = await db.student.findUnique({
+      where: { id: student.studentId },
       select: {
         id: true, namaLengkap: true, nisn: true, kelas: true,
         sekolah: true, jenisKelamin: true, isActive: true,
       },
     })
-    if (!student || !student.isActive) {
-      studentSessions.delete(token)
+    if (!dbStudent) {
       return NextResponse.json({ authenticated: false })
     }
-    return NextResponse.json({ authenticated: true, student })
+    return NextResponse.json({ authenticated: true, student: dbStudent })
   } catch {
     return NextResponse.json({ authenticated: false })
   }

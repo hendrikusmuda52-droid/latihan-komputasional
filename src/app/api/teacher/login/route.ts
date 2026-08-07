@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import crypto from 'crypto'
-
-const g = globalThis as unknown as {
-  __teacherSessions?: Map<string, { teacherId: string; username: string; name: string; role: string; subject: string }>
-}
-if (!g.__teacherSessions) g.__teacherSessions = new Map()
-export const teacherSessions = g.__teacherSessions
+import { createTeacherToken } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,12 +17,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Username atau password salah' }, { status: 401 })
     }
 
-    // Ambil role & subject, default ke nilai aman jika field tidak ada
     const role = (teacher as Record<string, unknown>).role as string || 'teacher'
     const subject = (teacher as Record<string, unknown>).subject as string || 'Informatika'
 
-    const token = crypto.randomBytes(32).toString('hex')
-    teacherSessions.set(token, {
+    // Buat JWT token (stateless - tidak butuh memory)
+    const token = createTeacherToken({
       teacherId: teacher.id,
       username: teacher.username,
       name: teacher.name,
@@ -49,6 +43,6 @@ export async function POST(req: NextRequest) {
     return res
   } catch (error) {
     console.error('Login error:', error)
-    return NextResponse.json({ error: 'Gagal login: ' + (error instanceof Error ? error.message : 'Unknown') }, { status: 500 })
+    return NextResponse.json({ error: 'Gagal login' }, { status: 500 })
   }
 }

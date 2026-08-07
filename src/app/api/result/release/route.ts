@@ -1,20 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireTeacherAuth } from '@/lib/auth'
 
-const g = globalThis as unknown as {
-  __teacherSessions?: Map<string, unknown>
-}
-
-async function requireAuth(req: NextRequest) {
-  const token = req.cookies.get('teacher_token')?.value
-  return !!(token && g.__teacherSessions?.has(token))
-}
+// Auth via stateless JWT - see @/lib/auth
 
 // PUT: toggle rilis/batalkan rilis untuk 1 result
 // Body: { id: string, isReleased: boolean }
 export async function PUT(req: NextRequest) {
   try {
-    if (!(await requireAuth(req))) {
+    if (!(await requireTeacherAuth(req))) {
       return NextResponse.json({ error: 'Tidak terautentikasi' }, { status: 401 })
     }
     const { id, isReleased } = await req.json()

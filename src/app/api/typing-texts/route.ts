@@ -1,19 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireTeacherAuth } from '@/lib/auth'
 
-const g = globalThis as unknown as {
-  __teacherSessions?: Map<string, unknown>
-}
-
-async function requireAuth(req: NextRequest) {
-  const token = req.cookies.get('teacher_token')?.value
-  return !!(token && g.__teacherSessions?.has(token))
-}
+// Auth via stateless JWT - see @/lib/auth
 
 // GET: list semua teks (untuk guru)
 export async function GET(req: NextRequest) {
   try {
-    if (!(await requireAuth(req))) {
+    if (!(await requireTeacherAuth(req))) {
       return NextResponse.json({ error: 'Tidak terautentikasi' }, { status: 401 })
     }
     const grade = req.nextUrl.searchParams.get('grade')
@@ -33,7 +27,7 @@ export async function GET(req: NextRequest) {
 // POST: tambah teks baru
 export async function POST(req: NextRequest) {
   try {
-    if (!(await requireAuth(req))) {
+    if (!(await requireTeacherAuth(req))) {
       return NextResponse.json({ error: 'Tidak terautentikasi' }, { status: 401 })
     }
     const body = await req.json()

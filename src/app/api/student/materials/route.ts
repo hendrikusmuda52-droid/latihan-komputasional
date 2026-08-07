@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireStudentAuth, getStudentFromToken } from '@/lib/auth'
 
-const g = globalThis as unknown as { __studentSessions?: Map<string, { kelas: string }> }
+// Student auth via stateless JWT
 
 export async function GET(req: NextRequest) {
-  const token = req.cookies.get('student_token')?.value
-  if (!token || !g.__studentSessions?.has(token)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  const session = g.__studentSessions.get(token)!
+  if (!(await requireStudentAuth(req))) { return NextResponse.json({ error: 'Tidak terautentikasi' }, { status: 401 }) }
+  const session = getStudentFromToken(req)!
   const materials = await db.material.findMany({
     where: { isActive: true },
     orderBy: { createdAt: 'desc' },

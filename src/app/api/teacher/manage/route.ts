@@ -1,18 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import crypto from 'crypto'
+import { requireAdminAuth } from '@/lib/auth'
 
-const g = globalThis as unknown as { __teacherSessions?: Map<string, { role: string }> }
-
-async function requireAdmin(req: NextRequest) {
-  const token = req.cookies.get('teacher_token')?.value
-  const session = token ? g.__teacherSessions?.get(token) : null
-  return session?.role === 'admin'
-}
-
-// GET: list semua guru
 export async function GET(req: NextRequest) {
-  if (!(await requireAdmin(req))) {
+  if (!(await requireAdminAuth(req))) {
     return NextResponse.json({ error: 'Akses ditolak - khusus admin' }, { status: 403 })
   }
   const teachers = await db.teacher.findMany({
@@ -22,9 +14,8 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ success: true, teachers })
 }
 
-// POST: tambah guru baru (admin only)
 export async function POST(req: NextRequest) {
-  if (!(await requireAdmin(req))) {
+  if (!(await requireAdminAuth(req))) {
     return NextResponse.json({ error: 'Akses ditolak - khusus admin' }, { status: 403 })
   }
   const { username, password, name, role, subject } = await req.json()
