@@ -106,21 +106,26 @@ model Material {
 model LearningObjective {
   id          String   @id @default(cuid())
   subject     String   @default("Informatika")
-  gradeLevel  String   // "7", "8", "9", "11DKV", "12DKV"
-  chapter     String   // bab/pokok bahasan
-  cp          String   // Capaian Pembelajaran (teks panjang)
-  tp          String   // Tujuan Pembelajaran (teks, bisa multiple dipisah newline)
+  gradeLevel  String
+  chapter     String
+  cp          String
+  tp          String
+  bobotTugas  Float    @default(40) // %Tugas per bab
+  bobotUH     Float    @default(60) // %Ulangan Harian per bab
   isActive    Boolean  @default(true)
   teacherId   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-// KKM per mapel
+// KKM + Bobot per mapel
 model SubjectConfig {
   id          String   @id @default(cuid())
   subject     String   @unique
-  kkm         Float    @default(75) // Kriteria Ketuntasan Minimal
+  kkm         Float    @default(75)
+  bobotNH     Float    @default(40) // % Nilai Harian
+  bobotUTS    Float    @default(30) // % Mid Semester
+  bobotUAS    Float    @default(30) // % Akhir Semester
   updatedAt   DateTime @updatedAt
 }
 
@@ -131,7 +136,9 @@ model ManualGrade {
   title       String
   score       Float
   description String   @default("")
-  subject     String   @default("Informatika") // mapel yang dinilai
+  subject     String   @default("Informatika")
+  gradeType   String   @default("tugas") // "tugas", "uh", "uts", "uas"
+  babId       String?  // link ke LearningObjective (untuk tugas & uh)
   isReleased  Boolean  @default(false)
   teacherId   String?
   createdAt   DateTime @default(now())

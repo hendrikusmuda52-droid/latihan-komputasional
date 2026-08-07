@@ -127,17 +127,17 @@ export function CPTPManager() {
 }
 
 function CPTPForm({ editing, onClose, onSaved }: { editing: Objective | null; onClose: () => void; onSaved: () => void }) {
-  const [form, setForm] = useState({ gradeLevel: editing?.gradeLevel ?? '7', chapter: editing?.chapter ?? '', cp: editing?.cp ?? '', tp: editing?.tp ?? '' })
+  const [form, setForm] = useState({ gradeLevel: editing?.gradeLevel ?? '7', chapter: editing?.chapter ?? '', cp: editing?.cp ?? '', tp: editing?.tp ?? '', bobotTugas: String(editing?.bobotTugas ?? 40), bobotUH: String(editing?.bobotUH ?? 60) })
   const [saving, setSaving] = useState(false)
   const handleSave = async () => {
     if (!form.chapter || !form.cp || !form.tp) { toast.error('Semua field wajib diisi'); return }
     setSaving(true)
     try {
       if (editing) {
-        const res = await fetch(`/api/learning-objectives/${editing.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+        const res = await fetch(`/api/learning-objectives/${editing.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, bobotTugas: parseFloat(form.bobotTugas), bobotUH: parseFloat(form.bobotUH) }) })
         if (!res.ok) throw new Error('Gagal'); toast.success('CP & TP diperbarui')
       } else {
-        const res = await fetch('/api/learning-objectives', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+        const res = await fetch('/api/learning-objectives', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, bobotTugas: parseFloat(form.bobotTugas), bobotUH: parseFloat(form.bobotUH) }) })
         if (!res.ok) throw new Error('Gagal'); toast.success('CP & TP ditambahkan')
       }
       onSaved()
@@ -154,7 +154,15 @@ function CPTPForm({ editing, onClose, onSaved }: { editing: Objective | null; on
           </div>
           <div className="space-y-1"><Label className="text-xs">Capaian Pembelajaran (CP) *</Label><Textarea value={form.cp} onChange={(e) => setForm({ ...form, cp: e.target.value })} rows={3} placeholder="Tulis CP untuk bab ini..." /></div>
           <div className="space-y-1"><Label className="text-xs">Tujuan Pembelajaran (TP) * — Satu poin per baris</Label><Textarea value={form.tp} onChange={(e) => setForm({ ...form, tp: e.target.value })} rows={5} placeholder={'TP 1: ...\nTP 2: ...\nTP 3: ...'} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1"><Label className="text-xs">Bobot Tugas (%) *</Label><Input type="number" min="0" max="100" value={form.bobotTugas} onChange={(e) => setForm({ ...form, bobotTugas: e.target.value })} /></div>
+            <div className="space-y-1"><Label className="text-xs">Bobot UH (%) *</Label><Input type="number" min="0" max="100" value={form.bobotUH} onChange={(e) => setForm({ ...form, bobotUH: e.target.value })} /></div>
+          </div>
         </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1"><Label className="text-xs">Bobot Tugas (%) *</Label><Input type="number" min="0" max="100" value={form.bobotTugas} onChange={(e) => setForm({ ...form, bobotTugas: e.target.value })} /></div>
+            <div className="space-y-1"><Label className="text-xs">Bobot UH (%) *</Label><Input type="number" min="0" max="100" value={form.bobotUH} onChange={(e) => setForm({ ...form, bobotUH: e.target.value })} /></div>
+          </div>
         <DialogFooter><Button variant="outline" onClick={onClose}>Batal</Button><Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">{saving ? 'Menyimpan...' : 'Simpan'}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
