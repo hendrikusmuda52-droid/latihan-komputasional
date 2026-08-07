@@ -1,9 +1,18 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getTeacherFromToken, requireTeacherAuth } from '@/lib/auth'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    if (!(await requireTeacherAuth(req))) {
+      return NextResponse.json({ error: 'Tidak terautentikasi' }, { status: 401 })
+    }
+    const teacher = getTeacherFromToken(req)
+    if (!teacher) return NextResponse.json({ error: 'Token invalid' }, { status: 401 })
+
+    // #3 FIX: Filter results by teacher's subject
     const results = await db.result.findMany({
+      where: { subject: teacher.subject },
       include: { student: true },
       orderBy: { completedAt: 'desc' },
     })
@@ -29,6 +38,7 @@ export async function GET() {
       completedAt: r.completedAt.toISOString(),
       isReleased: r.isReleased,
       releasedAt: r.releasedAt ? r.releasedAt.toISOString() : null,
+      subject: r.subject,
     }))
 
     const stats = {
@@ -43,7 +53,7 @@ export async function GET() {
       rataTotal: results.length
         ? Math.round((results.reduce((a, b) => a + b.totalScore, 0) / results.length) * 10) / 10
         : 0,
-      perKelas: ['7A', '7B', '7C', '8A', '8B', '8C', '9A', '9B'].map((k) => {
+      perKelas: ['7A', '7B', '7C', '8A', '8B', '8C', '9A', '9B', '11DKV', '12DKV'].map((k) => {
         const kelasResults = results.filter((r) => r.student.kelas === k)
         return {
           kelas: k,

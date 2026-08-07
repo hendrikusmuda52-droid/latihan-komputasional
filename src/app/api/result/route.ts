@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
       quizScore,
       quizDuration,
       totalScore,
+      subject,
     } = body
 
     if (!studentId) {
@@ -43,6 +44,7 @@ export async function POST(req: NextRequest) {
         quizTotal: quizTotal || 0,
         quizScore: quizScore || 0,
         totalScore: totalScore || 0,
+        subject: subject || 'Informatika',
       },
     })
 

@@ -95,9 +95,32 @@ model Material {
   targetKelas String   @default("ALL")
   targetJenjang String @default("ALL")
   category    String   @default("Umum")
+  tpId        String?  // link ke Tujuan Pembelajaran
   isActive    Boolean  @default(true)
   teacherId   String?
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Capaian Pembelajaran & Tujuan Pembelajaran
+model LearningObjective {
+  id          String   @id @default(cuid())
+  subject     String   @default("Informatika")
+  gradeLevel  String   // "7", "8", "9", "11DKV", "12DKV"
+  chapter     String   // bab/pokok bahasan
+  cp          String   // Capaian Pembelajaran (teks panjang)
+  tp          String   // Tujuan Pembelajaran (teks, bisa multiple dipisah newline)
+  isActive    Boolean  @default(true)
+  teacherId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// KKM per mapel
+model SubjectConfig {
+  id          String   @id @default(cuid())
+  subject     String   @unique
+  kkm         Float    @default(75) // Kriteria Ketuntasan Minimal
   updatedAt   DateTime @updatedAt
 }
 

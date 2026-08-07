@@ -76,6 +76,7 @@ function HomeContent() {
   }, [stage])
 
   // Stable callbacks (tidak recreate tiap render)
+  // #1 FIX: Tidak hapus cookie teacher saat switch ke student view
   const handleStudentLogin = useCallback((s: StudentInfo) => {
     setStudentSession(s)
     router.push('/?view=student-dashboard')
@@ -84,6 +85,7 @@ function HomeContent() {
   const handleStudentLogout = useCallback(() => {
     setStudentSession(null)
     router.push('/')
+    // TIDAK menghapus teacher_token cookie — admin/guru bisa kembali ke dashboard tanpa re-login
   }, [router])
 
   // Routing berdasarkan query param

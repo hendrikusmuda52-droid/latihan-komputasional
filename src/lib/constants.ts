@@ -71,14 +71,49 @@ export function getSubjectsByJenjang(jenjang: string): readonly string[] {
 // Subject categories untuk bank soal
 export const SUBJECT_CATEGORIES: Record<string, string[]> = {
   'Informatika': ['Dekomposisi', 'Pengenalan Pola', 'Abstraksi', 'Algoritma', 'Konsep Dasar', 'Internet', 'Etika Digital', 'Keamanan Digital', 'Kesehatan Digital'],
+  'DKV': ['Desain Grafis', 'Animasi', 'Fotografi', 'Videografi', 'Tipografi', 'Komposisi'],
   'Bahasa Indonesia': ['Membaca', 'Menulis', 'Berbicara', 'Mendengarkan', 'Sastra', 'EYD'],
   'Bahasa Inggris': ['Grammar', 'Vocabulary', 'Reading', 'Writing', 'Listening', 'Speaking'],
+  'Mandarin': ['Hanzi', 'Pinyin', 'Tata Bahasa', 'Kosakata', 'Budaya'],
   'Matematika': ['Aljabar', 'Geometri', 'Statistika', 'Aritmatika', 'Peluang'],
   'IPA': ['Fisika', 'Biologi', 'Kimia', 'Geologi'],
   'IPS': ['Sejarah', 'Geografi', 'Ekonomi', 'Sosiologi'],
+  'Seni Budaya': ['Seni Rupa', 'Seni Musik', 'Seni Tari', 'Seni Teater'],
+  'Agama': ['Alkitab', 'Moral', 'Ibadah', 'Sejarah Agama'],
+  'PLH': ['Lingkungan', 'Pencemaran', 'Konservasi', 'Energi'],
+  'KKA': ['Komunikasi', 'Kolaborasi', 'Kreativitas', 'Berpikir Kritis'],
+  'Kerohanian': ['Rohani', 'Doa', 'Iman', 'Pelayanan'],
+  'PkN': ['Pancasila', 'UUD', 'BHinneka', 'Negara'],
+  'Penjaskes': ['Olahraga', 'Kesehatan', 'Kebugaran', 'Permainan'],
   'default': ['Umum', 'Konsep Dasar', 'Latihan', 'Ulangan'],
 }
 
 export function getCategoriesForSubject(subject: string): string[] {
   return SUBJECT_CATEGORIES[subject] || SUBJECT_CATEGORIES['default']
+}
+
+// IT subjects yang punya fitur khusus (mengetik, game, dll)
+export const IT_SUBJECTS = ['Informatika', 'DKV']
+
+// Cek apakah subject punya fitur mengetik
+export function hasTypingFeature(subject: string): boolean {
+  return IT_SUBJECTS.includes(subject)
+}
+
+// Jenis tugas yang tersedia berdasarkan subject
+export function getTaskTypesForSubject(subject: string): Array<{ value: string; label: string }> {
+  if (IT_SUBJECTS.includes(subject)) {
+    return [
+      { value: 'typing_quiz', label: 'Mengetik + Soal HOTS' },
+      { value: 'quiz_only', label: 'Soal HOTS Saja' },
+      { value: 'typing_only', label: 'Mengetik Saja' },
+      { value: 'game', label: 'Game Interaktif (Benar/Salah)' },
+      { value: 'drawing', label: 'Tugas Menggambar / Peta Konsep' },
+    ]
+  }
+  // Non-IT: hanya soal dan menggambar
+  return [
+    { value: 'quiz_only', label: 'Soal HOTS Saja' },
+    { value: 'drawing', label: 'Tugas Menggambar / Peta Konsep' },
+  ]
 }

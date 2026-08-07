@@ -56,6 +56,7 @@ import {
   Lock,
   ClipboardList,
   Shield,
+  Target,
 } from 'lucide-react'
 import {
   BarChart,
@@ -82,6 +83,8 @@ import { AssignmentsManager } from './teacher/assignments-manager'
 import { MaterialsManager } from './teacher/materials-manager'
 import { GradeBook } from './teacher/grade-book'
 import { AdminManager } from './teacher/admin-manager'
+import { CPTPManager } from './teacher/cptp-manager'
+import { hasTypingFeature } from '@/lib/constants'
 
 interface ResultRow {
   id: string
@@ -348,6 +351,8 @@ export function TeacherDashboard() {
     return <TeacherLogin onLogin={setTeacher} />
   }
 
+  const isITSubject = hasTypingFeature(teacher.subject || 'Informatika')
+
   const menuItems = [
     { id: 'results', label: 'Hasil Latihan', icon: FileCheck },
     { id: 'grades', label: 'Daftar Nilai', icon: ClipboardList },
@@ -355,7 +360,9 @@ export function TeacherDashboard() {
     { id: 'assignments', label: 'Tugas', icon: FileText },
     { id: 'materials', label: 'Materi Belajar', icon: BookOpen },
     { id: 'questions', label: 'Bank Soal', icon: BookOpen },
-    { id: 'texts', label: 'Teks Bacaan', icon: FileText },
+    { id: 'cptp', label: 'CP & TP', icon: Target },
+    // #2: Teks Bacaan hanya untuk guru IT (Informatika/DKV)
+    ...(isITSubject ? [{ id: 'texts', label: 'Teks Bacaan', icon: FileText }] : []),
     ...(teacher.role === 'admin' ? [{ id: 'admin', label: 'Manajemen Pengguna', icon: Shield }] : []),
     { id: 'profile', label: 'Profil Akun', icon: UserCog },
   ]
@@ -823,6 +830,7 @@ export function TeacherDashboard() {
       {activeMenu === 'assignments' && <AssignmentsManager />}
       {activeMenu === 'materials' && <MaterialsManager />}
       {activeMenu === 'questions' && <QuestionBank />}
+      {activeMenu === 'cptp' && <CPTPManager />}
       {activeMenu === 'texts' && <TextManager />}
       {activeMenu === 'admin' && teacher.role === 'admin' && <AdminManager />}
       {activeMenu === 'profile' && (
