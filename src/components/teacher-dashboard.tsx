@@ -356,7 +356,7 @@ export function TeacherDashboard() {
     { id: 'materials', label: 'Materi Belajar', icon: BookOpen },
     { id: 'questions', label: 'Bank Soal', icon: BookOpen },
     { id: 'texts', label: 'Teks Bacaan', icon: FileText },
-    ...(teacher.role === 'admin' ? [{ id: 'admin', label: 'Manajemen Guru', icon: Shield }] : []),
+    ...(teacher.role === 'admin' ? [{ id: 'admin', label: 'Manajemen Pengguna', icon: Shield }] : []),
     { id: 'profile', label: 'Profil Akun', icon: UserCog },
   ]
 
