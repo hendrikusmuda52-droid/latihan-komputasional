@@ -22,22 +22,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Username atau password salah' }, { status: 401 })
     }
 
-    if (!teacher.isActive) {
-      return NextResponse.json({ error: 'Akun dinonaktifkan. Hubungi admin.' }, { status: 403 })
-    }
+    // Ambil role & subject, default ke nilai aman jika field tidak ada
+    const role = (teacher as Record<string, unknown>).role as string || 'teacher'
+    const subject = (teacher as Record<string, unknown>).subject as string || 'Informatika'
 
     const token = crypto.randomBytes(32).toString('hex')
     teacherSessions.set(token, {
       teacherId: teacher.id,
       username: teacher.username,
       name: teacher.name,
-      role: teacher.role,
-      subject: teacher.subject,
+      role,
+      subject,
     })
 
     const res = NextResponse.json({
       success: true,
-      teacher: { id: teacher.id, username: teacher.username, name: teacher.name, role: teacher.role, subject: teacher.subject },
+      teacher: { id: teacher.id, username: teacher.username, name: teacher.name, role, subject },
       token,
     })
     res.cookies.set('teacher_token', token, {
@@ -49,6 +49,6 @@ export async function POST(req: NextRequest) {
     return res
   } catch (error) {
     console.error('Login error:', error)
-    return NextResponse.json({ error: 'Gagal login' }, { status: 500 })
+    return NextResponse.json({ error: 'Gagal login: ' + (error instanceof Error ? error.message : 'Unknown') }, { status: 500 })
   }
 }
