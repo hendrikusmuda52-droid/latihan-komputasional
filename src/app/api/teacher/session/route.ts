@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
-import crypto from 'crypto'
 
-// Recreate sessions map (must match login route structure)
-// Note: in dev this won't share state with login route module instance,
-// so we use cookie token + DB check instead for robustness.
 export async function GET(req: NextRequest) {
   try {
     const token = req.cookies.get('teacher_token')?.value
@@ -12,12 +7,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ authenticated: false })
     }
 
-    // Untuk demo: kita simpan token di DB dengan tabel terpisah? Tidak ada.
-    // Pendekatan: hash token sebagai username lookup tidak aman.
-    // Solusi paling sederhana: simpan session di file/memory global.
-    // Karena Next.js dev mode reload, kita gunakan global cache.
     const g = globalThis as unknown as {
-      __teacherSessions?: Map<string, { teacherId: string; username: string; name: string }>
+      __teacherSessions?: Map<string, { teacherId: string; username: string; name: string; role: string; subject: string }>
     }
     if (!g.__teacherSessions) g.__teacherSessions = new Map()
     const session = g.__teacherSessions.get(token)
