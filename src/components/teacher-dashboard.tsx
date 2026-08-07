@@ -55,6 +55,7 @@ import {
   Send,
   Lock,
   ClipboardList,
+  Shield,
 } from 'lucide-react'
 import {
   BarChart,
@@ -80,6 +81,7 @@ import { StudentsManager } from './teacher/students-manager'
 import { AssignmentsManager } from './teacher/assignments-manager'
 import { MaterialsManager } from './teacher/materials-manager'
 import { GradeBook } from './teacher/grade-book'
+import { AdminManager } from './teacher/admin-manager'
 
 interface ResultRow {
   id: string
@@ -124,6 +126,8 @@ interface Teacher {
   id: string
   username: string
   name: string
+  role?: string
+  subject?: string
 }
 
 const COLORS = ['#10b981', '#14b8a6', '#f59e0b', '#ef4444', '#6366f1']
@@ -352,6 +356,7 @@ export function TeacherDashboard() {
     { id: 'materials', label: 'Materi Belajar', icon: BookOpen },
     { id: 'questions', label: 'Bank Soal', icon: BookOpen },
     { id: 'texts', label: 'Teks Bacaan', icon: FileText },
+    ...(teacher.role === 'admin' ? [{ id: 'admin', label: 'Manajemen Guru', icon: Shield }] : []),
     { id: 'profile', label: 'Profil Akun', icon: UserCog },
   ]
 
@@ -400,6 +405,8 @@ export function TeacherDashboard() {
             <p className="text-xs text-slate-400">Login sebagai:</p>
             <p className="text-sm font-semibold truncate">{teacher.name}</p>
             <p className="text-xs text-slate-500">@{teacher.username}</p>
+            {teacher.role === 'admin' && <p className="text-xs text-red-400 mt-1">🔴 Admin</p>}
+            {teacher.subject && <p className="text-xs text-emerald-400 mt-0.5">📚 {teacher.subject}</p>}
           </div>
           <a href="/" className="block">
             <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
@@ -817,6 +824,7 @@ export function TeacherDashboard() {
       {activeMenu === 'materials' && <MaterialsManager />}
       {activeMenu === 'questions' && <QuestionBank />}
       {activeMenu === 'texts' && <TextManager />}
+      {activeMenu === 'admin' && teacher.role === 'admin' && <AdminManager />}
       {activeMenu === 'profile' && (
         <TeacherProfile teacher={teacher} onUpdated={setTeacher} />
       )}

@@ -11,13 +11,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { School, Lock, User, ArrowLeft, KeyRound } from 'lucide-react'
+import { School, Lock, User, ArrowLeft, KeyRound, BookOpen } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface Teacher {
   id: string
   username: string
   name: string
+  role?: string
+  subject?: string
 }
 
 export function TeacherLogin({ onLogin }: { onLogin: (t: Teacher) => void }) {
@@ -107,9 +109,10 @@ export function TeacherLogin({ onLogin }: { onLogin: (t: Teacher) => void }) {
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 flex items-start gap-2">
                 <KeyRound className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold mb-0.5">Akun demo:</p>
-                  <p>Username: <code className="bg-amber-100 px-1 rounded">guru</code></p>
+                  <p className="font-semibold mb-0.5">Akun Admin:</p>
+                  <p>Username: <code className="bg-amber-100 px-1 rounded">admin</code></p>
                   <p>Password: <code className="bg-amber-100 px-1 rounded">guru123</code></p>
+                  <p className="text-xs mt-1 text-amber-700">Admin bisa tambah guru mapel lain</p>
                 </div>
               </div>
 

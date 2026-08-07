@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import crypto from 'crypto'
 
-// Simpan session di globalThis agar konsisten antar route
 const g = globalThis as unknown as {
-  __teacherSessions?: Map<string, { teacherId: string; username: string; name: string }>
+  __teacherSessions?: Map<string, { teacherId: string; username: string; name: string; role: string; subject: string }>
 }
 if (!g.__teacherSessions) g.__teacherSessions = new Map()
 export const teacherSessions = g.__teacherSessions
@@ -13,20 +12,18 @@ export async function POST(req: NextRequest) {
   try {
     const { username, password } = await req.json()
     if (!username || !password) {
-      return NextResponse.json(
-        { error: 'Username dan password wajib diisi' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Username dan password wajib diisi' }, { status: 400 })
     }
 
     const hash = crypto.createHash('sha256').update(password).digest('hex')
     const teacher = await db.teacher.findUnique({ where: { username } })
 
     if (!teacher || teacher.password !== hash) {
-      return NextResponse.json(
-        { error: 'Username atau password salah' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Username atau password salah' }, { status: 401 })
+    }
+
+    if (!teacher.isActive) {
+      return NextResponse.json({ error: 'Akun dinonaktifkan. Hubungi admin.' }, { status: 403 })
     }
 
     const token = crypto.randomBytes(32).toString('hex')
@@ -34,11 +31,13 @@ export async function POST(req: NextRequest) {
       teacherId: teacher.id,
       username: teacher.username,
       name: teacher.name,
+      role: teacher.role,
+      subject: teacher.subject,
     })
 
     const res = NextResponse.json({
       success: true,
-      teacher: { id: teacher.id, username: teacher.username, name: teacher.name },
+      teacher: { id: teacher.id, username: teacher.username, name: teacher.name, role: teacher.role, subject: teacher.subject },
       token,
     })
     res.cookies.set('teacher_token', token, {

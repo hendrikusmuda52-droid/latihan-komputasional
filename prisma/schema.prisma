@@ -32,6 +32,9 @@ model Teacher {
   username  String   @unique
   password  String   // disimpan sebagai hash SHA-256
   name      String
+  role      String   @default("teacher") // "admin" atau "teacher"
+  subject   String   @default("Informatika") // mata pelajaran
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 }
 
