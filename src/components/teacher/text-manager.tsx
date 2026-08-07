@@ -46,7 +46,7 @@ interface TypingText {
   updatedAt: string
 }
 
-const GRADE_OPTIONS = ['7A', '7B', '7C', '8A', '8B', '8C', '9A', '9B']
+const GRADE_OPTIONS = ['7A', '7B', '7C', '8A', '8B', '8C', '9A', '9B', '11DKV', '12DKV']
 
 export function TextManager() {
   const [texts, setTexts] = useState<TypingText[]>([])

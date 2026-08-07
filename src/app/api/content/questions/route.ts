@@ -1,21 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
-// GET: ambil soal aktif untuk jenjang tertentu
-// ?grade=8 atau ?grade=9
+// GET: ambil soal aktif untuk jenjang + subject tertentu
+// ?grade=8&subject=Informatika
 export async function GET(req: NextRequest) {
   try {
     const grade = req.nextUrl.searchParams.get('grade')
-    if (!grade || !['7', '8', '9'].includes(grade)) {
-      return NextResponse.json({ error: 'Grade tidak valid' }, { status: 400 })
+    const subject = req.nextUrl.searchParams.get('subject') || 'Informatika'
+
+    if (!grade) {
+      return NextResponse.json({ error: 'Grade wajib diisi' }, { status: 400 })
     }
 
     const questions = await db.question.findMany({
-      where: { gradeLevel: grade, isActive: true },
+      where: { gradeLevel: grade, isActive: true, subject },
       orderBy: { createdAt: 'asc' },
     })
 
-    // Format ke struktur yang dipakai frontend
     const formatted = questions.map((q, i) => ({
       id: i + 1,
       dbId: q.id,

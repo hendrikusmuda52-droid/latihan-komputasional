@@ -19,19 +19,25 @@ export async function POST(req: NextRequest) {
 
     const role = (teacher as Record<string, unknown>).role as string || 'teacher'
     const subject = (teacher as Record<string, unknown>).subject as string || 'Informatika'
+    let kelasDiampu = (teacher as Record<string, unknown>).kelasDiampu as string || '7,8,9'
 
-    // Buat JWT token (stateless - tidak butuh memory)
+    // Admin otomatis mengampu Informatika (7,8,9) + KKA (8)
+    if (role === 'admin' && subject === 'Informatika') {
+      kelasDiampu = '7,8,9'
+    }
+
     const token = createTeacherToken({
       teacherId: teacher.id,
       username: teacher.username,
       name: teacher.name,
       role,
       subject,
+      kelasDiampu,
     })
 
     const res = NextResponse.json({
       success: true,
-      teacher: { id: teacher.id, username: teacher.username, name: teacher.name, role, subject },
+      teacher: { id: teacher.id, username: teacher.username, name: teacher.name, role, subject, kelasDiampu },
       token,
     })
     res.cookies.set('teacher_token', token, {

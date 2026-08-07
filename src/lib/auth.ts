@@ -11,6 +11,7 @@ export interface TeacherSession {
   name: string
   role: string
   subject: string
+  kelasDiampu: string
 }
 
 // Interface untuk student session data
@@ -91,6 +92,7 @@ export function getTeacherFromToken(req: NextRequest): TeacherSession | null {
     name: data.name as string,
     role: (data.role as string) || 'teacher',
     subject: (data.subject as string) || 'Informatika',
+    kelasDiampu: (data.kelasDiampu as string) || '7,8,9',
   }
 }
 

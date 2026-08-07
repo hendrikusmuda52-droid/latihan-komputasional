@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
-// GET: ambil teks mengetik aktif untuk kelas tertentu
-// ?grade=8A, 8B, 8C, 9A, 9B
+// GET: ambil teks mengetik aktif untuk kelas + subject tertentu
+// ?grade=8A&subject=Informatika
 export async function GET(req: NextRequest) {
   try {
     const grade = req.nextUrl.searchParams.get('grade')
+    const subject = req.nextUrl.searchParams.get('subject') || 'Informatika'
+
     if (!grade) {
       return NextResponse.json({ error: 'Grade wajib diisi' }, { status: 400 })
     }
 
     const text = await db.typingText.findFirst({
-      where: { gradeLevel: grade, isActive: true },
+      where: { gradeLevel: grade, isActive: true, subject },
       orderBy: { updatedAt: 'desc' },
     })
 

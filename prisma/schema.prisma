@@ -1,5 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// SAKOLA - Multi-Subject & Multi-Teacher Isolation Schema
 
 generator client {
   provider = "prisma-client-js"
@@ -15,129 +14,125 @@ model Student {
   id           String     @id @default(cuid())
   namaLengkap  String
   nisn         String     @unique
-  password     String     @default("") // hash SHA-256, kosong = belum diset
-  kelas        String
+  password     String     @default("")
+  kelas        String     // "7A", "8B", "9C", "11DKV", "12DKV"
+  jenjang      String     @default("SMP") // "SMP" atau "SMK"
   sekolah      String
   jenisKelamin String
-  isActive     Boolean    @default(true) // guru bisa nonaktifkan siswa
+  isActive     Boolean    @default(true)
   createdAt    DateTime   @default(now())
-
   results      Result[]
   progresses   Progress[]
   manualGrades ManualGrade[]
 }
 
 model Teacher {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String   // disimpan sebagai hash SHA-256
-  name      String
-  role      String   @default("teacher") // "admin" atau "teacher"
-  subject   String   @default("Informatika") // mata pelajaran
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  username    String   @unique
+  password    String
+  name        String
+  role        String   @default("teacher") // "admin", "teacher", "bendahara"
+  subject     String   @default("Informatika") // mata pelajaran utama
+  kelasDiampu String   @default("7,8,9") // comma-separated: "7,8,9" atau "11DKV,12DKV"
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
 }
 
 model Question {
   id            String   @id @default(cuid())
-  gradeLevel    String   // '7', '8', atau '9'
+  gradeLevel    String   // "7", "8", "9", "11DKV", "12DKV"
+  subject       String   @default("Informatika") // mata pelajaran
   question      String
   optionA       String
   optionB       String
   optionC       String
   optionD       String
-  correctAnswer Int      // 0-3
+  correctAnswer Int
   explanation   String
   category      String
   isActive      Boolean  @default(true)
-  imageUrl      String?  // URL atau base64 gambar soal (opsional)
+  imageUrl      String?
+  teacherId     String?  // guru yang membuat soal
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
 
 model TypingText {
   id           String   @id @default(cuid())
-  gradeLevel   String   // '8A', '8B', '8C', '9A', '9B'
+  gradeLevel   String
+  subject      String   @default("Informatika")
   title        String
   content      String
-  isStructured Boolean  @default(false) // true untuk kelas 9 (format markdown)
-  isActive     Boolean  @default(true)  // hanya 1 aktif per kelas yang dipakai
+  isStructured Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  teacherId    String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
 
-// Tugas/Assignment yang dibuat guru untuk siswa
 model Assignment {
-  id           String    @id @default(cuid())
-  title        String
-  description  String    @default("")
-  targetKelas  String    @default("ALL")
-  isActive     Boolean   @default(true)
-  dueDate      DateTime?
-  // Jenis latihan: "wajib" (sekali, butuh izin ulang) atau "persiapan" (unlimited)
-  exerciseType String    @default("wajib")
-  // Jumlah soal yang ditugaskan (0 = pakai semua soal aktif)
-  questionCount Int      @default(0)
-  // Jenis tugas: "typing_quiz" (default), "game", "drawing", "essay"
-  taskType     String    @default("typing_quiz")
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  title         String
+  description   String    @default("")
+  subject       String    @default("Informatika") // mata pelajaran
+  targetKelas   String    @default("ALL")
+  targetJenjang String    @default("ALL") // "SMP", "SMK", "ALL"
+  isActive      Boolean   @default(true)
+  dueDate       DateTime?
+  exerciseType  String    @default("wajib")
+  questionCount Int       @default(0)
+  taskType      String    @default("typing_quiz")
+  teacherId     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
-// Materi belajar untuk siswa
 model Material {
   id          String   @id @default(cuid())
   title       String
-  content     String   // konten materi (mendukung markdown)
+  content     String
+  subject     String   @default("Informatika")
   targetKelas String   @default("ALL")
-  category    String   @default("Umum") // kategori materi
+  targetJenjang String @default("ALL")
+  category    String   @default("Umum")
   isActive    Boolean  @default(true)
+  teacherId   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-// Nilai manual yang diinput guru (selain dari hasil latihan otomatis)
 model ManualGrade {
   id          String   @id @default(cuid())
   studentId   String
   student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  title       String   // nama penilaian, mis: "Ulangan Harian 1"
-  score       Float    // nilai 0-100
+  title       String
+  score       Float
   description String   @default("")
-  isReleased  Boolean  @default(false) // siswa hanya lihat jika dirilis
+  subject     String   @default("Informatika") // mapel yang dinilai
+  isReleased  Boolean  @default(false)
+  teacherId   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
   @@index([studentId])
 }
 
-// Progress pengerjaan siswa - untuk resume jika error/keluar aplikasi
 model Progress {
   id              String   @id @default(cuid())
   studentId       String
   student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  // Stage saat ini: 'typing' | 'typing-finished' | 'quiz' | 'completed'
   currentStage    String   @default("typing")
-
-  // Typing progress (auto-save)
   typedText       String   @default("")
   charCount       Int      @default(0)
   correctChars    Int      @default(0)
-  typingStartTime String   @default("") // ISO timestamp
-  typingDuration  Int      @default(0)  // detik
-
-  // Quiz progress (auto-save)
-  quizAnswers     String   @default("{}") // JSON {questionId: selectedIndex}
+  typingStartTime String   @default("")
+  typingDuration  Int      @default(0)
+  quizAnswers     String   @default("{}")
   quizStartTime   String   @default("")
   quizDuration    Int      @default(0)
-
-  // Status
   isCompleted     Boolean  @default(false)
   lastSavedAt     DateTime @default(now())
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-
   @@index([studentId])
 }
 
@@ -145,27 +140,20 @@ model Result {
   id              String   @id @default(cuid())
   studentId       String
   student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  // Typing test metrics
-  typedText       String   // teks yang berhasil diketik siswa
-  charCount       Int      // jumlah karakter yang diketik
-  correctChars    Int      // karakter yang benar (sesuai teks asli)
-  typingSpeedWPM  Float    // kecepatan mengetik (kata per menit)
-  typingAccuracy  Float    // akurasi (%)
-  typingDuration  Int      // durasi aktual mengetik (detik)
-  typingScore     Float    // nilai akhir typing (0-100)
-
-  // Quiz metrics
-  quizAnswers     String   // JSON array of {questionId, selectedAnswer}
-  quizCorrect     Int      // jumlah jawaban benar
-  quizTotal       Int      // total soal (30)
-  quizScore       Float    // nilai akhir quiz (0-100)
-
-  // Overall
-  totalScore      Float    // kombinasi (0-100)
+  typedText       String
+  charCount       Int
+  correctChars    Int
+  typingSpeedWPM  Float
+  typingAccuracy  Float
+  typingDuration  Int
+  typingScore     Float
+  quizAnswers     String
+  quizCorrect     Int
+  quizTotal       Int
+  quizScore       Float
+  totalScore      Float
+  subject         String   @default("Informatika") // mapel dari tugas
   completedAt     DateTime @default(now())
-
-  // Status rilis - guru yang kontrol kapan nilai terlihat siswa
   isReleased      Boolean  @default(false)
   releasedAt      DateTime?
 }

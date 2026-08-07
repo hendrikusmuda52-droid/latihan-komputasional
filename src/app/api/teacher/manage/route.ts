@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json()
-  const { username, password, name, role, subject } = body
+  const { username, password, name, role, subject, kelasDiampu } = body
 
   // Validasi
   if (!username || !password || !name) {

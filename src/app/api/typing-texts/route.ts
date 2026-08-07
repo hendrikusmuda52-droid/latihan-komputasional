@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { requireTeacherAuth } from '@/lib/auth'
+import { requireTeacherAuth, getTeacherFromToken } from '@/lib/auth'
 
 // Auth via stateless JWT - see @/lib/auth
 
@@ -10,8 +10,10 @@ export async function GET(req: NextRequest) {
     if (!(await requireTeacherAuth(req))) {
       return NextResponse.json({ error: 'Tidak terautentikasi' }, { status: 401 })
     }
+    const teacher = getTeacherFromToken(req)!
+    if (!teacher) return NextResponse.json({ error: 'Token invalid' }, { status: 401 })
     const grade = req.nextUrl.searchParams.get('grade')
-    const where = grade ? { gradeLevel: grade } : {}
+    const where = grade ? { gradeLevel: grade, subject: teacher.subject } : { subject: teacher.subject }
 
     const texts = await db.typingText.findMany({
       where,
@@ -30,6 +32,8 @@ export async function POST(req: NextRequest) {
     if (!(await requireTeacherAuth(req))) {
       return NextResponse.json({ error: 'Tidak terautentikasi' }, { status: 401 })
     }
+    const teacher = getTeacherFromToken(req)!
+    if (!teacher) return NextResponse.json({ error: 'Token invalid' }, { status: 401 })
     const body = await req.json()
     const { gradeLevel, title, content, isStructured, makeActive } = body
 

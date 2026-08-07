@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { requireTeacherAuth } from '@/lib/auth'
+import { requireTeacherAuth, getTeacherFromToken } from '@/lib/auth'
 
 // Auth via stateless JWT - see @/lib/auth
 
 export async function GET(req: NextRequest) {
   if (!(await requireTeacherAuth(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const kelas = req.nextUrl.searchParams.get('kelas')
-  const where = kelas && kelas !== 'ALL' ? { targetKelas: { contains: kelas } } : {}
+  const where = kelas && kelas !== "ALL" ? { targetKelas: { contains: kelas }, subject: teacher.subject } : { subject: teacher.subject }
   const materials = await db.material.findMany({ where, orderBy: { createdAt: 'desc' } })
   return NextResponse.json({ success: true, materials })
 }
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const { title, content, targetKelas, category, isActive } = await req.json()
   if (!title || !content) return NextResponse.json({ error: 'Judul dan isi wajib diisi' }, { status: 400 })
   const material = await db.material.create({
-    data: { title, content, targetKelas: targetKelas || 'ALL', category: category || 'Umum', isActive: isActive !== false }
+    data: { title, content, subject: teacher.subject, targetKelas: targetKelas || 'ALL', category: category || 'Umum', isActive: isActive !== false }
   })
   return NextResponse.json({ success: true, material })
 }

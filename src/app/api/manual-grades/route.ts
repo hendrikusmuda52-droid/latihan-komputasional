@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { requireTeacherAuth } from '@/lib/auth'
+import { requireTeacherAuth, getTeacherFromToken } from '@/lib/auth'
 
 // Auth via stateless JWT - see @/lib/auth
 
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   const kelas = req.nextUrl.searchParams.get('kelas')
   const studentId = req.nextUrl.searchParams.get('studentId')
   
-  let where: Record<string, unknown> = {}
+  let where: Record<string, unknown> = { subject: teacher.subject }
   if (studentId) where.studentId = studentId
   if (kelas && kelas !== 'ALL') {
     const students = await db.student.findMany({ where: { kelas }, select: { id: true } })

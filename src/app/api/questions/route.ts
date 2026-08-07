@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Tidak terautentikasi' }, { status: 401 })
   }
   const grade = req.nextUrl.searchParams.get('grade')
-  const where = grade ? { gradeLevel: grade } : {}
+  const where = grade ? { gradeLevel: grade, subject: teacher.subject } : { subject: teacher.subject }
 
   const questions = await db.question.findMany({
     where,
@@ -36,8 +36,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Jawaban benar harus 0-3' }, { status: 400 })
   }
 
+  const finalSubject = body.subject || teacher.subject
   const created = await db.question.create({
-    data: { gradeLevel, question, optionA, optionB, optionC, optionD, correctAnswer, explanation, category, isActive: true, imageUrl: imageUrl || null },
+    data: { gradeLevel, subject: finalSubject, question, optionA, optionB, optionC, optionD, correctAnswer, explanation, category, isActive: true, imageUrl: imageUrl || null, teacherId: teacher.teacherId },
   })
   return NextResponse.json({ success: true, question: created })
 }
