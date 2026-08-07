@@ -115,6 +115,7 @@ interface Stats {
   rataTyping: number
   rataQuiz: number
   rataTotal: number
+  rataHarian: number // #3 FIX: alias for rataTotal — used as "Capaian Nilai Harian Global" for non-IT subjects
   perKelas: {
     kelas: string
     jumlahSiswa: number
@@ -145,6 +146,10 @@ export function TeacherDashboard() {
   const [search, setSearch] = useState('')
   const [filterKelas, setFilterKelas] = useState<string>('ALL')
   const [filterSekolah, setFilterSekolah] = useState<string>('ALL')
+
+  // #3 FIX: compute isITSubject up here so the useMemo hooks below can read it without TDZ errors.
+  // Default to true (= Informatika) when teacher is not loaded yet; recomputed when teacher arrives.
+  const isITSubject = hasTypingFeature(teacher?.subject || 'Informatika')
 
   // Cek session guru saat mount
   useEffect(() => {
@@ -259,15 +264,17 @@ export function TeacherDashboard() {
   }, [results, search, filterKelas, filterSekolah])
 
   // Data untuk grafik: rata-rata per kelas
+  // #3 FIX: For non-IT subjects (where typing is not applicable), the "Mengetik" series
+  // is replaced with "Harian" (= rataTotal) so the chart still renders meaningfully.
   const chartKelasData = useMemo(() => {
     if (!stats) return []
     return stats.perKelas.map((k) => ({
       kelas: k.kelas,
-      Mengetik: k.rataTyping,
+      [isITSubject ? 'Mengetik' : 'Harian']: isITSubject ? k.rataTyping : k.rataTotal,
       Quiz: k.rataQuiz,
       Total: k.rataTotal,
     }))
-  }, [stats])
+  }, [stats, isITSubject])
 
   // Data untuk grafik: distribusi nilai
   const chartDistribusi = useMemo(() => {
@@ -289,35 +296,49 @@ export function TeacherDashboard() {
   }, [filtered])
 
   // Data untuk grafik: timeline (8 latihan terakhir berdasarkan waktu)
+  // #3 FIX: For non-IT subjects, "Mengetik" series is replaced with "Harian" (= totalScore).
   const chartTimeline = useMemo(() => {
     return [...filtered]
       .sort((a, b) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime())
       .slice(-10)
       .map((r, i) => ({
         label: `#${i + 1} ${r.namaLengkap.split(' ')[0]}`,
-        Mengetik: r.typingScore,
+        [isITSubject ? 'Mengetik' : 'Harian']: isITSubject ? r.typingScore : r.totalScore,
         Quiz: r.quizScore,
         Total: r.totalScore,
       }))
-  }, [filtered])
+  }, [filtered, isITSubject])
 
   const handleExportCSV = () => {
     if (filtered.length === 0) {
       toast.warning('Tidak ada data untuk diexport')
       return
     }
-    const headers = [
-      'No', 'Nama Lengkap', 'NISN', 'Kelas', 'Sekolah', 'Jenis Kelamin',
-      'Karakter Diketik', 'Karakter Benar', 'Kecepatan (WPM)', 'Akurasi (%)',
-      'Durasi Mengetik (detik)', 'Nilai Mengetik', 'Benar (Quiz)', 'Total Soal',
-      'Nilai Quiz', 'Nilai Akhir', 'Waktu Selesai',
-    ]
-    const rows = filtered.map((r, i) => [
-      i + 1, `"${r.namaLengkap}"`, r.nisn, r.kelas, `"${r.sekolah}"`, r.jenisKelamin,
-      r.charCount, r.correctChars, r.typingSpeedWPM, r.typingAccuracy,
-      r.typingDuration, r.typingScore, r.quizCorrect, r.quizTotal, r.quizScore,
-      r.totalScore, new Date(r.completedAt).toLocaleString('id-ID'),
-    ])
+    const headers = isITSubject
+      ? [
+          'No', 'Nama Lengkap', 'NISN', 'Kelas', 'Sekolah', 'Jenis Kelamin',
+          'Karakter Diketik', 'Karakter Benar', 'Kecepatan (WPM)', 'Akurasi (%)',
+          'Durasi Mengetik (detik)', 'Nilai Mengetik', 'Benar (Quiz)', 'Total Soal',
+          'Nilai Quiz', 'Nilai Akhir', 'Waktu Selesai',
+        ]
+      : [
+          'No', 'Nama Lengkap', 'NISN', 'Kelas', 'Sekolah', 'Jenis Kelamin',
+          'Benar (Quiz)', 'Total Soal', 'Nilai Quiz', 'Nilai Akhir', 'Waktu Selesai',
+        ]
+    const rows = filtered.map((r, i) =>
+      isITSubject
+        ? [
+            i + 1, `"${r.namaLengkap}"`, r.nisn, r.kelas, `"${r.sekolah}"`, r.jenisKelamin,
+            r.charCount, r.correctChars, r.typingSpeedWPM, r.typingAccuracy,
+            r.typingDuration, r.typingScore, r.quizCorrect, r.quizTotal, r.quizScore,
+            r.totalScore, new Date(r.completedAt).toLocaleString('id-ID'),
+          ]
+        : [
+            i + 1, `"${r.namaLengkap}"`, r.nisn, r.kelas, `"${r.sekolah}"`, r.jenisKelamin,
+            r.quizCorrect, r.quizTotal, r.quizScore, r.totalScore,
+            new Date(r.completedAt).toLocaleString('id-ID'),
+          ],
+    )
     const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -350,8 +371,6 @@ export function TeacherDashboard() {
   if (!teacher) {
     return <TeacherLogin onLogin={setTeacher} />
   }
-
-  const isITSubject = hasTypingFeature(teacher.subject || 'Informatika')
 
   const menuItems = [
     { id: 'results', label: 'Hasil Latihan', icon: FileCheck },
@@ -476,12 +495,18 @@ export function TeacherDashboard() {
               <p className="text-xs text-slate-400">latihan diselesaikan</p>
             </CardContent>
           </Card>
+          {/* #3 FIX: For IT subjects show "Rata-rata Mengetik"; for non-IT subjects (Matematika, IPS, etc.)
+              show "Capaian Nilai Harian Global" instead so the card never references a typing metric
+              that doesn't exist for that teacher. */}
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
-                <Type className="w-4 h-4" /> Rata-rata Mengetik
+                {isITSubject ? <Type className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
+                {isITSubject ? 'Rata-rata Mengetik' : 'Capaian Nilai Harian Global'}
               </div>
-              <p className="text-3xl font-bold text-emerald-600">{stats?.rataTyping ?? 0}</p>
+              <p className="text-3xl font-bold text-emerald-600">
+                {isITSubject ? (stats?.rataTyping ?? 0) : (stats?.rataHarian ?? 0)}
+              </p>
               <p className="text-xs text-slate-400">dari 100</p>
             </CardContent>
           </Card>
@@ -516,7 +541,8 @@ export function TeacherDashboard() {
                     <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
                     <Tooltip />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="Mengetik" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    {/* #3 FIX: dataKey is dynamic — "Mengetik" for IT subjects, "Harian" for non-IT */}
+                    <Bar dataKey={isITSubject ? 'Mengetik' : 'Harian'} fill="#10b981" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="Quiz" fill="#14b8a6" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="Total" fill="#6366f1" radius={[4, 4, 0, 0]} />
                   </BarChart>
@@ -578,7 +604,8 @@ export function TeacherDashboard() {
                   <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
                   <Tooltip />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Line type="monotone" dataKey="Mengetik" stroke="#10b981" strokeWidth={2} />
+                  {/* #3 FIX: dataKey is dynamic — "Mengetik" for IT subjects, "Harian" for non-IT */}
+                  <Line type="monotone" dataKey={isITSubject ? 'Mengetik' : 'Harian'} stroke="#10b981" strokeWidth={2} />
                   <Line type="monotone" dataKey="Quiz" stroke="#14b8a6" strokeWidth={2} />
                   <Line type="monotone" dataKey="Total" stroke="#6366f1" strokeWidth={2} />
                 </LineChart>
@@ -670,7 +697,7 @@ export function TeacherDashboard() {
                       <TableHead>Identitas Siswa</TableHead>
                       <TableHead>Kelas</TableHead>
                       <TableHead>Sekolah</TableHead>
-                      <TableHead className="text-center">Mengetik</TableHead>
+                      <TableHead className="text-center">{isITSubject ? 'Mengetik' : 'Harian'}</TableHead>
                       <TableHead className="text-center">Quiz</TableHead>
                       <TableHead className="text-center">Nilai Akhir</TableHead>
                       <TableHead className="text-center">Status Rilis</TableHead>
@@ -692,10 +719,17 @@ export function TeacherDashboard() {
                         </TableCell>
                         <TableCell className="text-xs text-slate-600 max-w-[200px] truncate">{r.sekolah}</TableCell>
                         <TableCell className="text-center">
-                          <div className={`font-bold ${getScoreColor(r.typingScore)}`}>{r.typingScore}</div>
-                          <div className="text-xs text-slate-400">
-                            {r.typingSpeedWPM} WPM • {r.typingAccuracy}%
-                          </div>
+                          {/* #3 FIX: For IT subjects show typing score; for non-IT show totalScore as "Harian". */}
+                          {isITSubject ? (
+                            <>
+                              <div className={`font-bold ${getScoreColor(r.typingScore)}`}>{r.typingScore}</div>
+                              <div className="text-xs text-slate-400">
+                                {r.typingSpeedWPM} WPM • {r.typingAccuracy}%
+                              </div>
+                            </>
+                          ) : (
+                            <div className={`font-bold ${getScoreColor(r.totalScore)}`}>{r.totalScore}</div>
+                          )}
                         </TableCell>
                         <TableCell className="text-center">
                           <div className={`font-bold ${getScoreColor(r.quizScore)}`}>{r.quizScore}</div>
@@ -799,11 +833,22 @@ export function TeacherDashboard() {
                 Tips Membaca Hasil
               </h3>
               <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside">
-                <li><strong>Nilai Mengetik</strong>: akurasi + kecepatan + rasio penyelesaian</li>
-                <li><strong>Nilai Quiz</strong>: jumlah benar / 30 soal × 100</li>
-                <li><strong>Nilai Akhir</strong>: 50% mengetik + 50% quiz</li>
+                {/* #3 FIX: For non-IT subjects, replace typing-related tips with generic ones. */}
+                {isITSubject ? (
+                  <>
+                    <li><strong>Nilai Mengetik</strong>: akurasi + kecepatan + rasio penyelesaian</li>
+                    <li><strong>Nilai Quiz</strong>: jumlah benar / 30 soal × 100</li>
+                    <li><strong>Nilai Akhir</strong>: 50% mengetik + 50% quiz</li>
+                    <li>WPM ideal siswa SMP: 30-50. Akurasi ideal: ≥95%</li>
+                  </>
+                ) : (
+                  <>
+                    <li><strong>Capaian Nilai Harian Global</strong>: rata-rata semua nilai latihan</li>
+                    <li><strong>Nilai Quiz</strong>: jumlah benar / total soal × 100</li>
+                    <li><strong>Nilai Akhir</strong>: gabungan nilai harian daring + luring</li>
+                  </>
+                )}
                 <li>Grade A (≥80), B (70-79), C (60-69), D (50-59), E (&lt;50)</li>
-                <li>WPM ideal siswa SMP: 30-50. Akurasi ideal: ≥95%</li>
               </ul>
             </CardContent>
           </Card>

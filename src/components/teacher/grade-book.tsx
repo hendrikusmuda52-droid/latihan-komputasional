@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { RefreshCw, Plus, ClipboardList, Send, Lock, Settings, AlertTriangle, TrendingUp } from 'lucide-react'
+import { RefreshCw, Plus, ClipboardList, Send, Lock, Settings, AlertTriangle, TrendingUp, Save, PencilLine } from 'lucide-react'
 import { toast } from 'sonner'
 import { ALL_GRADES } from '@/lib/constants'
 
@@ -21,6 +21,15 @@ interface CalcResult {
 interface Config { kkm: number; bobotNH: number; bobotUTS: number; bobotUAS: number }
 interface Bab { id: string; chapter: string; bobotTugas: number; bobotUH: number }
 
+// Row state for bulk manual grade input form
+interface BulkRow {
+  studentId: string
+  tugas: string   // Tugas Manual (offline)
+  uh: string      // Nilai Ujian Bab (offline)
+  uts: string     // Nilai Mid (offline)
+  uas: string     // Nilai Akhir (offline)
+}
+
 export function GradeBook() {
   const [students, setStudents] = useState<Student[]>([])
   const [calcResults, setCalcResults] = useState<CalcResult[]>([])
@@ -31,6 +40,13 @@ export function GradeBook() {
   const [showAddGrade, setShowAddGrade] = useState(false)
   const [showConfig, setShowConfig] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+
+  // #2 FIX: Bulk input form state
+  const [bulkKelas, setBulkKelas] = useState<string>('')          // selected class for the bulk form
+  const [bulkRows, setBulkRows] = useState<BulkRow[]>([])
+  const [bulkBabId, setBulkBabId] = useState<string>('')           // optional: assign tugas/uh to a specific bab
+  const [bulkSaving, setBulkSaving] = useState(false)
+  const [bulkStudents, setBulkStudents] = useState<Student[]>([])
 
   const fetchData = async () => {
     setLoading(true)
@@ -57,6 +73,67 @@ export function GradeBook() {
   }, [calcResults])
 
   const remidiCount = calcResults.filter(r => r.status === 'Remedi').length
+
+  // #2 FIX: When a class is selected in the bulk form, fetch students for that class and seed empty rows.
+  const handleBulkKelasChange = useCallback(async (kelas: string) => {
+    setBulkKelas(kelas)
+    if (!kelas || kelas === 'ALL') { setBulkRows([]); setBulkStudents([]); return }
+    try {
+      const res = await fetch(`/api/teacher/students?kelas=${kelas}`)
+      const data = await res.json()
+      if (data.success) {
+        setBulkStudents(data.students)
+        // Seed one row per student with empty inputs
+        setBulkRows(data.students.map((s: Student) => ({
+          studentId: s.id, tugas: '', uh: '', uts: '', uas: '',
+        })))
+      }
+    } catch { toast.error('Gagal memuat siswa untuk kelas ini') }
+  }, [])
+
+  const updateBulkRow = (studentId: string, field: keyof Omit<BulkRow, 'studentId'>, value: string) => {
+    setBulkRows(prev => prev.map(r => r.studentId === studentId ? { ...r, [field]: value } : r))
+  }
+
+  // #2 FIX: Collect all non-empty inputs and POST as a single bulk request.
+  const handleBulkSave = async () => {
+    const grades: Array<{ studentId: string; score: number; gradeType: string; babId?: string | null; title?: string }> = []
+    for (const row of bulkRows) {
+      const push = (val: string, gradeType: string, title: string) => {
+        const n = parseFloat(val)
+        if (val !== '' && !isNaN(n) && n >= 0 && n <= 100) {
+          grades.push({ studentId: row.studentId, score: n, gradeType, babId: bulkBabId || null, title })
+        }
+      }
+      push(row.tugas, 'tugas', 'Tugas Manual (Luring)')
+      push(row.uh, 'uh', 'Ulangan Harian (Luring)')
+      push(row.uts, 'uts', 'Ulangan Tengah Semester (Luring)')
+      push(row.uas, 'uas', 'Ulangan Akhir Semester (Luring)')
+    }
+
+    if (grades.length === 0) { toast.warning('Tidak ada nilai yang diisi'); return }
+
+    setBulkSaving(true)
+    try {
+      const res = await fetch('/api/manual-grades', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ grades, isReleased: true }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Gagal menyimpan')
+      toast.success(`${data.count || grades.length} nilai manual berhasil disimpan`)
+      // Clear inputs after successful save
+      setBulkRows(prev => prev.map(r => ({ ...r, tugas: '', uh: '', uts: '', uas: '' })))
+      // Refresh calc table
+      fetchData()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Gagal menyimpan nilai')
+    } finally { setBulkSaving(false) }
+  }
+
+  const bulkFilledCount = useMemo(() => {
+    return bulkRows.reduce((acc, r) => acc + ['tugas', 'uh', 'uts', 'uas'].filter(k => r[k as keyof BulkRow] !== '').length, 0)
+  }, [bulkRows])
 
   return (
     <div className="space-y-4">
@@ -88,6 +165,136 @@ export function GradeBook() {
         </CardContent>
       </Card>
 
+      {/* #2 FIX: BULK MANUAL GRADE INPUT FORM */}
+      <Card className="border-slate-900 shadow-md">
+        <CardHeader className="bg-slate-900 text-white pb-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <CardTitle className="flex items-center gap-2 text-base text-white">
+              <PencilLine className="w-4 h-4 text-emerald-400" /> Input Nilai Manual (Luring)
+            </CardTitle>
+            {/* Big black save button in the top-right corner */}
+            <Button
+              size="sm"
+              className="bg-black hover:bg-slate-800 text-white border border-white/20"
+              onClick={handleBulkSave}
+              disabled={bulkSaving || bulkRows.length === 0}
+            >
+              <Save className="w-4 h-4 mr-1" />
+              {bulkSaving ? 'Menyimpan...' : 'Simpan Nilai Manual'}
+            </Button>
+          </div>
+          <p className="text-xs text-slate-300 mt-2">
+            Pilih kelas untuk memunculkan daftar siswa. Isi kolom nilai (0-100) sesuai jenis penilaian.
+            Kosongkan kolom yang tidak diisi. Bobot nilai per-bab & NH/UTS/UAS dihitung otomatis.
+          </p>
+        </CardHeader>
+        <CardContent className="pt-4 space-y-3">
+          {/* Filter row */}
+          <div className="grid md:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Pilih Kelas *</Label>
+              <Select value={bulkKelas} onValueChange={handleBulkKelasChange}>
+                <SelectTrigger><SelectValue placeholder="— Pilih Kelas —" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL" disabled>Pilih kelas dulu</SelectItem>
+                  {ALL_GRADES.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Bab (opsional — untuk Tugas & UH)</Label>
+              <Select value={bulkBabId} onValueChange={setBulkBabId}>
+                <SelectTrigger><SelectValue placeholder="— Tanpa Bab (umum) —" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">— Tanpa Bab (umum) —</SelectItem>
+                  {babs.map(b => <SelectItem key={b.id} value={b.id}>{b.chapter}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Bulk input table */}
+          {!bulkKelas || bulkKelas === 'ALL' ? (
+            <div className="py-12 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-lg">
+              <ClipboardList className="w-10 h-10 mx-auto mb-2 opacity-40" />
+              <p className="text-sm font-medium">Pilih kelas di atas untuk memunculkan tabel siswa</p>
+              <p className="text-xs mt-1">Tabel akan terisi otomatis dengan nama-nama siswa yang terdaftar di kelas tersebut</p>
+            </div>
+          ) : bulkStudents.length === 0 ? (
+            <div className="py-12 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-lg">
+              <p className="text-sm font-medium">Belum ada siswa terdaftar di kelas {bulkKelas}</p>
+              <p className="text-xs mt-1">Tambahkan siswa lewat menu "Data Siswa" terlebih dahulu</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-600">Menampilkan <strong>{bulkStudents.length}</strong> siswa dari kelas <Badge variant="outline">{bulkKelas}</Badge></span>
+                <span className="text-slate-500">{bulkFilledCount} nilai terisi</span>
+              </div>
+              <div className="overflow-x-auto max-h-[450px] overflow-y-auto border border-slate-200 rounded-lg">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-slate-100 z-10">
+                    <TableRow>
+                      <TableHead className="w-10">No</TableHead>
+                      <TableHead>Nama Siswa</TableHead>
+                      <TableHead className="text-center w-32">Tugas Manual</TableHead>
+                      <TableHead className="text-center w-32">Nilai Ujian Bab</TableHead>
+                      <TableHead className="text-center w-28">Nilai Mid (UTS)</TableHead>
+                      <TableHead className="text-center w-28">Nilai Akhir (UAS)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {bulkStudents.map((s, i) => {
+                      const row = bulkRows.find(r => r.studentId === s.id)
+                      if (!row) return null
+                      return (
+                        <TableRow key={s.id}>
+                          <TableCell className="text-slate-400 text-xs">{i + 1}</TableCell>
+                          <TableCell>
+                            <div className="font-medium text-slate-900">{s.namaLengkap}</div>
+                            <div className="text-xs text-slate-500">NISN: {s.nisn}</div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Input type="number" min="0" max="100" placeholder="—" value={row.tugas}
+                              onChange={e => updateBulkRow(s.id, 'tugas', e.target.value)}
+                              className="w-20 mx-auto text-center" />
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Input type="number" min="0" max="100" placeholder="—" value={row.uh}
+                              onChange={e => updateBulkRow(s.id, 'uh', e.target.value)}
+                              className="w-20 mx-auto text-center" />
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Input type="number" min="0" max="100" placeholder="—" value={row.uts}
+                              onChange={e => updateBulkRow(s.id, 'uts', e.target.value)}
+                              className="w-20 mx-auto text-center" />
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Input type="number" min="0" max="100" placeholder="—" value={row.uas}
+                              onChange={e => updateBulkRow(s.id, 'uas', e.target.value)}
+                              className="w-20 mx-auto text-center" />
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  className="bg-black hover:bg-slate-800 text-white"
+                  onClick={handleBulkSave}
+                  disabled={bulkSaving || bulkRows.length === 0 || bulkFilledCount === 0}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {bulkSaving ? 'Menyimpan...' : `Simpan ${bulkFilledCount} Nilai Manual`}
+                </Button>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Tabel Nilai Akhir */}
       <Card>
         <CardHeader className="bg-slate-50 pb-3">
@@ -105,7 +312,7 @@ export function GradeBook() {
           </div>
           <p className="text-xs text-slate-500 mt-2">
             NA = (NH × {config.bobotNH}%) + (UTS × {config.bobotUTS}%) + (UAS × {config.bobotUAS}%). NH = rata-rata nilai per bab.
-            Tugas daring otomatis masuk. Klik "Input Nilai" untuk input luring (UH/UTS/UAS).
+            Tugas daring otomatis masuk. Klik "Input Nilai" untuk input luring (UH/UTS/UAS) per siswa.
           </p>
         </CardHeader>
         <CardContent className="pt-0">
@@ -204,6 +411,19 @@ function ConfigDialog({ config, babs, onClose, onSaved }: { config: Config; babs
           <div className={`p-2 rounded-lg text-center text-sm font-bold ${Math.abs(total - 100) < 0.01 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
             Total: {total}% {Math.abs(total - 100) < 0.01 ? '✓' : '(harus 100%)'}
           </div>
+          {babs.length > 0 && (
+            <div className="border-t pt-2">
+              <Label className="text-xs font-semibold">Bobot per Bab (diatur di menu CP & TP):</Label>
+              <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
+                {babs.map(b => (
+                  <div key={b.id} className="flex justify-between text-xs bg-slate-50 px-2 py-1 rounded">
+                    <span className="truncate">{b.chapter}</span>
+                    <span className="text-slate-500">Tugas {b.bobotTugas}% • UH {b.bobotUH}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <DialogFooter><Button variant="outline" onClick={onClose}>Batal</Button><Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">{saving ? 'Menyimpan...' : 'Simpan'}</Button></DialogFooter>
       </DialogContent>
