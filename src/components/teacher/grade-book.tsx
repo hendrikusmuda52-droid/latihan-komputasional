@@ -92,9 +92,12 @@ function GradeBookInner() {
   const [showConfig, setShowConfig] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
 
-  const [bulkKelas, setBulkKelas] = useState<string>('')
+  // HOTFIX #1: bulkKelas and bulkBabId must NEVER be "" — Radix UI <Select> throws
+  // "A <Select.Item /> must have a value prop that is not an empty string".
+  // Use the "__none__" sentinel as the initial value (means "nothing selected yet").
+  const [bulkKelas, setBulkKelas] = useState<string>('__none__')
   const [bulkRows, setBulkRows] = useState<BulkRow[]>([])
-  const [bulkBabId, setBulkBabId] = useState<string>('')
+  const [bulkBabId, setBulkBabId] = useState<string>('__none__')
   const [bulkSaving, setBulkSaving] = useState(false)
   const [bulkStudents, setBulkStudents] = useState<Student[]>([])
 
@@ -158,7 +161,8 @@ function GradeBookInner() {
   // HOTFIX #3: try-catch + fallback arrays for the bulk class loader.
   const handleBulkKelasChange = useCallback(async (kelas: string) => {
     setBulkKelas(kelas)
-    if (!kelas || kelas === 'ALL') { setBulkRows([]); setBulkStudents([]); return }
+    // HOTFIX #1: treat __none__ and ALL the same way — both mean "no class selected".
+    if (!kelas || kelas === 'ALL' || kelas === '__none__') { setBulkRows([]); setBulkStudents([]); return }
     try {
       const res = await fetch(`/api/teacher/students?kelas=${kelas}`)
       const data = await res.json()
@@ -182,11 +186,13 @@ function GradeBookInner() {
   // HOTFIX #3: try-catch around the bulk save flow.
   const handleBulkSave = useCallback(async () => {
     const grades: Array<{ studentId: string; score: number; gradeType: string; babId?: string | null; title?: string }> = []
+    // HOTFIX #1: Convert "__none__" sentinel back to null before posting.
+    const effectiveBabId = bulkBabId && bulkBabId !== '__none__' ? bulkBabId : null
     for (const row of (bulkRows || [])) {
       const push = (val: string, gradeType: string, title: string) => {
         const n = parseFloat(val)
         if (val !== '' && !isNaN(n) && n >= 0 && n <= 100) {
-          grades.push({ studentId: row.studentId, score: n, gradeType, babId: bulkBabId || null, title })
+          grades.push({ studentId: row.studentId, score: n, gradeType, babId: effectiveBabId, title })
         }
       }
       push(row.tugas, 'tugas', 'Tugas Manual (Luring)')
@@ -287,7 +293,8 @@ function GradeBookInner() {
               <Select value={bulkKelas} onValueChange={handleBulkKelasChange}>
                 <SelectTrigger><SelectValue placeholder="— Pilih Kelas —" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL" disabled>Pilih kelas dulu</SelectItem>
+                  {/* HOTFIX #1: Radix UI forbids value="" — use __none__ sentinel for the placeholder */}
+                  <SelectItem value="__none__" disabled>— Pilih Kelas —</SelectItem>
                   {SAFE_GRADES.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -297,16 +304,19 @@ function GradeBookInner() {
               <Select value={bulkBabId} onValueChange={setBulkBabId}>
                 <SelectTrigger><SelectValue placeholder="— Tanpa Bab (umum) —" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">— Tanpa Bab (umum) —</SelectItem>
-                  {/* HOTFIX #2: optional chaining + fallback [] */}
-                  {(safeBabs || []).map(b => <SelectItem key={b.id} value={b.id}>{b.chapter}</SelectItem>)}
+                  {/* HOTFIX #1: Radix UI forbids value="" — must use a non-empty sentinel.
+                      We use "__none__" and convert it back to "" in handleBulkSave. */}
+                  <SelectItem value="__none__">— Tanpa Bab (umum) —</SelectItem>
+                  {/* HOTFIX #2: optional chaining + fallback [] + per-item null guard */}
+                  {(safeBabs || []).map(b => b?.id ? <SelectItem key={b.id} value={b.id}>{b.chapter || '(tanpa judul)'}</SelectItem> : null)}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           {/* Bulk input table */}
-          {!bulkKelas || bulkKelas === 'ALL' ? (
+          {/* HOTFIX #1: __none__ is the sentinel for "nothing selected" — same as 'ALL'/empty */}
+          {!bulkKelas || bulkKelas === 'ALL' || bulkKelas === '__none__' ? (
             <div className="py-12 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-lg">
               <ClipboardList className="w-10 h-10 mx-auto mb-2 opacity-40" />
               <p className="text-sm font-medium">Pilih kelas di atas untuk memunculkan tabel siswa</p>
@@ -601,9 +611,13 @@ function AddGradeDialog({ student, babs, onClose, onSaved }: { student: Student;
           {(form.gradeType === 'tugas' || form.gradeType === 'uh') && (
             <div className="space-y-1">
               <Label className="text-xs">Bab (CP/TP)</Label>
-              <Select value={form.babId} onValueChange={(v) => setForm({ ...form, babId: v })}>
+              <Select value={form.babId || '__none__'} onValueChange={(v) => setForm({ ...form, babId: v === '__none__' ? '' : v })}>
                 <SelectTrigger><SelectValue placeholder="Pilih bab..." /></SelectTrigger>
-                <SelectContent>{safeBabs.map(b => <SelectItem key={b.id} value={b.id}>{b.chapter} (Tugas {b.bobotTugas ?? 0}% / UH {b.bobotUH ?? 0}%)</SelectItem>)}</SelectContent>
+                <SelectContent>
+                  {/* HOTFIX #1: Radix UI forbids value="" — use __none__ sentinel */}
+                  <SelectItem value="__none__">— Tanpa Bab (umum) —</SelectItem>
+                  {safeBabs.map(b => b?.id ? <SelectItem key={b.id} value={b.id}>{b.chapter || '(tanpa judul)'} (Tugas {b.bobotTugas ?? 0}% / UH {b.bobotUH ?? 0}%)</SelectItem> : null)}
+                </SelectContent>
               </Select>
             </div>
           )}

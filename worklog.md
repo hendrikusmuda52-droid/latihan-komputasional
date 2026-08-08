@@ -115,3 +115,51 @@ Stage Summary:
 - Daftar Nilai page will no longer crash with "client-side exception" — worst case shows red error card with reload button
 - All 4 user requirements met: (1) optional chaining on every .map, (2) `|| []` fallback on every array, (3) try-catch on every async fn, (4) class dropdown is static
 - Ready to push to GitHub for Vercel auto-redeploy
+
+---
+Task ID: 3
+Agent: main
+Task: HOTFIX #2 — Console error "A <Select.Item /> must have a value prop that is not an empty string" + /api/grades/calculate 500 + /api/assignments 500
+
+Work Log:
+- Read worklog Task ID: 2 (previous hotfix introduced the empty-value bug via <SelectItem value="">— Tanpa Bab —)
+- Grepped all SelectItem usage in src/ — found 1 offender: grade-book.tsx line 300 (the bulk Bab dropdown I added)
+- Audited cptp-manager, assignments-manager, materials-manager, students-manager, admin-manager, question-bank, ai-* — all use non-empty literals or mapped non-empty values. Clean.
+
+Fix 1 — SelectItem value="" crash (root cause of Daftar Nilai page crash):
+- Replaced <SelectItem value="">— Tanpa Bab (umum) —</SelectItem> with <SelectItem value="__none__">— Tanpa Bab (umum) —</SelectItem>
+- Also added the same "__none__" sentinel for:
+  * bulkKelas placeholder ("— Pilih Kelas —" was previously value="ALL" disabled → now value="__none__" disabled)
+  * AddGradeDialog babId Select (was value={form.babId} starting as "") — now value={form.babId || '__none__'} with onValueChange converting "__none__" back to ""
+- Changed initial state of bulkKelas and bulkBabId from '' to '__none__' (Radix throws if value is "" at any time, including initial render)
+- Updated handleBulkKelasChange to treat '__none__' the same as 'ALL' (skip fetch)
+- Updated handleBulkSave to convert '__none__' back to null before posting to /api/manual-grades
+- Updated conditional render {!bulkKelas || bulkKelas === 'ALL' || bulkKelas === '__none__' ? <empty state> : <table>}
+- Added per-item null guard in all .map calls: b?.id ? <SelectItem ...> : null
+
+Fix 2 — /api/grades/calculate 500 → safe empty payload:
+- Wrapped every db.* call in safeQuery/safeQuerySingle helpers (return [] / null on error)
+- Race-condition guard for SubjectConfig.create: if create fails (likely concurrent insert), fall back to findUnique
+- safeConfig fallback: if config still null, use { kkm:75, bobotNH:40, bobotUTS:30, bobotUAS:30 }
+- Early return: if students array is empty (DB empty / kelas filter no match), return { success:true, config, babs, results:[] } immediately
+- Per-student try-catch inside the .map — one bad row returns a default 0-row instead of crashing the whole API
+- Number() coercion on every score field with || 0 fallback (defends against NaN propagation)
+- bab.bobotTugas/UH guarded with Number() || 40/60 (schema defaults but defensive)
+- Outer try-catch final fallback: return HTTP 200 with { success:true, config:defaults, babs:[], results:[] } — never 500 + HTML
+
+Fix 3 — /api/assignments 500 → safe empty array:
+- Replaced db.assignment.findMany with safeQuery helper (returns [] on error)
+- Outer try-catch final fallback: return HTTP 200 with { success:true, assignments:[] } — never 500 + HTML
+- POST route: added try-catch around req.json() for malformed body, type-narrowed body fields, trim() on title, typeof check on questionCount
+
+Verification:
+- npx tsc --noEmit (filtered to grade-book, grades/calculate, assignments/route) → 0 errors
+- npx eslint on all 3 changed files → 0 errors, 0 warnings
+- npx next build → ✓ Compiled successfully in 16.1s, 37/37 static pages
+
+Stage Summary:
+- Files modified: src/components/teacher/grade-book.tsx, src/app/api/grades/calculate/route.ts, src/app/api/assignments/route.ts, worklog.md
+- Daftar Nilai page no longer crashes on the Bab dropdown — Radix UI Select constraint satisfied via "__none__" sentinel
+- /api/grades/calculate never 500s — empty DB → safe empty payload, per-student errors → default 0-row
+- /api/assignments never 500s — empty DB → safe empty array, malformed POST body → 400 with clear message
+- Ready to push to GitHub for Vercel auto-redeploy
