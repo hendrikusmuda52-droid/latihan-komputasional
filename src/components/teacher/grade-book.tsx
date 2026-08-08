@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { Component, useEffect, useState, useMemo, useCallback, ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { RefreshCw, Plus, ClipboardList, Send, Lock, Settings, AlertTriangle, TrendingUp, Save, PencilLine } from 'lucide-react'
+import { RefreshCw, Plus, ClipboardList, Settings, AlertTriangle, TrendingUp, Save, PencilLine } from 'lucide-react'
 import { toast } from 'sonner'
 import { ALL_GRADES } from '@/lib/constants'
 
@@ -21,19 +21,70 @@ interface CalcResult {
 interface Config { kkm: number; bobotNH: number; bobotUTS: number; bobotUAS: number }
 interface Bab { id: string; chapter: string; bobotTugas: number; bobotUH: number }
 
-// Row state for bulk manual grade input form
 interface BulkRow {
   studentId: string
-  tugas: string   // Tugas Manual (offline)
-  uh: string      // Nilai Ujian Bab (offline)
-  uts: string     // Nilai Mid (offline)
-  uas: string     // Nilai Akhir (offline)
+  tugas: string
+  uh: string
+  uts: string
+  uas: string
+}
+
+const DEFAULT_CONFIG: Config = { kkm: 75, bobotNH: 40, bobotUTS: 30, bobotUAS: 30 }
+const SAFE_GRADES = (ALL_GRADES || []) as readonly string[]
+
+/**
+ * HOTFIX #1: Proper React Error Boundary class — the ONLY correct way to catch
+ * render-time exceptions in React. Wrapping JSX in try/catch does NOT work
+ * because React renders asynchronously; this class catches the errors via
+ * the lifecycle method getDerivedStateFromError + componentDidCatch.
+ */
+interface ErrorBoundaryState { hasError: boolean; message: string }
+class GradeBookErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
+  constructor(props: { children: ReactNode }) {
+    super(props)
+    this.state = { hasError: false, message: '' }
+  }
+
+  static getDerivedStateFromError(err: unknown): ErrorBoundaryState {
+    return { hasError: true, message: err instanceof Error ? err.message : 'Unknown error' }
+  }
+
+  componentDidCatch(err: unknown, info: unknown) {
+    console.error('[GradeBook] render crashed:', err, info)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-6 text-center">
+            <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-red-500" />
+            <p className="text-sm font-semibold text-red-700">Komponen Daftar Nilai gagal dimuat</p>
+            <p className="text-xs text-red-500 mt-1">{this.state.message}</p>
+            <Button size="sm" variant="outline" className="mt-3" onClick={() => window.location.reload()}>
+              <RefreshCw className="w-3 h-3 mr-1" />Muat Ulang
+            </Button>
+          </CardContent>
+        </Card>
+      )
+    }
+    return this.props.children
+  }
 }
 
 export function GradeBook() {
+  return (
+    <GradeBookErrorBoundary>
+      <GradeBookInner />
+    </GradeBookErrorBoundary>
+  )
+}
+
+function GradeBookInner() {
+  // HOTFIX #2: All arrays default to [] — never null/undefined.
   const [students, setStudents] = useState<Student[]>([])
   const [calcResults, setCalcResults] = useState<CalcResult[]>([])
-  const [config, setConfig] = useState<Config>({ kkm: 75, bobotNH: 40, bobotUTS: 30, bobotUAS: 30 })
+  const [config, setConfig] = useState<Config>(DEFAULT_CONFIG)
   const [babs, setBabs] = useState<Bab[]>([])
   const [loading, setLoading] = useState(true)
   const [filterKelas, setFilterKelas] = useState('ALL')
@@ -41,64 +92,97 @@ export function GradeBook() {
   const [showConfig, setShowConfig] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
 
-  // #2 FIX: Bulk input form state
-  const [bulkKelas, setBulkKelas] = useState<string>('')          // selected class for the bulk form
+  const [bulkKelas, setBulkKelas] = useState<string>('')
   const [bulkRows, setBulkRows] = useState<BulkRow[]>([])
-  const [bulkBabId, setBulkBabId] = useState<string>('')           // optional: assign tugas/uh to a specific bab
+  const [bulkBabId, setBulkBabId] = useState<string>('')
   const [bulkSaving, setBulkSaving] = useState(false)
   const [bulkStudents, setBulkStudents] = useState<Student[]>([])
 
-  const fetchData = async () => {
+  // HOTFIX #3: fetchData wrapped in outer try-catch; each fetch result guarded
+  // with optional chaining + fallback so a malformed API response never crashes.
+  const fetchData = useCallback(async () => {
     setLoading(true)
     try {
       const [studentsRes, calcRes] = await Promise.all([
-        fetch(`/api/teacher/students?kelas=${filterKelas}`).then(r => r.json()),
-        fetch(`/api/grades/calculate?kelas=${filterKelas !== 'ALL' ? filterKelas : ''}`).then(r => r.json()),
+        fetch(`/api/teacher/students?kelas=${filterKelas}`).then(r => r.json()).catch(() => ({ success: false, students: [] })),
+        fetch(`/api/grades/calculate?kelas=${filterKelas !== 'ALL' ? filterKelas : ''}`).then(r => r.json()).catch(() => ({ success: false })),
       ])
-      if (studentsRes.success) setStudents(studentsRes.students)
-      if (calcRes.success) {
-        setCalcResults(calcRes.results)
-        setConfig(calcRes.config)
-        setBabs(calcRes.babs || [])
+
+      // Defensive: never trust the shape — use ?? [] for arrays and ?? defaults for config.
+      if (studentsRes?.success && Array.isArray(studentsRes.students)) {
+        setStudents(studentsRes.students)
+      } else {
+        setStudents([])
       }
-    } catch { toast.error('Gagal memuat data') }
-    finally { setLoading(false) }
-  }
 
-  useEffect(() => { fetchData() }, [filterKelas])
+      if (calcRes?.success) {
+        setCalcResults(Array.isArray(calcRes.results) ? calcRes.results : [])
+        if (calcRes.config && typeof calcRes.config === 'object') {
+          setConfig({
+            kkm: typeof calcRes.config.kkm === 'number' ? calcRes.config.kkm : DEFAULT_CONFIG.kkm,
+            bobotNH: typeof calcRes.config.bobotNH === 'number' ? calcRes.config.bobotNH : DEFAULT_CONFIG.bobotNH,
+            bobotUTS: typeof calcRes.config.bobotUTS === 'number' ? calcRes.config.bobotUTS : DEFAULT_CONFIG.bobotUTS,
+            bobotUAS: typeof calcRes.config.bobotUAS === 'number' ? calcRes.config.bobotUAS : DEFAULT_CONFIG.bobotUAS,
+          })
+        }
+        setBabs(Array.isArray(calcRes.babs) ? calcRes.babs : [])
+      } else {
+        setCalcResults([])
+        setBabs([])
+      }
+    } catch (err) {
+      console.error('[GradeBook] fetchData error:', err)
+      // HOTFIX #3: silently keep empty arrays instead of throwing — toast only.
+      setStudents([])
+      setCalcResults([])
+      setBabs([])
+    } finally {
+      setLoading(false)
+    }
+  }, [filterKelas])
 
+  useEffect(() => { fetchData() }, [fetchData])
+
+  // HOTFIX #2: useMemo with fallback to [] so reduce/filter never throw on null.
   const classAvg = useMemo(() => {
-    if (calcResults.length === 0) return 0
-    return Math.round(calcResults.reduce((a, b) => a + b.NA, 0) / calcResults.length * 10) / 10
+    const arr = calcResults || []
+    if (arr.length === 0) return 0
+    return Math.round(arr.reduce((a, b) => a + (Number(b?.NA) || 0), 0) / arr.length * 10) / 10
   }, [calcResults])
 
-  const remidiCount = calcResults.filter(r => r.status === 'Remedi').length
+  const remidiCount = useMemo(() => {
+    const arr = calcResults || []
+    return arr.filter(r => r?.status === 'Remedi').length
+  }, [calcResults])
 
-  // #2 FIX: When a class is selected in the bulk form, fetch students for that class and seed empty rows.
+  // HOTFIX #3: try-catch + fallback arrays for the bulk class loader.
   const handleBulkKelasChange = useCallback(async (kelas: string) => {
     setBulkKelas(kelas)
     if (!kelas || kelas === 'ALL') { setBulkRows([]); setBulkStudents([]); return }
     try {
       const res = await fetch(`/api/teacher/students?kelas=${kelas}`)
       const data = await res.json()
-      if (data.success) {
-        setBulkStudents(data.students)
-        // Seed one row per student with empty inputs
-        setBulkRows(data.students.map((s: Student) => ({
-          studentId: s.id, tugas: '', uh: '', uts: '', uas: '',
-        })))
-      }
-    } catch { toast.error('Gagal memuat siswa untuk kelas ini') }
+      const list: Student[] = (data?.success && Array.isArray(data.students)) ? data.students : []
+      setBulkStudents(list)
+      setBulkRows(list.map((s: Student) => ({
+        studentId: s?.id || '', tugas: '', uh: '', uts: '', uas: '',
+      })))
+    } catch (err) {
+      console.error('[GradeBook] handleBulkKelasChange error:', err)
+      setBulkStudents([])
+      setBulkRows([])
+      toast.error('Gagal memuat siswa untuk kelas ini')
+    }
   }, [])
 
-  const updateBulkRow = (studentId: string, field: keyof Omit<BulkRow, 'studentId'>, value: string) => {
-    setBulkRows(prev => prev.map(r => r.studentId === studentId ? { ...r, [field]: value } : r))
-  }
+  const updateBulkRow = useCallback((studentId: string, field: keyof Omit<BulkRow, 'studentId'>, value: string) => {
+    setBulkRows(prev => (prev || []).map(r => r.studentId === studentId ? { ...r, [field]: value } : r))
+  }, [])
 
-  // #2 FIX: Collect all non-empty inputs and POST as a single bulk request.
-  const handleBulkSave = async () => {
+  // HOTFIX #3: try-catch around the bulk save flow.
+  const handleBulkSave = useCallback(async () => {
     const grades: Array<{ studentId: string; score: number; gradeType: string; babId?: string | null; title?: string }> = []
-    for (const row of bulkRows) {
+    for (const row of (bulkRows || [])) {
       const push = (val: string, gradeType: string, title: string) => {
         const n = parseFloat(val)
         if (val !== '' && !isNaN(n) && n >= 0 && n <= 100) {
@@ -120,28 +204,35 @@ export function GradeBook() {
         body: JSON.stringify({ grades, isReleased: true }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Gagal menyimpan')
-      toast.success(`${data.count || grades.length} nilai manual berhasil disimpan`)
-      // Clear inputs after successful save
-      setBulkRows(prev => prev.map(r => ({ ...r, tugas: '', uh: '', uts: '', uas: '' })))
-      // Refresh calc table
+      if (!res.ok) throw new Error(data?.error || 'Gagal menyimpan')
+      toast.success(`${data?.count || grades.length} nilai manual berhasil disimpan`)
+      setBulkRows(prev => (prev || []).map(r => ({ ...r, tugas: '', uh: '', uts: '', uas: '' })))
       fetchData()
     } catch (err) {
+      console.error('[GradeBook] handleBulkSave error:', err)
       toast.error(err instanceof Error ? err.message : 'Gagal menyimpan nilai')
     } finally { setBulkSaving(false) }
-  }
+  }, [bulkRows, bulkBabId, fetchData])
 
   const bulkFilledCount = useMemo(() => {
-    return bulkRows.reduce((acc, r) => acc + ['tugas', 'uh', 'uts', 'uas'].filter(k => r[k as keyof BulkRow] !== '').length, 0)
+    const rows = bulkRows || []
+    return rows.reduce((acc, r) => acc + ['tugas', 'uh', 'uts', 'uas'].filter(k => r[k as keyof BulkRow] !== '').length, 0)
   }, [bulkRows])
+
+  // HOTFIX #2: defensive locals used during render — never read state directly without fallback.
+  const safeCalcResults = calcResults || []
+  const safeStudents = students || []
+  const safeBabs = babs || []
+  const safeBulkStudents = bulkStudents || []
+  const safeBulkRows = bulkRows || []
 
   return (
     <div className="space-y-4">
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4"><div className="text-xs text-slate-500 mb-1">Total Siswa</div><p className="text-2xl font-bold text-slate-900">{calcResults.length}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs text-slate-500 mb-1">Total Siswa</div><p className="text-2xl font-bold text-slate-900">{safeCalcResults.length}</p></CardContent></Card>
         <Card><CardContent className="p-4"><div className="text-xs text-slate-500 mb-1">Rata-rata Kelas</div><p className="text-2xl font-bold text-emerald-600">{classAvg}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-xs text-slate-500 mb-1">KKM Mapel</div><p className="text-2xl font-bold text-amber-600">{config.kkm}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs text-slate-500 mb-1">KKM Mapel</div><p className="text-2xl font-bold text-amber-600">{config?.kkm ?? 75}</p></CardContent></Card>
         <Card className={remidiCount > 0 ? 'border-red-300 bg-red-50' : ''}>
           <CardContent className="p-4"><div className="text-xs text-slate-500 mb-1">Remidi</div><p className={`text-2xl font-bold ${remidiCount > 0 ? 'text-red-600' : 'text-slate-900'}`}>{remidiCount}</p></CardContent></Card>
       </div>
@@ -154,10 +245,10 @@ export function GradeBook() {
               <Settings className="w-5 h-5 text-amber-600" />
               <span className="text-sm font-semibold">Bobot Nilai:</span>
             </div>
-            <Badge className="bg-blue-100 text-blue-700">NH: {config.bobotNH}%</Badge>
-            <Badge className="bg-purple-100 text-purple-700">UTS: {config.bobotUTS}%</Badge>
-            <Badge className="bg-pink-100 text-pink-700">UAS: {config.bobotUAS}%</Badge>
-            <Badge className="bg-amber-100 text-amber-700">KKM: {config.kkm}</Badge>
+            <Badge className="bg-blue-100 text-blue-700">NH: {config?.bobotNH ?? 40}%</Badge>
+            <Badge className="bg-purple-100 text-purple-700">UTS: {config?.bobotUTS ?? 30}%</Badge>
+            <Badge className="bg-pink-100 text-pink-700">UAS: {config?.bobotUAS ?? 30}%</Badge>
+            <Badge className="bg-amber-100 text-amber-700">KKM: {config?.kkm ?? 75}</Badge>
           </div>
           <Button variant="outline" size="sm" onClick={() => setShowConfig(true)}>
             <Settings className="w-4 h-4 mr-1" />Atur Bobot & KKM
@@ -165,19 +256,18 @@ export function GradeBook() {
         </CardContent>
       </Card>
 
-      {/* #2 FIX: BULK MANUAL GRADE INPUT FORM */}
+      {/* BULK MANUAL GRADE INPUT FORM */}
       <Card className="border-slate-900 shadow-md">
         <CardHeader className="bg-slate-900 text-white pb-3">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <CardTitle className="flex items-center gap-2 text-base text-white">
               <PencilLine className="w-4 h-4 text-emerald-400" /> Input Nilai Manual (Luring)
             </CardTitle>
-            {/* Big black save button in the top-right corner */}
             <Button
               size="sm"
               className="bg-black hover:bg-slate-800 text-white border border-white/20"
               onClick={handleBulkSave}
-              disabled={bulkSaving || bulkRows.length === 0}
+              disabled={bulkSaving || safeBulkRows.length === 0}
             >
               <Save className="w-4 h-4 mr-1" />
               {bulkSaving ? 'Menyimpan...' : 'Simpan Nilai Manual'}
@@ -189,7 +279,8 @@ export function GradeBook() {
           </p>
         </CardHeader>
         <CardContent className="pt-4 space-y-3">
-          {/* Filter row */}
+          {/* HOTFIX #4: Class dropdown is rendered statically from SAFE_GRADES so the page
+              always loads even if /api/grades/calculate or /api/teacher/students fails. */}
           <div className="grid md:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Pilih Kelas *</Label>
@@ -197,7 +288,7 @@ export function GradeBook() {
                 <SelectTrigger><SelectValue placeholder="— Pilih Kelas —" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL" disabled>Pilih kelas dulu</SelectItem>
-                  {ALL_GRADES.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                  {SAFE_GRADES.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -207,7 +298,8 @@ export function GradeBook() {
                 <SelectTrigger><SelectValue placeholder="— Tanpa Bab (umum) —" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">— Tanpa Bab (umum) —</SelectItem>
-                  {babs.map(b => <SelectItem key={b.id} value={b.id}>{b.chapter}</SelectItem>)}
+                  {/* HOTFIX #2: optional chaining + fallback [] */}
+                  {(safeBabs || []).map(b => <SelectItem key={b.id} value={b.id}>{b.chapter}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -220,7 +312,7 @@ export function GradeBook() {
               <p className="text-sm font-medium">Pilih kelas di atas untuk memunculkan tabel siswa</p>
               <p className="text-xs mt-1">Tabel akan terisi otomatis dengan nama-nama siswa yang terdaftar di kelas tersebut</p>
             </div>
-          ) : bulkStudents.length === 0 ? (
+          ) : safeBulkStudents.length === 0 ? (
             <div className="py-12 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-lg">
               <p className="text-sm font-medium">Belum ada siswa terdaftar di kelas {bulkKelas}</p>
               <p className="text-xs mt-1">Tambahkan siswa lewat menu "Data Siswa" terlebih dahulu</p>
@@ -228,7 +320,7 @@ export function GradeBook() {
           ) : (
             <>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-600">Menampilkan <strong>{bulkStudents.length}</strong> siswa dari kelas <Badge variant="outline">{bulkKelas}</Badge></span>
+                <span className="text-slate-600">Menampilkan <strong>{safeBulkStudents.length}</strong> siswa dari kelas <Badge variant="outline">{bulkKelas}</Badge></span>
                 <span className="text-slate-500">{bulkFilledCount} nilai terisi</span>
               </div>
               <div className="overflow-x-auto max-h-[450px] overflow-y-auto border border-slate-200 rounded-lg">
@@ -244,15 +336,17 @@ export function GradeBook() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {bulkStudents.map((s, i) => {
-                      const row = bulkRows.find(r => r.studentId === s.id)
+                    {/* HOTFIX #2: optional chaining + fallback [] */}
+                    {(safeBulkStudents || []).map((s, i) => {
+                      if (!s?.id) return null
+                      const row = safeBulkRows.find(r => r.studentId === s.id)
                       if (!row) return null
                       return (
                         <TableRow key={s.id}>
                           <TableCell className="text-slate-400 text-xs">{i + 1}</TableCell>
                           <TableCell>
-                            <div className="font-medium text-slate-900">{s.namaLengkap}</div>
-                            <div className="text-xs text-slate-500">NISN: {s.nisn}</div>
+                            <div className="font-medium text-slate-900">{s.namaLengkap || '-'}</div>
+                            <div className="text-xs text-slate-500">NISN: {s.nisn || '-'}</div>
                           </TableCell>
                           <TableCell className="text-center">
                             <Input type="number" min="0" max="100" placeholder="—" value={row.tugas}
@@ -284,7 +378,7 @@ export function GradeBook() {
                 <Button
                   className="bg-black hover:bg-slate-800 text-white"
                   onClick={handleBulkSave}
-                  disabled={bulkSaving || bulkRows.length === 0 || bulkFilledCount === 0}
+                  disabled={bulkSaving || safeBulkRows.length === 0 || bulkFilledCount === 0}
                 >
                   <Save className="w-4 h-4 mr-2" />
                   {bulkSaving ? 'Menyimpan...' : `Simpan ${bulkFilledCount} Nilai Manual`}
@@ -303,21 +397,31 @@ export function GradeBook() {
               <ClipboardList className="w-4 h-4 text-emerald-600" /> Daftar Nilai Akhir (NA)
             </CardTitle>
             <div className="flex gap-2">
+              {/* HOTFIX #4: filter dropdown rendered statically — always present. */}
               <Select value={filterKelas} onValueChange={setFilterKelas}>
                 <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="ALL">Semua</SelectItem>{ALL_GRADES.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
+                <SelectContent>
+                  <SelectItem value="ALL">Semua</SelectItem>
+                  {SAFE_GRADES.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                </SelectContent>
               </Select>
               <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}><RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /></Button>
             </div>
           </div>
           <p className="text-xs text-slate-500 mt-2">
-            NA = (NH × {config.bobotNH}%) + (UTS × {config.bobotUTS}%) + (UAS × {config.bobotUAS}%). NH = rata-rata nilai per bab.
+            NA = (NH × {config?.bobotNH ?? 40}%) + (UTS × {config?.bobotUTS ?? 30}%) + (UAS × {config?.bobotUAS ?? 30}%). NH = rata-rata nilai per bab.
             Tugas daring otomatis masuk. Klik "Input Nilai" untuk input luring (UH/UTS/UAS) per siswa.
           </p>
         </CardHeader>
         <CardContent className="pt-0">
           {loading ? (
             <div className="py-20 text-center text-slate-400"><RefreshCw className="w-8 h-8 mx-auto animate-spin mb-2" />Memuat...</div>
+          ) : safeCalcResults.length === 0 ? (
+            <div className="py-16 text-center text-slate-400">
+              <ClipboardList className="w-10 h-10 mx-auto mb-2 opacity-40" />
+              <p className="text-sm font-medium">Belum ada nilai</p>
+              <p className="text-xs mt-1">Nilai akan muncul setelah siswa mengerjakan tugas daring atau setelah Anda input nilai manual di atas.</p>
+            </div>
           ) : (
             <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
               <Table>
@@ -334,31 +438,36 @@ export function GradeBook() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {calcResults.map((r) => (
-                    <TableRow key={r.studentId} className={r.status === 'Remedi' ? 'bg-red-50' : ''}>
-                      <TableCell><div className="font-medium">{r.namaLengkap}</div><div className="text-xs text-slate-500">{r.nisn}</div></TableCell>
-                      <TableCell><Badge variant="outline">{r.kelas}</Badge></TableCell>
-                      <TableCell className="text-center font-semibold text-blue-600">{r.NH || '-'}</TableCell>
-                      <TableCell className="text-center hidden md:table-cell font-semibold text-purple-600">{r.UTS || '-'}</TableCell>
-                      <TableCell className="text-center hidden md:table-cell font-semibold text-pink-600">{r.UAS || '-'}</TableCell>
-                      <TableCell className="text-center"><span className={`text-lg font-bold ${r.NA >= r.kkm ? 'text-emerald-600' : 'text-red-600'}`}>{r.NA || '-'}</span></TableCell>
-                      <TableCell className="text-center">
-                        {r.NA > 0 && r.NA < r.kkm ? (
-                          <Badge className="bg-red-100 text-red-700"><AlertTriangle className="w-3 h-3 mr-1" />Remidi</Badge>
-                        ) : r.NA > 0 ? (
-                          <Badge className="bg-emerald-100 text-emerald-700"><TrendingUp className="w-3 h-3 mr-1" />Tuntas</Badge>
-                        ) : (
-                          <span className="text-slate-300 text-xs">Belum ada nilai</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button size="sm" variant="outline" onClick={() => {
-                          const s = students.find(s => s.id === r.studentId)
-                          if (s) { setSelectedStudent(s); setShowAddGrade(true) }
-                        }}><Plus className="w-3 h-3 mr-1" />Input Nilai</Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {/* HOTFIX #2: optional chaining + fallback [] + per-row null guard */}
+                  {(safeCalcResults || []).map((r) => {
+                    if (!r?.studentId) return null
+                    const kkm = r.kkm ?? config?.kkm ?? 75
+                    return (
+                      <TableRow key={r.studentId} className={r.status === 'Remedi' ? 'bg-red-50' : ''}>
+                        <TableCell><div className="font-medium">{r.namaLengkap || '-'}</div><div className="text-xs text-slate-500">{r.nisn || '-'}</div></TableCell>
+                        <TableCell><Badge variant="outline">{r.kelas || '-'}</Badge></TableCell>
+                        <TableCell className="text-center font-semibold text-blue-600">{r.NH || '-'}</TableCell>
+                        <TableCell className="text-center hidden md:table-cell font-semibold text-purple-600">{r.UTS || '-'}</TableCell>
+                        <TableCell className="text-center hidden md:table-cell font-semibold text-pink-600">{r.UAS || '-'}</TableCell>
+                        <TableCell className="text-center"><span className={`text-lg font-bold ${r.NA >= kkm ? 'text-emerald-600' : 'text-red-600'}`}>{r.NA || '-'}</span></TableCell>
+                        <TableCell className="text-center">
+                          {r.NA > 0 && r.NA < kkm ? (
+                            <Badge className="bg-red-100 text-red-700"><AlertTriangle className="w-3 h-3 mr-1" />Remidi</Badge>
+                          ) : r.NA > 0 ? (
+                            <Badge className="bg-emerald-100 text-emerald-700"><TrendingUp className="w-3 h-3 mr-1" />Tuntas</Badge>
+                          ) : (
+                            <span className="text-slate-300 text-xs">Belum ada nilai</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button size="sm" variant="outline" onClick={() => {
+                            const s = safeStudents.find(s => s.id === r.studentId)
+                            if (s) { setSelectedStudent(s); setShowAddGrade(true) }
+                          }}><Plus className="w-3 h-3 mr-1" />Input Nilai</Button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -366,29 +475,43 @@ export function GradeBook() {
         </CardContent>
       </Card>
 
-      {showConfig && <ConfigDialog config={config} babs={babs} onClose={() => setShowConfig(false)} onSaved={() => { setShowConfig(false); fetchData() }} />}
+      {showConfig && (
+        <ConfigDialog config={config} babs={safeBabs} onClose={() => setShowConfig(false)} onSaved={() => { setShowConfig(false); fetchData() }} />
+      )}
       {showAddGrade && selectedStudent && (
-        <AddGradeDialog student={selectedStudent} babs={babs} onClose={() => { setShowAddGrade(false); setSelectedStudent(null) }} onSaved={() => { setShowAddGrade(false); setSelectedStudent(null); fetchData() }} />
+        <AddGradeDialog student={selectedStudent} babs={safeBabs} onClose={() => { setShowAddGrade(false); setSelectedStudent(null) }} onSaved={() => { setShowAddGrade(false); setSelectedStudent(null); fetchData() }} />
       )}
     </div>
   )
 }
 
 function ConfigDialog({ config, babs, onClose, onSaved }: { config: Config; babs: Bab[]; onClose: () => void; onSaved: () => void }) {
-  const [form, setForm] = useState({ kkm: String(config.kkm), bobotNH: String(config.bobotNH), bobotUTS: String(config.bobotUTS), bobotUAS: String(config.bobotUAS) })
+  // HOTFIX #2: defensive defaults if config or babs come in null/undefined.
+  const safeConfig: Config = config || DEFAULT_CONFIG
+  const safeBabs: Bab[] = Array.isArray(babs) ? babs : []
+  const [form, setForm] = useState({
+    kkm: String(safeConfig.kkm ?? 75),
+    bobotNH: String(safeConfig.bobotNH ?? 40),
+    bobotUTS: String(safeConfig.bobotUTS ?? 30),
+    bobotUAS: String(safeConfig.bobotUAS ?? 30),
+  })
   const [saving, setSaving] = useState(false)
 
   const total = (parseFloat(form.bobotNH) || 0) + (parseFloat(form.bobotUTS) || 0) + (parseFloat(form.bobotUAS) || 0)
 
+  // HOTFIX #3: try-catch around save.
   const handleSave = async () => {
     if (Math.abs(total - 100) > 0.01) { toast.error(`Total bobot harus 100%. Saat ini: ${total}%`); return }
     setSaving(true)
     try {
       const res = await fetch('/api/subject-config', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error) }
+      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d?.error || 'Gagal') }
       toast.success('Bobot & KKM disimpan')
       onSaved()
-    } catch (err) { toast.error(err instanceof Error ? err.message : 'Gagal') } finally { setSaving(false) }
+    } catch (err) {
+      console.error('[ConfigDialog] save error:', err)
+      toast.error(err instanceof Error ? err.message : 'Gagal')
+    } finally { setSaving(false) }
   }
 
   return (
@@ -411,14 +534,14 @@ function ConfigDialog({ config, babs, onClose, onSaved }: { config: Config; babs
           <div className={`p-2 rounded-lg text-center text-sm font-bold ${Math.abs(total - 100) < 0.01 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
             Total: {total}% {Math.abs(total - 100) < 0.01 ? '✓' : '(harus 100%)'}
           </div>
-          {babs.length > 0 && (
+          {safeBabs.length > 0 && (
             <div className="border-t pt-2">
               <Label className="text-xs font-semibold">Bobot per Bab (diatur di menu CP & TP):</Label>
               <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
-                {babs.map(b => (
+                {safeBabs.map(b => (
                   <div key={b.id} className="flex justify-between text-xs bg-slate-50 px-2 py-1 rounded">
-                    <span className="truncate">{b.chapter}</span>
-                    <span className="text-slate-500">Tugas {b.bobotTugas}% • UH {b.bobotUH}%</span>
+                    <span className="truncate">{b.chapter || '-'}</span>
+                    <span className="text-slate-500">Tugas {b.bobotTugas ?? 0}% • UH {b.bobotUH ?? 0}%</span>
                   </div>
                 ))}
               </div>
@@ -432,21 +555,27 @@ function ConfigDialog({ config, babs, onClose, onSaved }: { config: Config; babs
 }
 
 function AddGradeDialog({ student, babs, onClose, onSaved }: { student: Student; babs: Bab[]; onClose: () => void; onSaved: () => void }) {
+  const safeBabs: Bab[] = Array.isArray(babs) ? babs : []
+  const safeStudent: Student = student || { id: '', namaLengkap: '-', nisn: '-', kelas: '-', sekolah: '-' }
   const [form, setForm] = useState({ title: '', score: '', gradeType: 'uh', babId: '', description: '' })
   const [saving, setSaving] = useState(false)
 
+  // HOTFIX #3: try-catch around save.
   const handleSave = async () => {
     if (!form.title || form.score === '') { toast.error('Judul dan nilai wajib diisi'); return }
     setSaving(true)
     try {
       const res = await fetch('/api/manual-grades', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId: student.id, ...form, score: parseFloat(form.score), isReleased: true }),
+        body: JSON.stringify({ studentId: safeStudent.id, ...form, score: parseFloat(form.score), isReleased: true }),
       })
       if (!res.ok) throw new Error('Gagal')
       toast.success('Nilai ditambahkan')
       onSaved()
-    } catch { toast.error('Gagal') } finally { setSaving(false) }
+    } catch (err) {
+      console.error('[AddGradeDialog] save error:', err)
+      toast.error('Gagal')
+    } finally { setSaving(false) }
   }
 
   const gradeTypes = [
@@ -461,7 +590,7 @@ function AddGradeDialog({ student, babs, onClose, onSaved }: { student: Student;
       <DialogContent className="max-w-md">
         <DialogHeader><DialogTitle>Input Nilai Manual</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div className="bg-slate-50 p-3 rounded-lg"><p className="text-sm font-medium">{student.namaLengkap}</p><p className="text-xs text-slate-500">{student.kelas} • NISN: {student.nisn}</p></div>
+          <div className="bg-slate-50 p-3 rounded-lg"><p className="text-sm font-medium">{safeStudent.namaLengkap}</p><p className="text-xs text-slate-500">{safeStudent.kelas} • NISN: {safeStudent.nisn}</p></div>
           <div className="space-y-1">
             <Label className="text-xs">Jenis Nilai</Label>
             <Select value={form.gradeType} onValueChange={(v) => setForm({ ...form, gradeType: v })}>
@@ -474,7 +603,7 @@ function AddGradeDialog({ student, babs, onClose, onSaved }: { student: Student;
               <Label className="text-xs">Bab (CP/TP)</Label>
               <Select value={form.babId} onValueChange={(v) => setForm({ ...form, babId: v })}>
                 <SelectTrigger><SelectValue placeholder="Pilih bab..." /></SelectTrigger>
-                <SelectContent>{babs.map(b => <SelectItem key={b.id} value={b.id}>{b.chapter} (Tugas {b.bobotTugas}% / UH {b.bobotUH}%)</SelectItem>)}</SelectContent>
+                <SelectContent>{safeBabs.map(b => <SelectItem key={b.id} value={b.id}>{b.chapter} (Tugas {b.bobotTugas ?? 0}% / UH {b.bobotUH ?? 0}%)</SelectItem>)}</SelectContent>
               </Select>
             </div>
           )}

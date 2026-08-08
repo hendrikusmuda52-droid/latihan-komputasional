@@ -60,3 +60,58 @@ Stage Summary:
 - GradeBook now has a complete bulk input form with class filter + 4 grade-type columns + bulk save
 - Non-IT teachers (Matematika, IPS, etc.) no longer see "Rata-rata Mengetik" — replaced with "Capaian Nilai Harian Global"
 - Ready to push to GitHub for Vercel auto-redeploy
+
+---
+Task ID: 2
+Agent: main
+Task: HOTFIX — Daftar Nilai page crashes with "client-side exception" because frontend .map reads null/undefined from API
+
+Work Log:
+- Read worklog Task ID: 1 (context: previous fix introduced bulk form but still crashed for some teachers)
+- Read /home/z/my-project/src/components/teacher/grade-book.tsx (489 lines, full read)
+- Confirmed no src/app/dashboard/grades/page.tsx file exists — the "Daftar Nilai" page is rendered by <GradeBook/> when teacher clicks the sidebar menu item in /src/components/teacher-dashboard.tsx
+
+Root cause:
+- fetchData did .then(r => r.json()) without catch — if the API returned HTML or malformed JSON, the whole component crashed
+- students, calcResults, babs, bulkStudents were set directly from API response shape without Array.isArray checks — if API returned {success:false}, students would be undefined
+- calcResults.map(r => ...) crashed when calcResults was null
+- babs.map(b => ...) in SelectContent crashed when babs was null
+- No error boundary — any render exception bubbled up to Next.js white error screen
+
+HOTFIX #1 — Proper React Error Boundary (class component):
+- Replaced the initial try-catch-around-JSX (which ESLint correctly flagged as non-functional) with a GradeBookErrorBoundary class component
+- Uses getDerivedStateFromError + componentDidCatch (the only correct React pattern)
+- <GradeBook/> now wraps <GradeBookInner/> in <GradeBookErrorBoundary> so any render exception shows a red fallback card with reload button instead of the white "Application error" screen
+
+HOTFIX #2 — Optional chaining + fallback arrays on every .map:
+- Added `const safeCalcResults = calcResults || []` etc. for all 4 array states
+- All .map calls now use the safe* locals + per-row null guard (if (!r?.studentId) return null)
+- SelectContent for babs uses `(safeBabs || []).map(b => ...)`
+- bulkStudents table uses `(safeBulkStudents || []).map((s, i) => { if (!s?.id) return null; ... })`
+- ConfigDialog and AddGradeDialog each compute their own safeBabs/safeStudent locals with `Array.isArray(babs) ? babs : []` and `student || { ... defaults }`
+- All object property reads use `?.` (e.g. `r.kkm ?? config?.kkm ?? 75`, `b.bobotTugas ?? 0`)
+- useMemo deps guarded: classAvg uses `(calcResults || [])` and `Number(b?.NA) || 0`
+- remidiCount uses `(calcResults || []).filter(r => r?.status === 'Remedi')`
+
+HOTFIX #3 — try-catch around every async function:
+- fetchData: outer try-catch + each fetch chained with .catch(() => ({ success: false, students: [] })) + Array.isArray checks before setState + silent fallback to [] instead of toast (avoid noise on transient network blips)
+- handleBulkKelasChange: try-catch, fallback setBulkStudents([]) + setBulkRows([])
+- handleBulkSave: try-catch around fetch + JSON parse, defensive `data?.count || grades.length`
+- ConfigDialog.handleSave: try-catch + `d?.error || 'Gagal'`
+- AddGradeDialog.handleSave: try-catch
+
+HOTFIX #4 — Static class dropdown:
+- Both filter dropdowns (bulk form + NA table) render from SAFE_GRADES = (ALL_GRADES || []) which is a constant imported at module load time
+- This means the dropdown ALWAYS renders 7A/7B/7C/8A/8B/8C/9A/9B/11DKV/12DKV even if every API call fails — page can never be "stuck loading" without UI
+
+Verification:
+- npx eslint src/components/teacher/grade-book.tsx → 0 errors, 0 warnings
+- npx tsc --noEmit (filtered to grade-book) → 0 errors
+- npx next build → ✓ Compiled successfully in 14.3s, 37/37 static pages generated
+- Cleanup: discarded chmod-only changes to 9 unrelated files, removed /tool-results/ scratch dir
+
+Stage Summary:
+- Files modified: src/components/teacher/grade-book.tsx (rewritten ~570 lines), worklog.md (appended)
+- Daftar Nilai page will no longer crash with "client-side exception" — worst case shows red error card with reload button
+- All 4 user requirements met: (1) optional chaining on every .map, (2) `|| []` fallback on every array, (3) try-catch on every async fn, (4) class dropdown is static
+- Ready to push to GitHub for Vercel auto-redeploy
