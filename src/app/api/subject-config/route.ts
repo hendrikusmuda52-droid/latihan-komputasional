@@ -8,8 +8,9 @@ import { requireTeacherAuth, getTeacherFromToken } from '@/lib/auth'
 const DEFAULT_KKM = 75
 const DEFAULT_BOBOT = { bobotNH: 40, bobotUTS: 30, bobotUAS: 30 }
 
-// 13 SMP + 5 SMK subjects (mirrors src/lib/constants.ts).
+// 14 SMP + 5 SMK subjects (mirrors src/lib/constants.ts — Matematika ditambahkan resmi per 2026).
 const FALLBACK_SUBJECTS = [
+  'Matematika',
   'Bahasa Indonesia', 'Bahasa Inggris', 'Mandarin', 'Informatika', 'IPS', 'IPA',
   'Seni Budaya', 'Agama', 'PLH', 'KKA', 'Kerohanian', 'PkN', 'Penjaskes',
   'DKV', 'Komputer Akuntansi', 'Multimedia', 'TKJ', 'RPL',

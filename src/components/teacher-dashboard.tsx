@@ -57,6 +57,8 @@ import {
   ClipboardList,
   Shield,
   Target,
+  Menu,
+  X,
 } from 'lucide-react'
 import {
   BarChart,
@@ -146,6 +148,9 @@ export function TeacherDashboard() {
   const [search, setSearch] = useState('')
   const [filterKelas, setFilterKelas] = useState<string>('ALL')
   const [filterSekolah, setFilterSekolah] = useState<string>('ALL')
+  // MOBILE SIDEBAR: controls slide-over menu on screens < md (768px).
+  // On desktop the sidebar is always visible (translate-x-0, no overlay).
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // #3 FIX: compute isITSubject up here so the useMemo hooks below can read it without TDZ errors.
   // Default to true (= Informatika) when teacher is not loaded yet; recomputed when teacher arrives.
@@ -380,18 +385,39 @@ export function TeacherDashboard() {
     { id: 'materials', label: 'Materi Belajar', icon: BookOpen },
     { id: 'questions', label: 'Bank Soal', icon: BookOpen },
     { id: 'cptp', label: 'CP & TP', icon: Target },
-    // #2: Teks Bacaan hanya untuk guru IT (Informatika/DKV)
     ...(isITSubject ? [{ id: 'texts', label: 'Teks Bacaan', icon: FileText }] : []),
     ...(teacher.role === 'admin' ? [{ id: 'admin', label: 'Manajemen Pengguna', icon: Shield }] : []),
     { id: 'profile', label: 'Profil Akun', icon: UserCog },
   ]
 
+  // MOBILE SIDEBAR: switch menu + auto-close sidebar so the page content is
+  // immediately visible after a tap (mobile UX). On desktop this is a no-op
+  // because the sidebar is always open there.
+  const handleMenuClick = (id: string) => {
+    setActiveMenu(id)
+    setSidebarOpen(false)
+  }
+
   return (
     <div className="min-h-screen flex bg-slate-50">
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-white flex flex-col fixed h-screen z-50">
-        {/* Logo */}
-        <div className="p-5 border-b border-slate-700">
+      {/* MOBILE OVERLAY: tap-to-close backdrop, only visible on < md when sidebar is open. */}
+      {sidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-40 transition-opacity"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar — desktop: fixed & always visible (translate-x-0).
+          Mobile: slide-over, hidden by default (-translate-x-full), slides in when sidebarOpen. */}
+      <aside
+        className={`w-64 bg-slate-900 text-white flex flex-col fixed h-screen z-50 transform transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0`}
+      >
+        {/* Logo + close button (close button only visible on mobile) */}
+        <div className="p-5 border-b border-slate-700 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center">
               <School className="w-5 h-5 text-white" />
@@ -401,6 +427,14 @@ export function TeacherDashboard() {
               <p className="text-xs text-slate-400">Santo Augustinus E-Learning</p>
             </div>
           </div>
+          {/* MOBILE: X close button */}
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="md:hidden p-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+            aria-label="Tutup menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Navigation */}
@@ -411,7 +445,7 @@ export function TeacherDashboard() {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveMenu(item.id)}
+                onClick={() => handleMenuClick(item.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   isActive
                     ? 'bg-emerald-600 text-white shadow-lg'
@@ -445,15 +479,25 @@ export function TeacherDashboard() {
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
+      {/* Main content — ml-64 on desktop, ml-0 on mobile (sidebar is overlaid). */}
+      <div className="flex-1 ml-0 md:ml-64 flex flex-col min-h-screen">
         {/* Top bar */}
-        <header className="sticky top-0 z-40 bg-white border-b shadow-sm">
-          <div className="px-6 py-3 flex items-center justify-between gap-3">
-            <h1 className="text-lg font-bold text-slate-900">
-              {menuItems.find(m => m.id === activeMenu)?.label || 'Dashboard'}
-            </h1>
-            <div className="flex items-center gap-2">
+        <header className="sticky top-0 z-30 bg-white border-b shadow-sm">
+          <div className="px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              {/* MOBILE: Hamburger button — visible only on < md. */}
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="md:hidden p-2 -ml-1 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors flex-shrink-0"
+                aria-label="Buka menu"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+              <h1 className="text-base md:text-lg font-bold text-slate-900 truncate">
+                {menuItems.find(m => m.id === activeMenu)?.label || 'Dashboard'}
+              </h1>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
               {activeMenu === 'results' && (
                 <>
                   <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
@@ -471,8 +515,8 @@ export function TeacherDashboard() {
           </div>
         </header>
 
-        {/* Content area */}
-        <main className="flex-1 px-6 py-6">
+        {/* Content area — smaller horizontal padding on mobile. */}
+        <main className="flex-1 px-4 md:px-6 py-4 md:py-6">
           {activeMenu === 'results' && (
         <>
         {/* Statistik Cards */}

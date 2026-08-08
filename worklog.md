@@ -272,3 +272,54 @@ Stage Summary:
 - All 3 POST routes now return 400 with friendly error on DB failure instead of 500 — frontend shows toast, not white screen
 - tpId in Material insert is always coerced to null when empty — no foreign key constraint violation when CP/TP not yet created
 - Ready to push to GitHub for Vercel auto-redeploy
+
+---
+Task ID: 6
+Agent: main
+Task: UI update — (1) collapsible mobile sidebar with hamburger, (2) add Matematika subject
+
+Work Log:
+- Read worklog Task ID: 5 (previous hotfix bulletproofed 6 API routes + fixed Prisma generate on Vercel)
+- Read teacher-dashboard.tsx sidebar layout (lines 370-475)
+- Read constants.ts — confirmed Matematika was missing from SMP_SUBJECTS (only 13 mapel)
+- Read admin-manager.tsx — found it had its own local SUBJECTS list (with Matematika but out of sync with canonical list)
+
+Change 1 — Mobile collapsible sidebar:
+- Added `Menu` and `X` icons to lucide-react imports
+- Added `const [sidebarOpen, setSidebarOpen] = useState(false)` state
+- Added `handleMenuClick(id)` helper that switches menu AND closes sidebar (mobile UX — page content visible immediately after tap)
+- Refactored `<aside>` className:
+  * Base: `transform transition-transform duration-300 ease-in-out`
+  * When sidebarOpen: `translate-x-0`
+  * When closed: `-translate-x-full`
+  * On md+ screens: always `md:translate-x-0` (sidebar persistent on desktop)
+- Added close X button inside sidebar header — only visible on mobile (`md:hidden`)
+- Added overlay backdrop (semi-transparent black) when sidebarOpen — only on mobile (`md:hidden`), tap-to-close
+- Added hamburger button (Menu icon) in the top-bar header — only on mobile (`md:hidden`), opens sidebar
+- Adjusted main content wrapper: `ml-0 md:ml-64` (no left margin on mobile, sidebar is overlaid)
+- Adjusted header padding: `px-4 md:px-6` (smaller on mobile)
+- Adjusted main content padding: `px-4 md:px-6 py-4 md:py-6` (smaller on mobile)
+- Title font size: `text-base md:text-lg` (smaller on mobile)
+- Header z-index changed from z-40 to z-30 so the mobile sidebar (z-50) slides over it correctly
+
+Change 2 — Add Matematika subject:
+- src/lib/constants.ts: SMP_SUBJECTS now has 14 entries — 'Matematika' added at top of list (most-used first)
+- Subject categories for Matematika already existed in SUBJECT_CATEGORIES ('Aljabar', 'Geometri', 'Statistika', 'Aritmatika', 'Peluang') — no change needed
+- src/app/api/subject-config/route.ts: FALLBACK_SUBJECTS array updated — 'Matematika' added at top (now 14 SMP + 5 SMK = 19 entries)
+- src/components/teacher/admin-manager.tsx: removed hardcoded local SUBJECTS list, now imports ALL_SUBJECTS from constants.ts — single source of truth so any future subject additions auto-propagate to the admin user-creation form
+- IT_SUBJECTS = ['Informatika', 'DKV'] unchanged — Matematika is NOT an IT subject, so it won't get typing/game features (correct behavior)
+- hasTypingFeature('Matematika') returns false — so Matematika teachers see "Capaian Nilai Harian Global" instead of "Rata-rata Mengetik" (from previous hotfix)
+- getTaskTypesForSubject('Matematika') returns only quiz_only + drawing (no typing/game) — correct behavior
+
+Verification:
+- npx tsc --noEmit (filtered to all 4 changed files) → 0 errors
+- npx eslint on all 4 files → 0 errors, 0 warnings
+- npx next build → ✓ Compiled successfully in 15.2s, 37/37 static pages
+
+Stage Summary:
+- Files modified: src/components/teacher-dashboard.tsx, src/lib/constants.ts, src/app/api/subject-config/route.ts, src/components/teacher/admin-manager.tsx, worklog.md
+- Mobile sidebar: hamburger ☰ in top-left of header (md:hidden), slide-over aside with X close button, tap-to-close overlay backdrop, auto-close on menu tap
+- Desktop sidebar: unchanged — always visible (md:translate-x-0), fixed 256px width
+- Matematika added as 14th SMP subject — appears in admin subject dropdown, constants.ts, subject-config fallback
+- Admin user-creation form now uses canonical ALL_SUBJECTS list (single source of truth)
+- Ready to push to GitHub for Vercel auto-redeploy

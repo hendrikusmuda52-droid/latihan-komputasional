@@ -1,7 +1,8 @@
 // Konstanta Multi-Subject & Multi-Teacher Isolation untuk SAKOLA
 
-// 13 Mapel Utama SMP
+// Mapel Utama SMP (14 mapel — Matematika ditambahkan resmi per 2026)
 export const SMP_SUBJECTS = [
+  'Matematika',
   'Bahasa Indonesia',
   'Bahasa Inggris',
   'Mandarin',

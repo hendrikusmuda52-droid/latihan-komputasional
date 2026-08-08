@@ -19,6 +19,8 @@ import {
   Wallet, KeyRound, Pencil,
 } from 'lucide-react'
 import { toast } from 'sonner'
+// SOURCE OF TRUTH: canonical subject list (includes Matematika + 13 SMP + 5 SMK).
+import { ALL_SUBJECTS } from '@/lib/constants'
 
 interface UserRow {
   id: string
@@ -30,11 +32,9 @@ interface UserRow {
   createdAt: string
 }
 
-const SUBJECTS = [
-  'Informatika', 'Matematika', 'IPA', 'IPS', 'Bahasa Indonesia',
-  'Bahasa Inggris', 'PKn', 'Seni Budaya', 'PJOK', 'Prakarya',
-  'Agama', 'Lainnya',
-]
+// Use the canonical subject list from constants.ts so admin always sees
+// the same subject options as the rest of the app (Matematika, Informatika, etc.).
+const SUBJECTS = [...ALL_SUBJECTS] as string[]
 
 const ROLE_INFO: Record<string, { label: string; icon: typeof Shield; color: string; badge: string }> = {
   admin: { label: 'Admin', icon: Shield, color: 'text-red-600', badge: 'bg-red-100 text-red-700' },
