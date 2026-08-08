@@ -51,31 +51,49 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Body request bukan JSON valid' }, { status: 400 })
     }
 
-    const { title, content, targetKelas, category, isActive } = body as {
+    const { title, content, targetKelas, category, isActive, tpId } = body as {
       title?: string
       content?: string
       targetKelas?: string
       category?: string
       isActive?: boolean
+      tpId?: string | null
     }
 
     if (!title || !content) {
       return NextResponse.json({ error: 'Judul dan isi wajib diisi' }, { status: 400 })
     }
 
-    const material = await db.material.create({
-      data: {
-        title,
-        content,
-        subject: teacher.subject || 'Informatika',
-        targetKelas: targetKelas || 'ALL',
-        category: category || 'Umum',
-        isActive: isActive !== false,
-      },
-    })
-    return NextResponse.json({ success: true, material })
+    // HOTFIX #4: Wrap the DB insert in its own try-catch so a schema/DB failure
+    // returns a friendly 400 instead of crashing the whole API with 500.
+    // tpId is optional — if empty/null/undefined, pass null so the foreign key
+    // constraint doesn't block the insert when no CP/TP has been created yet.
+    try {
+      const material = await db.material.create({
+        data: {
+          title,
+          content,
+          subject: teacher.subject || 'Informatika',
+          targetKelas: targetKelas || 'ALL',
+          category: category || 'Umum',
+          isActive: isActive !== false,
+          tpId: tpId || null,
+          teacherId: teacher.teacherId,
+        },
+      })
+      return NextResponse.json({ success: true, material })
+    } catch (dbErr) {
+      console.error('[materials] POST DB insert error:', dbErr)
+      return NextResponse.json(
+        { success: false, error: 'Gagal memproses ke database. Pastikan kolom data sesuai.' },
+        { status: 400 },
+      )
+    }
   } catch (error) {
     console.error('[materials] POST FATAL error:', error)
-    return NextResponse.json({ error: 'Gagal membuat materi' }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: 'Gagal memproses ke database. Pastikan kolom data sesuai.' },
+      { status: 400 },
+    )
   }
 }

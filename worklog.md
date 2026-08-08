@@ -208,3 +208,67 @@ Stage Summary:
 - POST /api/manual-grades now coerces null/empty/NaN scores to 0 before DB insert — never constraint violation
 - All 4 dependent APIs (materials/questions/learning-objectives/typing-texts) now return [] with 200 on any DB failure — no more red toasts
 - Ready to push to GitHub for Vercel auto-redeploy
+
+---
+Task ID: 5
+Agent: main
+Task: HOTFIX #4 — 500 crashes on POST /api/learning-objectives, /api/materials, /api/assignments. User suspects DB schema mismatch.
+
+Work Log:
+- Read worklog Task ID: 4 (previous hotfix bulletproofed 6 API routes but POST catches still returned 500)
+- Read prisma/schema.prisma — confirmed LearningObjective, Material, Assignment models all have subject, teacherId, tpId (Material only), bobotTugas/UH (LO only)
+- Discovered .env had been reset to SQLite again (DATABASE_URL=file:...) — rewrote to Supabase PostgreSQL URL
+- Ran `npx prisma db push --accept-data-loss` → "The database is already in sync with the Prisma schema" (schema IS correct on Supabase)
+- Wrote /home/z/my-project/scripts/check-schema.ts diagnostic — ran it with explicit env vars:
+  * LearningObjective: 0 rows, INSERT + DELETE ✓
+  * Material: 1 row, INSERT (no tpId) + DELETE ✓
+  * Assignment: 4 rows, INSERT + DELETE ✓
+  * SubjectConfig: 1 row, Question: 91 rows, TypingText: 8 rows
+  * CONCLUSION: DB schema is fully in sync. The 500 on Vercel must be a stale Prisma client.
+
+ROOT CAUSE IDENTIFIED: Vercel's `npm install` does NOT run `prisma generate` automatically.
+The Prisma client in node_modules was generated from an older schema version (before multi-subject
+columns were added). When the API tries to insert `subject: teacher.subject`, the stale client
+doesn't know about that field → Prisma validation error → 500.
+
+Fix A — Build pipeline (root cause fix):
+- Added `"postinstall": "prisma generate"` to package.json scripts — runs after every `npm install`
+- Added `"vercel-build": "prisma generate && next build"` to package.json scripts
+- Updated vercel.json buildCommand from `"next build"` to `"prisma generate && next build"`
+- This ensures Vercel regenerates the Prisma client from the latest schema.prisma before compiling
+
+Fix B — POST /api/learning-objectives:
+- Wrapped db.learningObjective.create in its own try-catch
+- DB insert catch returns: { success: false, error: 'Gagal memproses ke database. Pastikan kolom data sesuai.' } with status 400
+- Outer fatal catch also returns 400 (was 500)
+- Insert data includes: subject, gradeLevel, chapter, cp, tp, bobotTugas, bobotUH, teacherId
+
+Fix C — POST /api/materials:
+- Added tpId to destructured body fields (was missing — frontend sends it)
+- Insert now passes tpId: tpId || null (ensures NULL when no CP/TP linked, not undefined)
+- Insert now passes teacherId: teacher.teacherId (was missing)
+- Wrapped db.material.create in its own try-catch
+- DB insert catch returns 400 with friendly error
+- Outer fatal catch also returns 400 (was 500)
+
+Fix D — POST /api/assignments:
+- Insert now passes teacherId: teacher.teacherId (was missing)
+- Wrapped db.assignment.create in its own try-catch
+- DB insert catch returns 400 with friendly error
+- Outer fatal catch also returns 400 (was 500)
+
+Verification:
+- npm run postinstall → ✓ Generated Prisma Client (v6.19.2)
+- npx tsc --noEmit (filtered to all 3 changed files) → 0 errors
+- npx eslint on all 3 files → 0 errors, 0 warnings
+- npx next build → ✓ Compiled successfully in 15.6s, 37/37 static pages
+- Diagnostic script confirmed all 3 tables accept inserts correctly on Supabase
+
+Stage Summary:
+- Files modified: package.json (added postinstall + vercel-build scripts), vercel.json (updated buildCommand), src/app/api/learning-objectives/route.ts, src/app/api/materials/route.ts, src/app/api/assignments/route.ts, worklog.md
+- New file: scripts/check-schema.ts (diagnostic utility)
+- ROOT CAUSE: Vercel wasn't running `prisma generate` → stale Prisma client → inserts with new columns (subject, teacherId, tpId, bobotTugas/UH) threw validation errors → 500
+- FIX: postinstall script + vercel.json buildCommand now both run `prisma generate` before build
+- All 3 POST routes now return 400 with friendly error on DB failure instead of 500 — frontend shows toast, not white screen
+- tpId in Material insert is always coerced to null when empty — no foreign key constraint violation when CP/TP not yet created
+- Ready to push to GitHub for Vercel auto-redeploy

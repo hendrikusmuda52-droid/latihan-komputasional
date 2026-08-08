@@ -70,22 +70,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Judul wajib diisi' }, { status: 400 })
     }
 
-    const assignment = await db.assignment.create({
-      data: {
-        subject: teacher.subject || 'Informatika',
-        title: title.trim(),
-        description: description || '',
-        targetKelas: targetKelas || 'ALL',
-        isActive: isActive !== false,
-        dueDate: dueDate ? new Date(dueDate) : null,
-        exerciseType: exerciseType || 'wajib',
-        questionCount: typeof questionCount === 'number' ? questionCount : 0,
-        taskType: taskType || 'typing_quiz',
-      },
-    })
-    return NextResponse.json({ success: true, assignment })
+    // HOTFIX #4: Wrap the DB insert in its own try-catch so a schema/DB failure
+    // returns a friendly 400 instead of crashing the whole API with 500.
+    // dueDate is optional — if empty/null/undefined, pass null.
+    try {
+      const assignment = await db.assignment.create({
+        data: {
+          subject: teacher.subject || 'Informatika',
+          title: title.trim(),
+          description: description || '',
+          targetKelas: targetKelas || 'ALL',
+          isActive: isActive !== false,
+          dueDate: dueDate ? new Date(dueDate) : null,
+          exerciseType: exerciseType || 'wajib',
+          questionCount: typeof questionCount === 'number' ? questionCount : 0,
+          taskType: taskType || 'typing_quiz',
+          teacherId: teacher.teacherId,
+        },
+      })
+      return NextResponse.json({ success: true, assignment })
+    } catch (dbErr) {
+      console.error('[assignments] POST DB insert error:', dbErr)
+      return NextResponse.json(
+        { success: false, error: 'Gagal memproses ke database. Pastikan kolom data sesuai.' },
+        { status: 400 },
+      )
+    }
   } catch (error) {
     console.error('[assignments] POST FATAL error:', error)
-    return NextResponse.json({ error: 'Gagal membuat tugas' }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: 'Gagal memproses ke database. Pastikan kolom data sesuai.' },
+      { status: 400 },
+    )
   }
 }

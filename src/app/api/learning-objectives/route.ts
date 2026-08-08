@@ -68,21 +68,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Total bobot Tugas + UH per Bab harus 100%. Saat ini: ${totalBab}%` }, { status: 400 })
     }
 
-    const obj = await db.learningObjective.create({
-      data: {
-        subject: teacher.subject || 'Informatika',
-        gradeLevel,
-        chapter,
-        cp,
-        tp,
-        bobotTugas: bt,
-        bobotUH: bu,
-        teacherId: teacher.teacherId,
-      },
-    })
-    return NextResponse.json({ success: true, objective: obj })
+    // HOTFIX #4: Wrap the DB insert in its own try-catch so a schema/DB failure
+    // returns a friendly 400 instead of crashing the whole API with 500.
+    try {
+      const obj = await db.learningObjective.create({
+        data: {
+          subject: teacher.subject || 'Informatika',
+          gradeLevel,
+          chapter,
+          cp,
+          tp,
+          bobotTugas: bt,
+          bobotUH: bu,
+          teacherId: teacher.teacherId,
+        },
+      })
+      return NextResponse.json({ success: true, objective: obj })
+    } catch (dbErr) {
+      console.error('[learning-objectives] POST DB insert error:', dbErr)
+      return NextResponse.json(
+        { success: false, error: 'Gagal memproses ke database. Pastikan kolom data sesuai.' },
+        { status: 400 },
+      )
+    }
   } catch (error) {
     console.error('[learning-objectives] POST FATAL error:', error)
-    return NextResponse.json({ error: 'Gagal membuat CP/TP' }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: 'Gagal memproses ke database. Pastikan kolom data sesuai.' },
+      { status: 400 },
+    )
   }
 }
