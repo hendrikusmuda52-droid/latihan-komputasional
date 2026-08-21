@@ -1,0 +1,394 @@
+// SAKOLA - Multi-Subject & Multi-Teacher Isolation Schema (v2 - CP/TP Hierarchy)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Student {
+  id           String     @id @default(cuid())
+  namaLengkap  String
+  nisn         String     @unique
+  password     String     @default("")
+  kelas        String     // "7A", "8B", "9C", "11DKV", "12DKV"
+  jenjang      String     @default("SMP") // "SMP" atau "SMK"
+  sekolah      String
+  jenisKelamin String
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  results      Result[]
+  progresses   Progress[]
+  manualGrades ManualGrade[]
+  attendances  Attendance[]
+  catatanSikap CatatanSikap[]
+  resetRequests ResetRequest[]
+}
+
+model Teacher {
+  id          String   @id @default(cuid())
+  username    String   @unique
+  password    String
+  name        String
+  role        String   @default("teacher") // "admin", "teacher", "bendahara"
+  subject     String   @default("Informatika")
+  kelasDiampu String   @default("7,8,9")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model Question {
+  id            String   @id @default(cuid())
+  gradeLevel    String
+  subject       String   @default("Informatika")
+  question      String
+  optionA       String   @default("")
+  optionB       String   @default("")
+  optionC       String   @default("")
+  optionD       String   @default("")
+  correctAnswer Int      @default(0)
+  explanation   String   @default("")
+  category      String
+  isActive      Boolean  @default(true)
+  imageUrl      String?
+  teacherId     String?
+  // ── v3 multi-type fields ──
+  questionType  String   @default("pilihan_ganda") // pilihan_ganda, pilihan_ganda_kompleks, mencocokkan, isian_singkat, essai
+  correctAnswers String  @default("[]") // JSON array for multi-answer (pilihan_ganda_kompleks: [0,2], isian_singkat: ["answer"])
+  matchPairs    String   @default("[]") // JSON array of {key, value} for mencocokkan
+  shortAnswer   String   @default("") // for isian_singkat (accepted answers, pipe-separated)
+  essayAnswer   String   @default("") // for essai (model answer / rubric)
+  levelKognitif String   @default("C2") // C1-C6 Taksonomi Bloom
+  pembahasanBenar String @default("") // penjelasan mengapa kunci jawaban benar
+  analisisDistraktor String @default("") // penjelasan mengapa opsi lain salah
+  cpId          String?  // link ke CapaianPembelajaran
+  tpId          String?  // link ke TujuanPembelajaran
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  @@index([subject, questionType])
+  @@index([cpId, tpId])
+}
+
+model TypingText {
+  id           String   @id @default(cuid())
+  gradeLevel   String
+  subject      String   @default("Informatika")
+  title        String
+  content      String
+  isStructured Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  teacherId    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Assignment {
+  id            String    @id @default(cuid())
+  title         String
+  description   String    @default("")
+  subject       String    @default("Informatika")
+  targetKelas   String    @default("ALL")
+  targetJenjang String    @default("ALL")
+  isActive      Boolean   @default(true)
+  dueDate       DateTime?
+  exerciseType  String    @default("wajib") // "wajib" or "persiapan"
+  questionCount Int       @default(0)
+  taskType      String    @default("quiz_only") // quiz_only, typing_quiz, typing_only, game, drawing, tugas_proyek, belajar_bermain, manual
+  teacherId     String?
+  // ── NEW v2 fields ──
+  cpId          String?   // link ke CapaianPembelajaran
+  tpId          String?   // link ke TujuanPembelajaran
+  taskCategory  String    @default("luring") // "luring" or "daring"
+  taskTypeName  String    @default("") // custom task type name (when taskType="manual")
+  tahunAjaran   String    @default("2026/2027")
+  semester      String    @default("ganjil") // "ganjil" or "genap"
+  // ── FIX #2: Duration field (in minutes) for quiz/exercise timer ──
+  // 0 = no time limit (use default 25 min for quiz, 40 min for typing)
+  // >0 = custom duration in minutes (e.g., 30 = 30 minutes)
+  duration      Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Material {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  subject     String   @default("Informatika")
+  targetKelas String   @default("ALL")
+  targetJenjang String @default("ALL")
+  category    String   @default("Umum")
+  // ── Bug #8 fix: consolidated tpId field ──
+  // Previously had both `tpId` (legacy String) and `newTpId` (proper FK),
+  // which caused data inconsistency. Consolidated to single `tpId` field.
+  // The migration `6_material_consolidate_tpid` backfills tpId from newTpId
+  // where tpId is null, then drops the newTpId column.
+  tpId        String?  // link ke TujuanPembelajaran (consolidated — was previously split with newTpId)
+  cpId        String?  // link ke CapaianPembelajaran
+  isActive    Boolean  @default(true)
+  teacherId   String?
+  // ── v3 media fields ──
+  mediaType   String   @default("teks") // teks, gambar, teks_gambar, powerpoint, video
+  mediaUrl    String?  // URL for gambar, video (YouTube embed), PowerPoint (Google Docs viewer)
+  imageUrl    String?  // URL for inline image rendering (Google Drive public URL)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ── NEW v2: Capaian Pembelajaran (CP) — parent ──
+model CapaianPembelajaran {
+  id          String   @id @default(cuid())
+  subject     String   @default("Informatika")
+  gradeLevel  String
+  kodeCP      String   @default("") // e.g. "CP.1", "CP.2"
+  deskripsi   String   // full CP text
+  isActive    Boolean  @default(true)
+  teacherId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tps         TujuanPembelajaran[]
+
+  @@unique([subject, gradeLevel, kodeCP])
+}
+
+// ── NEW v2: Tujuan Pembelajaran (TP) — child of CP ──
+model TujuanPembelajaran {
+  id          String   @id @default(cuid())
+  cpId        String
+  cp          CapaianPembelajaran @relation(fields: [cpId], references: [id], onDelete: Cascade)
+  kodeTP      String   @default("") // e.g. "TP.1.1"
+  deskripsi   String   @db.VarChar(100) // MAX 100 chars — e-Rapor safe
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([cpId, kodeTP])
+  @@index([cpId])
+}
+
+// Legacy: Capaian Pembelajaran & Tujuan Pembelajaran (old flat model, kept for backward compat)
+model LearningObjective {
+  id          String   @id @default(cuid())
+  subject     String   @default("Informatika")
+  gradeLevel  String
+  chapter     String
+  cp          String
+  tp          String
+  bobotTugas  Float    @default(40)
+  bobotUH     Float    @default(60)
+  isActive    Boolean  @default(true)
+  teacherId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// KKM + Bobot per mapel per tahun ajaran per semester
+model SubjectConfig {
+  id          String   @id @default(cuid())
+  subject     String
+  kkm         Float    @default(75)
+  bobotNH     Float    @default(40) // % Nilai Harian (Tugas Harian + Ulangan Harian)
+  bobotSTS    Float    @default(30) // % Asesmen Tengah Semester (MID)
+  bobotSAS    Float    @default(30) // % Asesmen Akhir Semester (UAS)
+  // ── NEW v2 fields ──
+  tahunAjaran String   @default("2026/2027")
+  semester    String   @default("ganjil") // "ganjil" or "genap"
+  updatedAt   DateTime @updatedAt
+
+  @@unique([subject, tahunAjaran, semester])
+}
+
+model ManualGrade {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title       String
+  score       Float
+  description String   @default("")
+  subject     String   @default("Informatika")
+  gradeType   String   @default("tugas") // legacy: "tugas", "uh", "uts", "uas"
+  // ── NEW v2 fields ──
+  gradeCategory String @default("tugas_harian") // "tugas_harian", "ulangan_harian", "sts", "sas"
+  cpId        String?  // link ke CapaianPembelajaran
+  tpId        String?  // link ke TujuanPembelajaran
+  tahunAjaran String   @default("2026/2027")
+  semester    String   @default("ganjil")
+  isOverride  Boolean  @default(false) // true if guru manually overrode auto grade
+  babId       String?  // legacy: link ke LearningObjective
+  isReleased  Boolean  @default(false)
+  teacherId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([studentId])
+  @@index([subject, tahunAjaran, semester])
+}
+
+model Progress {
+  id              String   @id @default(cuid())
+  studentId       String
+  student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  currentStage    String   @default("typing")
+  typedText       String   @default("")
+  charCount       Int      @default(0)
+  correctChars    Int      @default(0)
+  typingStartTime String   @default("")
+  typingDuration  Int      @default(0)
+  quizAnswers     String   @default("{}")
+  quizStartTime   String   @default("")
+  quizDuration    Int      @default(0)
+  isCompleted     Boolean  @default(false)
+  lastSavedAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([studentId])
+}
+
+model Result {
+  id              String   @id @default(cuid())
+  studentId       String
+  student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  typedText       String
+  charCount       Int
+  correctChars    Int
+  typingSpeedWPM  Float
+  typingAccuracy  Float
+  typingDuration  Int
+  typingScore     Float
+  quizAnswers     String
+  quizCorrect     Int
+  quizTotal       Int
+  quizScore       Float
+  totalScore      Float
+  subject         String   @default("Informatika")
+  // ── NEW v2 fields ──
+  cpId          String?   // link ke CapaianPembelajaran
+  tpId          String?   // link ke TujuanPembelajaran
+  tahunAjaran   String    @default("2026/2027")
+  semester      String    @default("ganjil")
+  assignmentId  String?   // link ke Assignment that generated this result
+  completedAt     DateTime @default(now())
+  isReleased      Boolean  @default(false)
+  releasedAt      DateTime?
+  @@index([subject, tahunAjaran, semester])
+}
+
+// ══════════════════════════════════════════════════════════════════
+// v3: FITUR PENUNJANG AKADEMIK
+// ══════════════════════════════════════════════════════════════════
+
+// ── Absensi Siswa (Daftar Hadir) ──
+model Attendance {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject     String   @default("Informatika")
+  kelas       String   // "7A", "8B", dll
+  tanggal     DateTime // tanggal pertemuan
+  status      String   @default("H") // "H" (Hadir), "S" (Sakit), "I" (Izin), "A" (Alpa)
+  keterangan  String   @default("") // catatan opsional
+  tahunAjaran String   @default("2026/2027")
+  semester    String   @default("ganjil")
+  teacherId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([studentId, subject, tanggal])
+  @@index([subject, kelas, tanggal])
+  @@index([subject, tahunAjaran, semester])
+}
+
+// ── Jurnal Pembelajaran Guru (Slot JP Dinamis) ──
+model JurnalGuru {
+  id            String   @id @default(cuid())
+  teacherId     String
+  subject       String   @default("Informatika")
+  tanggal       DateTime // tanggal jurnal
+  hari          String   // "Senin", "Selasa", "Rabu", "Kamis", "Jumat"
+  jamPelajaran  Int      // 1-9 (tergantung hari)
+  kelas         String   // kelas yang diajar pada JP ini
+  mapel         String   // mapel (biasanya = subject, tapi bisa beda untuk guru multi-mapel)
+  cpId          String?  // CP yang dibahas
+  tpId          String?  // TP yang dibahas
+  materiPokok   String   @default("") // materi/kegiatan
+  hambatan      String   @default("") // catatan/hambatan kelas
+  tahunAjaran   String   @default("2026/2027")
+  semester      String   @default("ganjil")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([teacherId, tanggal, jamPelajaran])
+  @@index([teacherId, tanggal])
+  @@index([subject, tahunAjaran, semester])
+}
+
+// ── Catatan Sikap Siswa (Jurnal Observasi Anekdot) ──
+model CatatanSikap {
+  id            String   @id @default(cuid())
+  studentId     String
+  student       Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject       String   @default("Informatika")
+  kelas         String
+  tanggal       DateTime
+  kategori      String   @default("Sosial") // "Spiritual", "Sosial", "ProfilPelajarPancasila"
+  deskripsi     String   // deskripsi kejadian (positif/negatif)
+  tindakLanjut  String   @default("") // "Sudah ditegur", "Diteruskan ke Wali Kelas", dll
+  tahunAjaran   String   @default("2026/2027")
+  semester      String   @default("ganjil")
+  teacherId     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([studentId, subject])
+  @@index([subject, kelas, tanggal])
+  @@index([subject, tahunAjaran, semester])
+}
+
+// ── v3: Reset Request (Pengajuan Remedial dari Siswa ke Guru) ──
+model ResetRequest {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject     String   @default("Informatika")
+  assignmentId String? // specific assignment to reset (null = all assignments for subject)
+  kelas       String
+  cpId        String?  // CP context
+  tpId        String?  // TP context
+  reason      String   @default("") // alasan pengajuan dari siswa
+  status      String   @default("pending") // "pending", "approved", "rejected"
+  teacherId   String?  // guru yang memproses
+  processedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([subject, status])
+  @@index([studentId, subject])
+  @@index([teacherId, status])
+}
+
+// ── ForceStop (Sinyal Hentikan Tugas dari Guru ke Siswa) ──
+// Berbeda dengan model lain, ForceStop sebelumnya dibuat via raw SQL
+// di /api/force-stop/route.ts karena belum ada di schema. Sekarang
+// di-resmikan sebagai model Prisma agar bisa pakai db.forceStop.create()
+// dan db.forceStop.findFirst() tanpa $queryRaw/$executeRaw.
+//
+// Lifecycle:
+//   1. Guru trigger POST /api/force-stop → create record dengan expiresAt = NOW+60s
+//   2. Siswa poll GET /api/force-stop?subject=... setiap 3 detik
+//   3. Saat expiresAt < NOW(), record dianggap expired (siswa redirect ke dashboard)
+//   4. Cleanup: record lama (>2 jam) bisa dihapus via cron job (tidak ada relasi FK)
+model ForceStop {
+  id              String   @id @default(cuid())
+  subject         String   @default("Informatika") // mapel guru yang trigger
+  triggeredAt     DateTime @default(now())         // kapan guru mengaktifkan
+  expiresAt       DateTime                           // kapan countdown selesai
+  countdownSeconds Int    @default(60)              // durasi countdown (detik)
+  teacherId       String?                           // guru yang trigger (nullable untuk future system-triggered)
+  createdAt       DateTime @default(now())
+
+  @@index([subject, expiresAt]) // query utama: WHERE subject = ? AND expiresAt > NOW()
+  @@index([teacherId, triggeredAt])
+}

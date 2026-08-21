@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>SAKOLA Cover</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --c-bg:       #f0f0f1;
+    --c-accent:   #2b6886;
+    --c-text:     #151617;
+    --c-muted:    #80878a;
+    --c-mid:      #475b66;
+    --c-surface:  #e9eced;
+    --c-accent2:  #b76e4a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 794px;
+    background: var(--c-bg);
+    font-family: 'Inter', 'Noto Sans SC', sans-serif;
+    color: var(--c-text);
+  }
+  @page { size: 794px 1123px; margin: 0; }
+  .cover {
+    position: relative;
+    width: 794px;
+    height: 1123px;
+    background: var(--c-bg);
+    overflow: hidden;
+  }
+
+  /* ── Layer 1: Background grid + watermark ── */
+  .layer-bg {
+    position: absolute; inset: 0;
+    overflow: hidden;
+    z-index: 1;
+  }
+  .grid-pattern {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(43, 104, 134, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(43, 104, 134, 0.04) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  /* ── Layer 2: Structure ── */
+  .layer-structure {
+    position: absolute; inset: 0;
+    z-index: 2;
+  }
+  .anchor-line {
+    position: absolute;
+    left: 95px;          /* 0.12 * 794 = 95.28 */
+    top: 112px;          /* 0.10 * 1123 = 112.3 */
+    bottom: 112px;       /* 0.10 * 1123 = 112.3 */
+    width: 6px;
+    background: var(--c-accent);
+  }
+  .corner-tl, .corner-tr, .corner-bl, .corner-br {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    border-color: var(--c-accent);
+    opacity: 0.6;
+  }
+  .corner-tl { top: 32px; left: 32px; border-top: 2px solid; border-left: 2px solid; }
+  .corner-tr { top: 32px; right: 32px; border-top: 2px solid; border-right: 2px solid; }
+  .corner-bl { bottom: 32px; left: 32px; border-bottom: 2px solid; border-left: 2px solid; }
+  .corner-br { bottom: 32px; right: 32px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  /* ── Layer 3: Content ── */
+  .layer-content {
+    position: absolute; inset: 0;
+    z-index: 3;
+  }
+  .content-block {
+    position: absolute;
+    left: 145px;         /* 95 + 6 + 44 (gap ≥ 40px from anchor line) */
+    right: 80px;
+  }
+
+  /* A - Kicker */
+  .kicker {
+    top: 168px;          /* 0.15 * 1123 = 168.45 */
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 4px;
+    color: var(--c-accent);
+    opacity: 0.85;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* B - Hero Title */
+  .hero-title {
+    top: 245px;          /* below kicker with breathing room */
+    font-size: 64px;
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -1px;
+    color: var(--c-text);
+    max-width: 580px;
+  }
+  .hero-title .accent {
+    color: var(--c-accent);
+  }
+  .subtitle {
+    top: 405px;
+    font-size: 22px;
+    font-weight: 300;
+    line-height: 1.35;
+    color: var(--c-muted);
+    max-width: 560px;
+    letter-spacing: 0.3px;
+  }
+
+  /* C - Summary */
+  .summary {
+    top: 510px;          /* ~0.45 * H */
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.7;
+    color: var(--c-text);
+    opacity: 0.85;
+    max-width: 540px;    /* W * 0.68 */
+  }
+  .summary strong {
+    color: var(--c-accent);
+    font-weight: 600;
+  }
+
+  /* Stats row */
+  .stats {
+    top: 700px;
+    display: flex;
+    gap: 48px;
+    max-width: 540px;
+  }
+  .stat {
+    border-left: 2px solid var(--c-accent);
+    padding-left: 14px;
+  }
+  .stat-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--c-text);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--c-muted);
+    margin-top: 6px;
+  }
+
+  /* D - Meta */
+  .meta {
+    top: 870px;          /* 0.77 * H */
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--c-text);
+  }
+  .meta-row {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 4px;
+  }
+  .meta-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: var(--c-muted);
+    text-transform: uppercase;
+    min-width: 90px;
+    padding-top: 2px;
+  }
+  .meta-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--c-text);
+  }
+
+  /* Footer */
+  .footer {
+    position: absolute;
+    bottom: 50px;
+    left: 145px;
+    right: 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--c-muted);
+    opacity: 0.7;
+    text-transform: uppercase;
+  }
+  .footer-right {
+    color: var(--c-accent);
+  }
+</style>
+</head>
+<body>
+<div class="cover">
+
+  <!-- Layer 1: Background -->
+  <div class="layer-bg">
+    <div class="grid-pattern"></div>
+  </div>
+
+  <!-- Layer 2: Structure -->
+  <div class="layer-structure">
+    <div class="anchor-line"></div>
+    <div class="corner-tl"></div>
+    <div class="corner-tr"></div>
+    <div class="corner-bl"></div>
+    <div class="corner-br"></div>
+  </div>
+
+  <!-- Layer 3: Content -->
+  <div class="layer-content">
+
+    <div class="content-block kicker">
+      LAPORAN TEKNIS ARSITEKTUR &amp; AUDIT BUG
+    </div>
+
+    <div class="content-block hero-title">
+      SAKOLA<br>
+      <span class="accent">E-Learning</span> Platform
+    </div>
+
+    <div class="content-block subtitle">
+      Santo Augustinus Komputasi Online Learning Aplikasi<br>
+      Audit Menyeluruh Arsitektur, Struktur Kode, Alur Kerja, dan Daftar Bug Aktif
+    </div>
+
+    <div class="content-block summary">
+      Laporan teknis menyeluruh untuk aplikasi SAKOLA &mdash; platform e-learning LMS multi-mata pelajaran
+      untuk SMP Santo Augustinus dan SMK Santo Petrus. Dokumen ini mencakup <strong>arsitektur sistem</strong>,
+      <strong>struktur direktori</strong>, <strong>alur kerja inti</strong> (autentikasi, latihan siswa,
+      perhitungan nilai, AI generation), serta <strong>daftar 14 bug aktif</strong> dengan akar masalah,
+      dampak runtime, dan instruksi perbaikan terperinci untuk tim IT.
+    </div>
+
+    <div class="content-block stats">
+      <div class="stat">
+        <div class="stat-num">59</div>
+        <div class="stat-label">API Routes</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">17</div>
+        <div class="stat-label">Prisma Models</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">14</div>
+        <div class="stat-label">Active Bugs</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">5</div>
+        <div class="stat-label">Migrations</div>
+      </div>
+    </div>
+
+    <div class="content-block meta">
+      <div class="meta-row">
+        <span class="meta-label">Versi</span>
+        <span class="meta-value">0.2.0</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Tanggal</span>
+        <span class="meta-value">12 Agustus 2026</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Repository</span>
+        <span class="meta-value">github.com/hendrikusmuda52-droid/latihan-komputasional</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Disusun oleh</span>
+        <span class="meta-value">Arsitek Sistem Utama &mdash; Tim IT SAKOLA</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>DOKUMEN INTERNAL &middot; TIM IT</span>
+      <span class="footer-right">REV. 2026.08.12</span>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

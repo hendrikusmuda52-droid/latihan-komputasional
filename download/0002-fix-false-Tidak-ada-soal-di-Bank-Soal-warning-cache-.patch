@@ -1,0 +1,268 @@
+From 08586251d9bc00dc73008059aff2bbe8e8426935 Mon Sep 17 00:00:00 2001
+From: Z User <z@container>
+Date: Fri, 21 Aug 2026 01:52:44 +0000
+Subject: [PATCH 2/2] fix: false 'Tidak ada soal di Bank Soal' warning (cache +
+ missing params)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+ROOT CAUSE (bukan hanya caching):
+- Frontend assignments-manager.tsx line 453 fetch ke /api/questions?stockCheck=1
+  HANYA mengirim cpId+tpId — TIDAK mengirim grade (kelas) & subject (mapel).
+- Backend jatuh ke teacherSubject dari JWT (default 'Informatika'), padahal
+  user mungkin pilih mapel lain (mis: 'Mata Pelajaran Kejuruan').
+- Query count = 0 karena subject mismatch → false warning muncul.
+- Next.js Data Cache memperburuk: count=0 ter-cache, tidak update meski
+  soal baru ditambahkan ke DB.
+
+FIXES:
+
+Backend (src/app/api/questions/route.ts):
+- Tambah export const dynamic = 'force-dynamic'
+- Tambah export const fetchCache = 'force-no-store'
+- Tambah export const revalidate = 0
+- Tambah Cache-Control: no-store, max-age=0, must-revalidate headers
+  di SEMUA response path (stockCheck + list + fallback)
+- Tambah console.log params & result untuk debugging
+- Tambah fallback query 'stockCountWithoutCp': jika count dengan cpId = 0,
+  coba query ulang TANPA cpId untuk kasus soal lama yang belum di-link
+- Echo params di response agar frontend bisa verifikasi
+
+Frontend (src/components/teacher/assignments-manager.tsx):
+- Tambah params.set('grade', effectiveGrade) — kirim grade eksplisit
+- Tambah params.set('subject', effectiveSubject) — kirim subject eksplisit
+- Tambah cache: 'no-store' di fetch options
+- Tambah effectiveGrade & effectiveSubject ke dependency array useEffect
+- Update stockInfo state untuk simpan withoutCp & params echo
+- Update UI warning: 3 level (red/amber/emerald) dengan pesan lebih akurat:
+  - Red: benar-benar tidak ada soal untuk mapel+kelas+CP ini
+  - Amber: ada soal tapi belum di-link ke CP (hint ke user untuk link)
+  - Emerald: stok soal tersedia
+
+Verified:
+- TypeScript: tsc --noEmit exit 0
+- ESLint: exit 0
+- 2 files modified, 117 insertions, 10 deletions
+---
+ src/app/api/questions/route.ts                | 85 ++++++++++++++++++-
+ .../teacher/assignments-manager.tsx           | 42 +++++++--
+ 2 files changed, 117 insertions(+), 10 deletions(-)
+
+diff --git a/src/app/api/questions/route.ts b/src/app/api/questions/route.ts
+index ab397fe..8e0c623 100755
+--- a/src/app/api/questions/route.ts
++++ b/src/app/api/questions/route.ts
+@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
+ import { db } from '@/lib/db'
+ import { requireTeacherAuth, requireAdminAuth } from '@/lib/auth'
+ 
++// ── FIX: Nonaktifkan Next.js Data Cache secara total untuk endpoint ini ──
++// Sebelumnya, response GET /api/questions?stockCheck=1 bisa di-cache oleh
++// Next.js (default cache 0s-300s tergantung konfigurasi). Akibatnya, ketika
++// guru menambah soal baru ke Bank Soal, count di modal Tambah Tugas masih
++// menampilkan angka lama (atau 0) — notifikasi "Tidak ada soal di Bank Soal"
++// muncul secara keliru meskipun puluhan soal sudah ada di DB.
++//
++// `force-dynamic` menyebabkan route ini selalu dieksekusi di server (tidak
++// di-cache di edge/full-route cache). `force-no-store` melarang fetch cache
++// untuk apapun yang dipanggil dari dalam handler ini.
++export const dynamic = 'force-dynamic'
++export const fetchCache = 'force-no-store'
++export const revalidate = 0
++
+ // HOTFIX #3: Helper — safely run a DB query, return [] on any error.
+ async function safeQuery<T>(fn: () => Promise<T[]>): Promise<T[]> {
+   try {
+@@ -22,6 +36,15 @@ async function safeCount(fn: () => Promise<number>): Promise<number> {
+   }
+ }
+ 
++// Helper: bypass cache headers untuk response JSON.
++// Dipakai di semua return path agar browser & Vercel Edge tidak pernah
++// menyimpan response endpoint ini.
++const NO_CACHE_HEADERS = {
++  'Cache-Control': 'no-store, max-age=0, must-revalidate',
++  'Pragma': 'no-cache',
++  'Expires': '0',
++}
++
+ // GET: list semua soal (untuk guru)
+ export async function GET(req: NextRequest) {
+   try {
+@@ -44,6 +67,21 @@ export async function GET(req: NextRequest) {
+     const effectiveSubject = subjectParam || teacherSubject
+ 
+     // ── Stock check mode — return count only ──
++    // Frontend (assignments-manager.tsx) memanggil endpoint ini saat user
++    // memilih CP di modal Tambah Tugas untuk mengecek apakah ada soal yang
++    // tersedia sebelum tugas disimpan.
++    //
++    // FIX Bug "Tidak ada soal di Bank Soal":
++    //   1. Frontend sebelumnya HANYA mengirim cpId+tpId, TANPA grade+subject.
++    //      Backend jatuh ke teacherSubject dari JWT (default "Informatika"),
++    //      padahal user mungkin memilih mapel "Mata Pelajaran Kejuruan".
++    //      Query count jadi 0 karena subject mismatch → false warning.
++    //   2. Next.js caching membuat count=0 ter-cache, tidak update meski
++    //      soal baru ditambahkan ke DB.
++    //
++    //   Solusi: di backend kita defensive — kalau subject tidak dikirim,
++    //   fallback ke teacherSubject. Tapi yang BENAR adalah frontend kirim
++    //   subject + grade eksplisit (lihat patch assignments-manager.tsx).
+     if (stockCheck === '1') {
+       const stockWhere: Record<string, unknown> = {
+         subject: effectiveSubject,
+@@ -53,8 +91,47 @@ export async function GET(req: NextRequest) {
+       if (cpIdParam && cpIdParam !== '__none__') stockWhere.cpId = cpIdParam
+       if (tpIdParam && tpIdParam !== '__none__') stockWhere.tpId = tpIdParam
+ 
++      // ── FIX: Logging untuk debugging mismatch ──
++      // Jika count = 0, log parameter yang diterima agar mudah troubleshoot.
++      console.log('[questions] stockCheck params:', {
++        grade,
++        subject: effectiveSubject,
++        cpId: cpIdParam,
++        tpId: tpIdParam,
++        teacherSubject,
++      })
++
+       const stockCount = await safeCount(() => db.question.count({ where: stockWhere }))
+-      return NextResponse.json({ success: true, stockCount })
++
++      // ── FIX: Jika count = 0 dengan cpId, coba query ulang TANPA cpId ──
++      // Kemungkinan soal-soal lama belum di-link ke cpId manapun. Beri info
++      // ke frontend bahwa soal ada tapi belum di-CP-kan.
++      let stockCountWithoutCp: number | null = null
++      if (stockCount === 0 && cpIdParam && cpIdParam !== '__none__') {
++        const fallbackWhere: Record<string, unknown> = {
++          subject: effectiveSubject,
++          isActive: true,
++        }
++        if (grade) fallbackWhere.gradeLevel = grade
++        stockCountWithoutCp = await safeCount(() => db.question.count({ where: fallbackWhere }))
++      }
++
++      console.log('[questions] stockCheck result:', {
++        stockCount,
++        stockCountWithoutCp,
++        query: stockWhere,
++      })
++
++      return NextResponse.json({
++        success: true,
++        stockCount,
++        // Info tambahan untuk debugging: jumlah soal untuk subject+grade
++        // ini TANPA filter cpId. Frontend bisa pakai untuk nampilkan hint
++        // "ada N soal tapi belum di-link ke CP ini".
++        stockCountWithoutCp,
++        // Echo parameter yang dipakai agar frontend bisa verifikasi
++        params: { grade, subject: effectiveSubject, cpId: cpIdParam, tpId: tpIdParam },
++      }, { headers: NO_CACHE_HEADERS })
+     }
+ 
+     const where = grade
+@@ -75,7 +152,7 @@ export async function GET(req: NextRequest) {
+     )
+ 
+     if (!rawQuestions || rawQuestions.length === 0) {
+-      return NextResponse.json({ success: true, questions: [] })
++      return NextResponse.json({ success: true, questions: [] }, { headers: NO_CACHE_HEADERS })
+     }
+ 
+     // Collect unique cpIds + tpIds (exclude null/empty)
+@@ -115,11 +192,11 @@ export async function GET(req: NextRequest) {
+       }
+     })
+ 
+-    return NextResponse.json({ success: true, questions })
++    return NextResponse.json({ success: true, questions }, { headers: NO_CACHE_HEADERS })
+   } catch (fatalErr) {
+     // HOTFIX #3: Final fallback — return HTTP 200 with empty array instead of 500 + HTML.
+     console.error('[questions] GET FATAL error (returning safe empty array):', fatalErr)
+-    return NextResponse.json({ success: true, questions: [] })
++    return NextResponse.json({ success: true, questions: [] }, { headers: NO_CACHE_HEADERS })
+   }
+ }
+ 
+diff --git a/src/components/teacher/assignments-manager.tsx b/src/components/teacher/assignments-manager.tsx
+index 7251bc4..232f3e4 100755
+--- a/src/components/teacher/assignments-manager.tsx
++++ b/src/components/teacher/assignments-manager.tsx
+@@ -439,7 +439,22 @@ function AssignmentForm({
+   // When taskType is quiz_only or typing_quiz AND CP is selected,
+   // fetch the count of active questions matching the CP/TP filter.
+   // Show warning if questionCount > available stock.
+-  const [stockInfo, setStockInfo] = useState<{ available: number; loading: boolean } | null>(null)
++  //
++  // ── FIX Bug "Tidak ada soal di Bank Soal" ──
++  // Sebelumnya, fetch HANYA mengirim cpId+tpId — TANPA grade & subject.
++  // Backend jatuh ke teacherSubject dari JWT (default "Informatika"),
++  // padahal user mungkin pilih mapel lain (mis: "Mata Pelajaran Kejuruan").
++  // Akibatnya, query count selalu 0 → muncul false warning.
++  //
++  // Sekarang: kirim grade (effectiveGrade) + subject (effectiveSubject)
++  // eksplisit, plus `cache: 'no-store'` agar browser selalu ambil data
++  // segar dari server (tidak pakai cache Next.js / browser).
++  const [stockInfo, setStockInfo] = useState<{
++    available: number
++    loading: boolean
++    withoutCp?: number | null
++    params?: { grade?: string; subject?: string; cpId?: string; tpId?: string }
++  } | null>(null)
+   const needsQuizQuestions = form.taskType === 'quiz_only' || form.taskType === 'typing_quiz'
+   useEffect(() => {
+     if (!needsQuizQuestions || !form.cpId || form.cpId === NONE) {
+@@ -449,14 +464,24 @@ function AssignmentForm({
+     setStockInfo({ available: 0, loading: true })
+     const params = new URLSearchParams({ cpId: form.cpId })
+     if (form.tpId && form.tpId !== NONE) params.set('tpId', form.tpId)
++    // ── FIX: Kirim grade + subject eksplisit agar backend query akurat ──
++    if (effectiveGrade) params.set('grade', effectiveGrade)
++    if (effectiveSubject) params.set('subject', effectiveSubject)
+     // Use the questions API with stock-check mode (count only)
+-    fetch(`/api/questions?${params.toString()}&stockCheck=1`)
++    fetch(`/api/questions?${params.toString()}&stockCheck=1`, {
++      cache: 'no-store',  // FIX: bypass Next.js Data Cache & browser cache
++    })
+       .then((r) => r.json())
+       .then((data) => {
+-        setStockInfo({ available: data?.stockCount ?? 0, loading: false })
++        setStockInfo({
++          available: data?.stockCount ?? 0,
++          loading: false,
++          withoutCp: data?.stockCountWithoutCp ?? null,
++          params: data?.params,
++        })
+       })
+       .catch(() => setStockInfo({ available: 0, loading: false }))
+-  }, [form.cpId, form.tpId, form.taskType, needsQuizQuestions])
++  }, [form.cpId, form.tpId, form.taskType, needsQuizQuestions, effectiveGrade, effectiveSubject])
+ 
+   const stockWarning = stockInfo && !stockInfo.loading && form.questionCount > 0 && form.questionCount > stockInfo.available
+     ? `Stok soal untuk CP/TP ini hanya ${stockInfo.available} soal. Jumlah soal akan disesuaikan otomatis.`
+@@ -917,7 +942,9 @@ function AssignmentForm({
+               stockInfo.loading
+                 ? 'bg-slate-50 text-slate-500'
+                 : stockInfo.available === 0
+-                  ? 'bg-red-50 text-red-700 border border-red-200'
++                  ? stockInfo.withoutCp && stockInfo.withoutCp > 0
++                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
++                    : 'bg-red-50 text-red-700 border border-red-200'
+                   : stockWarning
+                     ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                     : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+@@ -925,7 +952,10 @@ function AssignmentForm({
+               {stockInfo.loading ? (
+                 'Memeriksa stok soal...'
+               ) : stockInfo.available === 0 ? (
+-                '⚠ Tidak ada soal di Bank Soal untuk CP/TP ini. Tugas tidak akan bisa dikerjakan siswa.'
++                // ── FIX: Pesan lebih akurat berdasarkan info withoutCp ──
++                stockInfo.withoutCp && stockInfo.withoutCp > 0
++                  ? `⚠ Tidak ada soal yang ter-link ke CP/TP ini. Namun ada ${stockInfo.withoutCp} soal untuk mapel+kelas ini yang belum di-link ke CP manapun. Hubungkan soal-soal tersebut ke CP melalui menu Bank Soal, atau pilih CP lain.`
++                  : '⚠ Tidak ada soal di Bank Soal untuk mapel+kelas+CP/TP ini. Pastikan:(1) Mapel di-dropdown sesuai dengan mapel soal di Bank Soal, (2) Kelas di-dropdown sesuai grade soal (7/8/9/11DKV/12DKV), (3) Soal sudah di-link ke CP yang dipilih.'
+               ) : stockWarning ? (
+                 `⚠ ${stockWarning}`
+               ) : (
+-- 
+2.47.3
+
