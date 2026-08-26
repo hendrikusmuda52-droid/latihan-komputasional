@@ -371,10 +371,28 @@ function AssignmentForm({
   // That didn't work for multi-mapel because API returned only JWT subject CPs.
   // Now we fetch with explicit subject + grade params so API returns
   // CPs for the selected subject (e.g., "Mapel Kejuruan" for 11DKV).
+  //
+  // ── FIX Bug CP Tidak Muncul: ──
+  // Sebelumnya, effectiveGrade hanya dihitung jika selectedKelas.length === 1.
+  // Jika user pilih 2+ kelas (mis: 7A + 7B + 7C), effectiveGrade = '' (kosong)
+  // → useEffect return tanpa fetch CP → CP tidak pernah muncul.
+  //
+  // Sekarang: ambil grade tier dari kelas pertama yang dipilih.
+  // Jika semua kelas dari grade tier yang sama (mis: 7A, 7B, 7C → "7"),
+  // fetch CP untuk grade tier itu.
+  // Jika mix grade tier (mis: 7A + 11DKV), tampilkan warning.
   const effectiveSubject = form.subject || 'Informatika'
-  const effectiveGrade = selectedKelas.length === 1
-    ? kelasToGradeTier(selectedKelas[0])
-    : ''
+
+  // Hitung set grade tier unik dari selectedKelas
+  const gradeTiers = selectedKelas
+    .map(k => kelasToGradeTier(k))
+    .filter(t => t !== '')
+  const uniqueGradeTiers = [...new Set(gradeTiers)]
+
+  // Ambil grade tier pertama jika semua kelas dari tier yang sama
+  // Jika beda tier, tetap pakai yang pertama tapi tampilkan warning
+  const effectiveGrade = uniqueGradeTiers.length >= 1 ? uniqueGradeTiers[0] : ''
+  const hasMixedGradeTiers = uniqueGradeTiers.length > 1
 
   useEffect(() => {
     // Don't fetch if subject or grade not yet determined
@@ -636,6 +654,14 @@ function AssignmentForm({
             {form.targetKelas === 'CUSTOM' && selectedKelas.length === 0 && (
               <p className="text-xs text-amber-600 mt-1">
                 ⚠ Pilih minimal 1 kelas untuk mengaktifkan dropdown Mata Pelajaran & CP
+              </p>
+            )}
+            {/* ── FIX: Warning jika pilih kelas dari grade tier berbeda ── */}
+            {form.targetKelas === 'CUSTOM' && hasMixedGradeTiers && (
+              <p className="text-xs text-amber-600 mt-1">
+                ⚠ Anda memilih kelas dari tingkat berbeda ({uniqueGradeTiers.join(', ')}).
+                CP yang ditampilkan hanya untuk tingkat <b>{effectiveGrade}</b>.
+                Sebaiknya pilih kelas dari tingkat yang sama agar CP dan soal konsisten.
               </p>
             )}
           </div>
