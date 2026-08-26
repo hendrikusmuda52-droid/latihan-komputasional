@@ -26,17 +26,41 @@ DATABASE_URL = os.environ.get(
 )
 # ───────────────────────────────────────────────────────────────
 
-SQL_PARTS_DIR = "/home/z/my-project/download/sql_parts"
+# ─── PATH FOLDER SQL ──────────────────────────────────────────
+# Default: folder sql_parts_v2 di direktori yang sama dengan script ini
+# Kalau Anda letakkan file SQL di lokasi lain, edit path ini
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)  # parent of scripts/
+SQL_PARTS_DIR = os.path.join(PROJECT_ROOT, "download", "sql_parts_v2")
+
+# Fallback: kalau folder tidak ada, tanya user
+if not os.path.isdir(SQL_PARTS_DIR):
+    print(f"⚠️  Folder SQL tidak ditemukan di: {SQL_PARTS_DIR}")
+    print(f"   Masukkan path folder SQL Anda (atau tekan Enter untuk pakai default):")
+    user_path = input("   Path folder sql_parts_v2: ").strip()
+    if user_path:
+        SQL_PARTS_DIR = user_path
+    if not os.path.isdir(SQL_PARTS_DIR):
+        print(f"❌ Folder tidak ditemukan: {SQL_PARTS_DIR}")
+        print(f"   Pastikan Anda sudah download folder sql_parts_v2 dari z.ai workspace")
+        sys.exit(1)
 
 
 def main():
-    # Cek psycopg2
+    # Cek psycopg2 — auto-install kalau belum ada
     try:
         import psycopg2
     except ImportError:
-        print("❌ psycopg2 belum terinstall.")
-        print("   Install dengan: pip install psycopg2-binary")
-        sys.exit(1)
+        print("⚠️  psycopg2 belum terinstall. Mencoba auto-install...")
+        import subprocess
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "psycopg2-binary"])
+            import psycopg2
+            print("✅ psycopg2 berhasil di-install!")
+        except Exception as e:
+            print(f"❌ Gagal auto-install: {e}")
+            print("   Install manual dengan: pip install psycopg2-binary")
+            sys.exit(1)
 
     # Cek DATABASE_URL
     if "PROJECT" in DATABASE_URL or "PASSWORD" in DATABASE_URL:
