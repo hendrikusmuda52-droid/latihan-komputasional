@@ -1,0 +1,111 @@
+name: Run SQL to Supabase
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install psycopg2
+        run: pip install psycopg2-binary
+
+      - name: Verify SQL files exist
+        run: |
+          echo "=== Cek file SQL ==="
+          ls download/sql_parts_v2/*.sql | wc -l
+          if [ ! -d "download/sql_parts_v2" ]; then
+            echo "Folder tidak ditemukan!"
+            exit 1
+          fi
+
+      - name: Connect & Run SQL
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python3 << 'EOF'
+          import os, glob, psycopg2, sys
+          DATABASE_URL = os.environ.get("DATABASE_URL", "")
+          SQL_DIR = "download/sql_parts_v2"
+          if not DATABASE_URL:
+              print("DATABASE_URL secret belum diset!")
+              sys.exit(1)
+          if "[YOUR-PASSWORD]" in DATABASE_URL:
+              print("Ganti [YOUR-PASSWORD] dengan password asli!")
+              sys.exit(1)
+          sql_files = sorted(glob.glob(os.path.join(SQL_DIR, "*.sql")))
+          print(f"Ditemukan {len(sql_files)} file SQL")
+          print("Menghubungkan ke database...")
+          conn = psycopg2.connect(DATABASE_URL)
+          conn.autocommit = False
+          cursor = conn.cursor()
+          print("Berhasil connect!")
+          success = 0
+          failed = []
+          for sql_file in sql_files:
+              filename = os.path.basename(sql_file)
+              print(f"\nMemproses: {filename}")
+              with open(sql_file, "r", encoding="utf-8") as f:
+                  sql_content = f.read()
+              try:
+                  cursor.execute(sql_content)
+                  conn.commit()
+                  print(f"  Berhasil!")
+                  success += 1
+              except Exception as e:
+                  conn.rollback()
+                  err = str(e)
+                  if "duplicate key" in err.lower():
+                      print(f"  Duplicate - skip")
+                      success += 1
+                  else:
+                      print(f"  GAGAL: {err}")
+                      failed.append(filename)
+          cursor.close()
+          conn.close()
+          print(f"\n{'='*50}")
+          print(f"Berhasil: {success}/{len(sql_files)}")
+          if failed:
+              print(f"Gagal: {failed}")
+              sys.exit(1)
+          print("SEMUA BERHASIL!")
+          EOF
+
+      - name: Verifikasi hasil
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python3 << 'EOF'
+          import os, psycopg2
+          DATABASE_URL = os.environ.get("DATABASE_URL", "")
+          if not DATABASE_URL: exit(0)
+          conn = psycopg2.connect(DATABASE_URL)
+          cursor = conn.cursor()
+          cursor.execute('''
+              SELECT cp."gradeLevel", cp."kodeCP", COUNT(q.id)
+              FROM "Question" q
+              JOIN "CapaianPembelajaran" cp ON q."cpId" = cp.id
+              WHERE q.subject = 'Informatika'
+              GROUP BY cp."gradeLevel", cp."kodeCP"
+              ORDER BY cp."gradeLevel", cp."kodeCP"
+          ''')
+          rows = cursor.fetchall()
+          print("\nJumlah soal per CP:")
+          total = 0
+          for grade, kode, jumlah in rows:
+              print(f"  Kelas {grade} {kode}: {jumlah} soal")
+              total += jumlah
+          print(f"\nTOTAL: {total} soal")
+          cursor.close()
+          conn.close()
+          EOF
