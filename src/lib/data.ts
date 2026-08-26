@@ -19,6 +19,14 @@ export interface Question {
   // TypeScript errors out and the runtime check `currentQ.imageUrl && (...)`
   // always evaluates to falsy (undefined), preventing images from rendering.
   imageUrl?: string | null
+  // ── FIX: Field v3 untuk tampilan soal yang lebih kaya ──
+  // Ditambahkan agar quiz-stage bisa tampilkan badge level kognitif + CP
+  levelKognitif?: string | null
+  cpId?: string | null
+  tpId?: string | null
+  pembahasanBenar?: string | null
+  analisisDistraktor?: string | null
+  dbId?: string
 }
 
 // =====================================================

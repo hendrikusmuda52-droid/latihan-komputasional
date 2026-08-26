@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAppStore, type QuizResult } from '@/lib/store'
 import { getQuestions as getQuestionsFallback, type GradeLevel, type Question } from '@/lib/data'
 import { getGradeTier } from '@/lib/constants'
+import { QuestionMarkdown } from '@/components/stages/question-markdown'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -413,72 +414,99 @@ export function QuizStage() {
         </div>
 
         <div className="grid lg:grid-cols-[1fr_280px] gap-6">
-          {/* Soal */}
-          <Card className="border-slate-200">
-            <CardHeader className="bg-slate-50 pb-3">
-              <div className="flex items-center justify-between">
+          {/* Soal — Layout baru lebih menarik dengan markdown */}
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-teal-50 to-sky-50 pb-3 border-b border-slate-200">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <CardTitle className="flex items-center gap-2 text-base">
-                  Soal {currentIdx + 1} dari {QUESTIONS.length}
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-600 text-white text-sm font-bold">
+                    {currentIdx + 1}
+                  </span>
+                  <span className="text-slate-700">dari {QUESTIONS.length}</span>
                 </CardTitle>
-                <Badge variant="outline" className="bg-teal-50 text-teal-700">
-                  {currentQ.category}
-                </Badge>
+                <div className="flex items-center gap-1.5">
+                  {currentQ.levelKognitif && (
+                    <Badge variant="outline" className="bg-violet-50 text-violet-700 border-violet-200 text-xs">
+                      {currentQ.levelKognitif}
+                    </Badge>
+                  )}
+                  <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200 text-xs">
+                    {currentQ.category}
+                  </Badge>
+                  {currentQ.cpId && (
+                    <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200 text-xs">
+                      CP
+                    </Badge>
+                  )}
+                </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-6">
-              <p className="text-slate-900 leading-relaxed mb-4 text-base">
-                {currentQ.question}
-              </p>
+            <CardContent className="pt-5">
+              {/* ── FIX: Render soal dengan markdown untuk tampilan menarik ── */}
+              <div className="prose prose-slate max-w-none mb-5">
+                <QuestionMarkdown content={currentQ.question} />
+              </div>
+
               {currentQ.imageUrl && (
-                <div className="mb-6">
+                <div className="mb-5 flex justify-center">
                   <img
                     src={currentQ.imageUrl}
                     alt="Gambar soal"
-                    className="max-w-full max-h-72 rounded-lg border border-slate-200 mx-auto"
+                    className="max-w-full max-h-72 rounded-lg border border-slate-200 shadow-sm"
                   />
                 </div>
               )}
 
-              <RadioGroup
-                value={
-                  answers[currentQ.id] !== undefined
-                    ? String(answers[currentQ.id])
-                    : ''
-                }
-                onValueChange={(v) =>
-                  setAnswers({
-                    ...answers,
-                    [currentQ.id]: Number(v),
-                  })
-                }
-                className="space-y-3"
-              >
-                {currentQ.options.map((opt, i) => (
-                  <div
-                    key={i}
-                    className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                      answers[currentQ.id] === i
-                        ? 'border-teal-500 bg-teal-50'
-                        : 'border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <RadioGroupItem
-                      value={String(i)}
-                      id={`q${currentQ.id}-opt${i}`}
-                      className="mt-1"
-                    />
-                    <Label
-                      htmlFor={`q${currentQ.id}-opt${i}`}
-                      className="cursor-pointer flex-1 text-sm leading-relaxed text-slate-700"
+              {/* ── FIX: Opsi jawaban dengan layout lebih rapi ── */}
+              <div className="space-y-2.5">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                  Pilih jawaban:
+                </p>
+                <RadioGroup
+                  value={
+                    answers[currentQ.id] !== undefined
+                      ? String(answers[currentQ.id])
+                      : ''
+                  }
+                  onValueChange={(v) =>
+                    setAnswers({
+                      ...answers,
+                      [currentQ.id]: Number(v),
+                    })
+                  }
+                  className="space-y-2.5"
+                >
+                  {currentQ.options.map((opt, i) => (
+                    <div
+                      key={i}
+                      className={`flex items-start gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                        answers[currentQ.id] === i
+                          ? 'border-teal-500 bg-teal-50 shadow-sm'
+                          : 'border-slate-200 hover:border-teal-300 hover:bg-slate-50'
+                      }`}
                     >
-                      <span className="font-semibold mr-2">
-                        {String.fromCharCode(65 + i)}.
-                      </span>
-                      {opt}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
+                      <RadioGroupItem
+                        value={String(i)}
+                        id={`q${currentQ.id}-opt${i}`}
+                        className="mt-1"
+                      />
+                      <Label
+                        htmlFor={`q${currentQ.id}-opt${i}`}
+                        className="cursor-pointer flex-1 text-sm leading-relaxed text-slate-700"
+                      >
+                        <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md text-xs font-bold mr-2.5 ${
+                          answers[currentQ.id] === i
+                            ? 'bg-teal-600 text-white'
+                            : 'bg-slate-200 text-slate-600'
+                        }`}>
+                          {String.fromCharCode(65 + i)}
+                        </span>
+                        {opt}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
 
               {/* Tombol navigasi */}
               <div className="flex justify-between items-center mt-6 pt-4 border-t">
