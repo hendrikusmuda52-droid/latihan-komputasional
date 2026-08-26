@@ -39,7 +39,7 @@ VALUES (
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
 VALUES (
   'tp_inf_7_1_1', 'cp_inf_7_1', 'TP.7.1.1',
-  'Peserta didik dapat menjelaskan konsep berpikir komputasional dan menyusun algoritma sederhana untuk penyelesaian masalah.',
+  'Siswa dapat menjelaskan berpikir komputasional dan menyusun algoritma sederhana.',
   true, NOW(), NOW()
 ) ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
@@ -81,7 +81,7 @@ VALUES (
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
 VALUES (
   'tp_inf_7_2_1', 'cp_inf_7_2', 'TP.7.2.1',
-  'Peserta didik dapat menggunakan perkakas pengolah lembar kerja untuk pengolahan data dasar dan lanjutan.',
+  'Siswa dapat menggunakan spreadsheet untuk pengolahan data dasar dan lanjutan.',
   true, NOW(), NOW()
 ) ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
@@ -132,7 +132,7 @@ VALUES (
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
 VALUES (
   'tp_inf_7_3_1', 'cp_inf_7_3', 'TP.7.3.1',
-  'Peserta didik dapat menerapkan literasi informasi dengan mengevaluasi kredibilitas sumber dan membedakan fakta, opini, serta hoaks.',
+  'Siswa dapat mengevaluasi kredibilitas sumber dan membedakan fakta, opini, hoaks.',
   true, NOW(), NOW()
 ) ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
@@ -196,7 +196,7 @@ VALUES (
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
 VALUES (
   'tp_inf_7_4_1', 'cp_inf_7_4', 'TP.7.4.1',
-  'Peserta didik dapat menerapkan keseimbangan aktivitas digital dan melindungi informasi privat dengan kata sandi yang aman.',
+  'Siswa dapat menjaga keseimbangan digital dan membuat kata sandi yang aman.',
   true, NOW(), NOW()
 ) ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
@@ -247,7 +247,7 @@ VALUES (
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
 VALUES (
   'tp_inf_7_5_1', 'cp_inf_7_5', 'TP.7.5.1',
-  'Peserta didik dapat menjelaskan komponen sistem komputer, perangkat lunak produktivitas, dan dasar jaringan internet.',
+  'Siswa dapat menjelaskan sistem komputer, perangkat lunak, dan dasar jaringan internet.',
   true, NOW(), NOW()
 ) ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
@@ -301,7 +301,7 @@ VALUES (
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
 VALUES (
   'tp_inf_8_1_1', 'cp_inf_8_1', 'TP.8.1.1',
-  'Peserta didik dapat mencari, memvisualisasikan, dan meringkas data untuk analisis.',
+  'Siswa dapat mencari, memvisualisasikan, dan meringkas data untuk analisis.',
   true, NOW(), NOW()
 ) ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
@@ -348,7 +348,7 @@ VALUES (
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
 VALUES (
   'tp_inf_8_2_1', 'cp_inf_8_2', 'TP.8.2.1',
-  'Peserta didik dapat menerapkan fungsi, himpunan dan sistem bilangan, serta struktur data dalam penyelesaian masalah.',
+  'Siswa dapat menerapkan fungsi, sistem bilangan, dan struktur data dasar.',
   true, NOW(), NOW()
 ) ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
@@ -397,7 +397,7 @@ VALUES (
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
 VALUES (
   'tp_inf_8_3_1', 'cp_inf_8_3', 'TP.8.3.1',
-  'Peserta didik dapat membuat program sederhana dengan Scratch, Blockly Games, dan mengenal robot Ozobot.',
+  'Siswa dapat membuat program sederhana dengan Scratch dan Blockly Games.',
   true, NOW(), NOW()
 ) ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
@@ -455,7 +455,7 @@ VALUES (
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
 VALUES (
   'tp_inf_8_4_1', 'cp_inf_8_4', 'TP.8.4.1',
-  'Peserta didik dapat mengelola jejak digital pribadi dan menjaga reputasi online.',
+  'Siswa dapat mengelola jejak digital pribadi dan menjaga reputasi online.',
   true, NOW(), NOW()
 ) ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
@@ -503,7 +503,7 @@ VALUES (
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
 VALUES (
   'tp_inf_8_5_1', 'cp_inf_8_5', 'TP.8.5.1',
-  'Peserta didik dapat memanfaatkan perangkat digital untuk pengiriman data dan komunikasi.',
+  'Siswa dapat memanfaatkan perangkat digital untuk komunikasi data.',
   true, NOW(), NOW()
 ) ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
@@ -557,7 +557,7 @@ VALUES (
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
 VALUES (
   'tp_inf_9_1_1', 'cp_inf_9_1', 'TP.9.1.1',
-  'Peserta didik dapat menerapkan struktur data tree dan graph untuk analisis himpunan data terstruktur.',
+  'Siswa dapat menerapkan struktur data tree dan graph untuk analisis data.',
   true, NOW(), NOW()
 ) ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
@@ -608,7 +608,7 @@ VALUES (
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
 VALUES (
   'tp_inf_9_2_1', 'cp_inf_9_2', 'TP.9.2.1',
-  'Peserta didik dapat mengembangkan library pada pemrograman visual blok dan transisi ke pemrograman tekstual dengan pseudocode.',
+  'Siswa dapat mengembangkan library Scratch dan transisi ke pemrograman tekstual.',
   true, NOW(), NOW()
 ) ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
@@ -667,7 +667,7 @@ VALUES (
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
 VALUES (
   'tp_inf_9_3_1', 'cp_inf_9_3', 'TP.9.3.1',
-  'Peserta didik dapat melakukan pemrosesan data dan penyajian data dengan perangkat lunak produktivitas.',
+  'Siswa dapat melakukan pemrosesan dan penyajian data dengan tools produktivitas.',
   true, NOW(), NOW()
 ) ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
@@ -727,7 +727,7 @@ VALUES (
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
 VALUES (
   'tp_inf_9_4_1', 'cp_inf_9_4', 'TP.9.4.1',
-  'Peserta didik dapat menerapkan praktik keamanan digital untuk melindungi data dan aktivitas online.',
+  'Siswa dapat menerapkan praktik keamanan digital untuk melindungi data online.',
   true, NOW(), NOW()
 ) ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
