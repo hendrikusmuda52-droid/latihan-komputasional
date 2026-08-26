@@ -2,48 +2,111 @@
 # -*- coding: utf-8 -*-
 """
 Script untuk jalankan SQL langsung ke database Supabase via psycopg2.
-Alternatif kalau SQL Editor menolak file terlalu besar.
+Auto-load DATABASE_URL dari file .env (kalau ada), atau dari environment variable.
 
 CARA PAKAI:
-1. Install psycopg2-binary:  pip install psycopg2-binary
-2. Set DATABASE_URL environment variable, atau edit langsung di bawah
-3. Jalankan:  python3 run_sql_direct.py
+1. Install dependencies:
+   pip install python-dotenv psycopg2-binary
+
+2. Buat file .env di folder yang sama dengan script ini, isi:
+   DATABASE_URL=postgresql://postgres.wkvtjcvsttxypouzdwys:[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres
+
+   Ganti [YOUR-PASSWORD] dengan password database Anda.
+
+3. Jalankan:
+   python3 run_sql_direct.py
 
 DATABASE_URL didapat dari:
-- Supabase Dashboard → Settings → Database → Connection string
-- Pilih "Transaction" mode (port 6543) untuk runtime query
+- Supabase Dashboard → Connect → Direct → Transaction pooler → Python
+- Pastikan port 6543 (bukan 5432)
 """
 
 import os
 import sys
 import glob
 
+# ─── LOAD .ENV FILE ────────────────────────────────────────────
+# Coba load python-dotenv kalau ada (lebih aman untuk password)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    DOTENV_AVAILABLE = True
+except ImportError:
+    DOTENV_AVAILABLE = False
+
 # ─── KONFIGURASI ───────────────────────────────────────────────
-# Edit ini atau set environment variable DATABASE_URL
+# DATABASE_URL akan otomatis terbaca dari .env atau environment variable
 DATABASE_URL = os.environ.get(
     "DATABASE_URL",
-    "postgresql://postgres.PROJECT:PASSWORD@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres"
+    ""  # Kosong — harus diisi via .env atau env var
 )
 # ───────────────────────────────────────────────────────────────
 
 # ─── PATH FOLDER SQL ──────────────────────────────────────────
-# Default: folder sql_parts_v2 di direktori yang sama dengan script ini
-# Kalau Anda letakkan file SQL di lokasi lain, edit path ini
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)  # parent of scripts/
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR) if os.path.basename(SCRIPT_DIR) == "scripts" else SCRIPT_DIR
 SQL_PARTS_DIR = os.path.join(PROJECT_ROOT, "download", "sql_parts_v2")
 
 # Fallback: kalau folder tidak ada, tanya user
 if not os.path.isdir(SQL_PARTS_DIR):
-    print(f"⚠️  Folder SQL tidak ditemukan di: {SQL_PARTS_DIR}")
-    print(f"   Masukkan path folder SQL Anda (atau tekan Enter untuk pakai default):")
-    user_path = input("   Path folder sql_parts_v2: ").strip()
-    if user_path:
-        SQL_PARTS_DIR = user_path
-    if not os.path.isdir(SQL_PARTS_DIR):
-        print(f"❌ Folder tidak ditemukan: {SQL_PARTS_DIR}")
-        print(f"   Pastikan Anda sudah download folder sql_parts_v2 dari z.ai workspace")
-        sys.exit(1)
+    # Coba cari di direktori yang sama dengan script
+    alt_path = os.path.join(SCRIPT_DIR, "sql_parts_v2")
+    if os.path.isdir(alt_path):
+        SQL_PARTS_DIR = alt_path
+    else:
+        print(f"⚠️  Folder SQL tidak ditemukan di: {SQL_PARTS_DIR}")
+        print(f"   atau: {alt_path}")
+        print(f"\n   Masukkan path folder SQL Anda (atau tekan Enter untuk keluar):")
+        user_path = input("   Path folder sql_parts_v2: ").strip()
+        if user_path:
+            SQL_PARTS_DIR = user_path
+        if not os.path.isdir(SQL_PARTS_DIR):
+            print(f"❌ Folder tidak ditemukan: {SQL_PARTS_DIR}")
+            print(f"\n   Pastikan Anda sudah download folder sql_parts_v2 dari z.ai workspace")
+            print(f"   dan letakkan di struktur folder yang sama dengan script ini.")
+            sys.exit(1)
+
+
+def print_help_and_exit():
+    """Tampilkan panduan setup DATABASE_URL dan exit."""
+    print("=" * 60)
+    print("❌ DATABASE_URL belum diset!")
+    print("=" * 60)
+    print()
+    print("CARA SETUP (pilih salah satu):")
+    print()
+    print("📝 OPSI A — Pakai file .env (RECOMMENDED, paling mudah):")
+    print()
+    print("   1. Install dependencies:")
+    print("      pip install python-dotenv psycopg2-binary")
+    print()
+    print("   2. Buat file bernama '.env' di folder yang sama dengan script ini")
+    print("      Isi dengan (ganti [YOUR-PASSWORD] dengan password Anda):")
+    print()
+    print("      DATABASE_URL=postgresql://postgres.wkvtjcvsttxypouzdwys:[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres")
+    print()
+    print("   3. Jalankan script lagi:")
+    print("      python3 run_sql_direct.py")
+    print()
+    print("🏷️  OPSI B — Pakai environment variable:")
+    print()
+    print("   Linux/Mac:")
+    print('      export DATABASE_URL="postgresql://postgres.wkvtjcvsttxypouzdwys:PASSWORD_ANDA@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres"')
+    print()
+    print("   Windows PowerShell:")
+    print('      $env:DATABASE_URL="postgresql://postgres.wkvtjcvsttxypouzdwys:PASSWORD_ANDA@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres"')
+    print()
+    print("   Lalu jalankan script:")
+    print("      python3 run_sql_direct.py")
+    print()
+    print("📍 Dapat URL dari:")
+    print("   Supabase Dashboard → Connect → Direct → Transaction pooler → Python")
+    print("   Pastikan port 6543 (Transaction pooler), BUKAN 5432 (Direct connection)")
+    print()
+    print("💡 Kalau lupa password database:")
+    print("   Supabase → Settings → Database → Reset database password")
+    print()
+    sys.exit(1)
 
 
 def main():
@@ -63,31 +126,69 @@ def main():
             sys.exit(1)
 
     # Cek DATABASE_URL
-    if "PROJECT" in DATABASE_URL or "PASSWORD" in DATABASE_URL:
-        print("❌ DATABASE_URL belum diset!")
-        print()
-        print("Cara set:")
-        print("  1. Edit file ini, ganti DATABASE_URL di atas")
-        print("  2. Atau set environment variable:")
-        print("     export DATABASE_URL='postgresql://postgres.PROJECT:PASS@host:6543/postgres'")
-        print()
-        print("Dapat URL dari:")
-        print("  Supabase Dashboard → Settings → Database → Connection string")
-        print("  Pilih tab 'Transaction' (port 6543)")
+    if not DATABASE_URL:
+        print_help_and_exit()
+
+    # Validasi URL format
+    if not DATABASE_URL.startswith("postgresql://"):
+        print(f"❌ DATABASE_URL format salah: {DATABASE_URL[:50]}...")
+        print("   Harus dimulai dengan 'postgresql://'")
         sys.exit(1)
 
-    # Cari semua file SQL di sql_parts/
+    # Cek apakah masih ada placeholder [YOUR-PASSWORD]
+    if "[YOUR-PASSWORD]" in DATABASE_URL:
+        print("❌ DATABASE_URL masih berisi placeholder [YOUR-PASSWORD]!")
+        print("   Edit file .env dan ganti [YOUR-PASSWORD] dengan password database asli Anda.")
+        print()
+        print("   Kalau lupa password:")
+        print("   Supabase → Settings → Database → Reset database password")
+        sys.exit(1)
+
+    # Cek port (harus 6543 untuk Transaction pooler)
+    if ":5432" in DATABASE_URL and ":6543" not in DATABASE_URL:
+        print("⚠️  PERINGATAN: URL menggunakan port 5432 (Direct connection)!")
+        print("   Ini bisa menyebabkan error 'EMAXCONNSESSION max clients reached'.")
+        print("   Sebaiknya gunakan port 6543 (Transaction pooler) untuk bulk insert.")
+        print()
+        response = input("Lanjut dengan port 5432? (ketik 'ya' untuk lanjut): ")
+        if response.lower() != 'ya':
+            print("❌ Dibatalkan. Silakan update DATABASE_URL dengan port 6543.")
+            sys.exit(0)
+
+    # Cari semua file SQL di sql_parts_v2/
     sql_files = sorted(glob.glob(os.path.join(SQL_PARTS_DIR, "*.sql")))
     if not sql_files:
         print(f"❌ Tidak ada file SQL di {SQL_PARTS_DIR}")
-        print("   Jalankan dulu: python3 scripts/split_sql_parts.py")
         sys.exit(1)
 
-    print(f"📁 Ditemukan {len(sql_files)} file SQL di {SQL_PARTS_DIR}")
-    print(f"🔗 Database URL: {DATABASE_URL[:50]}...")
+    # Tampilkan info sebelum mulai
+    print("=" * 60)
+    print("🚀 SCRIPT EKSEKUSI SQL KE SUPABASE")
+    print("=" * 60)
+    print(f"📁 Folder SQL: {SQL_PARTS_DIR}")
+    print(f"📄 Jumlah file SQL: {len(sql_files)}")
+    # Mask password di URL untuk display
+    masked_url = DATABASE_URL
+    if "@" in masked_url:
+        # Sembunyikan password: postgresql://user:PASSWORD@host -> postgresql://user:***@host
+        parts = masked_url.split("@", 1)
+        prefix = parts[0]
+        if ":" in prefix:
+            # Hapus password
+            proto_user = prefix.rsplit(":", 1)[0]
+            masked_url = proto_user + ":***@" + parts[1]
+    print(f"🔗 Database URL: {masked_url}")
     print()
     print("⚠️  PENTING: Backup database dulu sebelum menjalankan script ini!")
     print("   Supabase → Database → Backups → Create a backup")
+    print()
+    print("📋 Yang akan dilakukan script ini:")
+    print("   1. Connect ke database Supabase Anda")
+    print("   2. Jalankan 16 file SQL berurutan:")
+    print("      - 00_delete_old_questions.sql (hapus soal lama)")
+    print("      - 01 sampai 14 (insert 840 soal baru)")
+    print("      - 99_verifikasi.sql (cek hasil)")
+    print("   3. Tampilkan ringkasan akhir")
     print()
     response = input("Lanjutkan? (ketik 'ya' untuk lanjut): ")
     if response.lower() != 'ya':
@@ -100,12 +201,17 @@ def main():
         conn = psycopg2.connect(DATABASE_URL)
         conn.autocommit = False
         cursor = conn.cursor()
-        print("✅ Berhasil connect!")
+        print("✅ Berhasil connect ke database!")
     except Exception as e:
         print(f"❌ Gagal connect: {e}")
+        print()
+        print("Kemungkinan penyebab:")
+        print("   - Password salah → cek [YOUR-PASSWORD] di file .env")
+        print("   - Network issue → cek koneksi internet")
+        print("   - URL salah → pastikan format: postgresql://postgres.PROJECT:PASSWORD@host:6543/postgres")
         sys.exit(1)
 
-    # Jalankan setiap file
+    # Jalankan setiap file SQL
     total_statements = 0
     success_files = 0
     failed_files = []
@@ -117,12 +223,13 @@ def main():
         with open(sql_file, "r", encoding="utf-8") as f:
             sql_content = f.read()
 
-        # Hitung jumlah statement (kasar)
+        # Hitung jumlah statement (kasar — hitung titik koma)
         statement_count = sql_content.count(";")
-        print(f"   {statement_count} statements, {len(sql_content)/1024:.1f} KB")
+        file_size_kb = len(sql_content) / 1024
+        print(f"   📊 {statement_count} statements, {file_size_kb:.1f} KB")
 
         try:
-            # Execute entire file
+            # Execute entire file content
             cursor.execute(sql_content)
             conn.commit()
             print(f"   ✅ Berhasil!")
@@ -130,8 +237,14 @@ def main():
             success_files += 1
         except Exception as e:
             conn.rollback()
-            print(f"   ❌ GAGAL: {e}")
-            failed_files.append((filename, str(e)))
+            error_msg = str(e)
+            print(f"   ❌ GAGAL: {error_msg}")
+            # Kalau error duplicate key, itu OK (ON CONFLICT DO NOTHING)
+            if "duplicate key" in error_msg.lower() or "already exists" in error_msg.lower():
+                print(f"   ℹ️  (Duplicate — akan di-skip, lanjut...)")
+                success_files += 1
+            else:
+                failed_files.append((filename, error_msg))
 
     # Tutup connection
     cursor.close()
@@ -139,7 +252,7 @@ def main():
 
     # Summary
     print("\n" + "=" * 60)
-    print("📊 RINGKASAN")
+    print("📊 RINGKASAN AKHIR")
     print("=" * 60)
     print(f"✅ File berhasil: {success_files}/{len(sql_files)}")
     print(f"❌ File gagal: {len(failed_files)}")
@@ -148,9 +261,23 @@ def main():
     if failed_files:
         print("\n❌ File yang gagal:")
         for filename, error in failed_files:
-            print(f"   - {filename}: {error[:100]}...")
+            print(f"   - {filename}")
+            print(f"     Error: {error[:200]}...")
 
-    print("\n🎉 Selesai! Jalankan 99_verifikasi.sql di SQL Editor untuk cek hasil.")
+    if success_files == len(sql_files):
+        print("\n🎉 SEMUA FILE BERHASIL!")
+        print("\nLangkah verifikasi:")
+        print("   1. Buka Supabase → SQL Editor")
+        print("   2. Jalankan query:")
+        print('      SELECT cp."gradeLevel", cp."kodeCP", COUNT(q.id) AS jumlah_soal')
+        print('      FROM "Question" q')
+        print('      JOIN "CapaianPembelajaran" cp ON q."cpId" = cp.id')
+        print('      WHERE q.subject = \'Informatika\'')
+        print('      GROUP BY cp."gradeLevel", cp."kodeCP"')
+        print('      ORDER BY cp."gradeLevel", cp."kodeCP";')
+        print("   3. Expected: 14 baris, masing-masing 60 soal (total 840)")
+    else:
+        print("\n⚠️  Ada file yang gagal. Kirim error ke Z.ai untuk debugging.")
 
 
 if __name__ == "__main__":

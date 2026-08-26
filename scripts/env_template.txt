@@ -1,0 +1,22 @@
+# ============================================================
+# KONFIGURASI DATABASE SUPABASE
+# ============================================================
+# Ganti [YOUR-PASSWORD] dengan password database Anda.
+#
+# Cara dapat password:
+# 1. Login ke https://supabase.com
+# 2. Pilih project hendrikusmuda52-droid
+# 3. Settings → Database → Reset database password (kalau lupa)
+#
+# ⚠️ JANGAN commit file ini ke GitHub!
+# File ini berisi password — tambahkan ke .gitignore
+# ============================================================
+
+DATABASE_URL=postgresql://postgres.wkvtjcvsttxypouzdwys:[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres
+
+# ============================================================
+# CATATAN:
+# - URL di atas sudah dikonfigurasi untuk project Anda (wkvtjcvsttxypouzdwys)
+# - Port 6543 = Transaction pooler (RECOMMENDED untuk bulk insert)
+# - Jangan gunakan port 5432 (Direct) — akan error EMAXCONNSESSION
+# ============================================================
