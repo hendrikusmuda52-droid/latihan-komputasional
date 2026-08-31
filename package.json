@@ -98,6 +98,17 @@
     "tw-animate-css": "^1.3.5",
     "typescript": "^5"
   },
+  "trustedDependencies": [
+    "@prisma/client",
+    "@prisma/engines",
+    "prisma",
+    "sharp",
+    "@swc/core",
+    "@parcel/watcher",
+    "core-js",
+    "es5-ext",
+    "unrs-resolver"
+  ],
   "overrides": {
     "@prisma/client": {
       "allow-scripts": true
