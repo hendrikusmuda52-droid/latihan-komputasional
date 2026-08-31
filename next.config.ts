@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // ── FIX: Disable sharp untuk hindari build stuck di Vercel ──
+  // Vercel punya built-in image optimization, tidak perlu sharp lokal
+  images: {
+    unoptimized: true,
+  },
   /* config options here */
   // ── Bug #6 fix: re-enable TypeScript build errors ──
   // Was previously `true` to keep Vercel builds passing while known type
