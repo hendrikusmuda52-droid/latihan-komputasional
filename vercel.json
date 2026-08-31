@@ -1,8 +1,13 @@
 {
-  "buildCommand": "prisma generate && prisma migrate deploy && next build",
+  "buildCommand": "next build",
   "framework": "nextjs",
   "regions": ["sin1"],
   "github": {
     "silent": true
+  },
+  "functions": {
+    "src/app/api/**/route.ts": {
+      "maxDuration": 30
+    }
   }
 }
