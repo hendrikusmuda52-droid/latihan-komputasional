@@ -124,9 +124,13 @@ export async function GET(req: NextRequest) {
         // Langkah A: Nilai per Bab
         const babNilai = (babs || []).map(bab => {
           const tugasManual = studentGrades.filter(g => g.gradeType === 'tugas' && g.babId === bab.id)
+          // ── FIX BUG C: filter auto results per CP/bab ──
+          // Sebelumnya: studentAuto masuk ke SEMUA bab → NH menggelembung
+          // Sekarang: hanya auto results yang cpId-nya cocok dengan bab.id yang masuk
+          const tugasAuto = studentAuto.filter(r => r.cpId === bab.id || r.cpId === null)
           const allTugasScores = [
             ...tugasManual.map(g => Number(g.score) || 0),
-            ...studentAuto.map(r => Number(r.totalScore) || 0),
+            ...tugasAuto.map(r => Number(r.totalScore) || 0),
           ]
           const avgTugas = allTugasScores.length > 0
             ? allTugasScores.reduce((a, b) => a + b, 0) / allTugasScores.length

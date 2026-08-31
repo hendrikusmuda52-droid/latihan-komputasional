@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireTeacherAuth, getTeacherFromToken } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
   try {
@@ -107,11 +108,21 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    // ── FIX: tambah auth — sebelumnya GET tidak ada auth, siapa saja bisa akses semua nilai ──
+    if (!(await requireTeacherAuth(req))) {
+      return NextResponse.json({ error: 'Tidak terautentikasi' }, { status: 401 })
+    }
+    const teacher = getTeacherFromToken(req)
+    if (!teacher) return NextResponse.json({ error: 'Token invalid' }, { status: 401 })
+
+    const teacherSubject = teacher.subject || 'Informatika'
     const results = await db.result.findMany({
+      where: { subject: teacherSubject },
       include: { student: true },
       orderBy: { completedAt: 'desc' },
+      take: 100,  // limit untuk hindari load berat
     })
     return NextResponse.json({ success: true, results })
   } catch (error) {
