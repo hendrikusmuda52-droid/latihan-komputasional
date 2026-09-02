@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import {
   RefreshCw, Plus, ClipboardList, Settings, AlertTriangle, TrendingUp, Save,
   PencilLine, Download, FileSpreadsheet, Calendar, AlertCircle,
-  Target, ChevronRight, Pencil, Trash2, Check, X,
+  Target, ChevronRight, Pencil, Trash2, Check, X, Upload,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ALL_GRADES, TAHUN_AJARAN_OPTIONS, SEMESTER_OPTIONS, GRADE_CATEGORIES } from '@/lib/constants'
@@ -195,6 +195,13 @@ function GradeBookInner() {
   const [selectedCpId, setSelectedCpId] = useState<string>('__none__')
   const [exporting, setExporting] = useState(false)
 
+  // ── NEW: State untuk Import Nilai dari Excel ──
+  const [importType, setImportType] = useState<string>('per_cp')
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState<any>(null)
+  // handleImport dideklarasikan setelah fetchPerCp (di bawah) untuk hindari circular dependency
+
   // ── NEW: State untuk Daftar Nilai per CP ──
   const [perCpData, setPerCpData] = useState<any>(null)
   const [perCpLoading, setPerCpLoading] = useState(false)
@@ -236,6 +243,46 @@ function GradeBookInner() {
       return next
     })
   }
+
+  // ── NEW: handleImport — dideklarasikan setelah fetchPerCp ──
+  const handleImport = useCallback(async () => {
+    if (!importFile) {
+      toast.error('Pilih file Excel dulu')
+      return
+    }
+    setImporting(true)
+    setImportResult(null)
+    try {
+      const formData = new FormData()
+      formData.append('file', importFile)
+      formData.append('type', importType)
+      formData.append('tahunAjaran', tahunAjaran)
+      formData.append('semester', semester)
+
+      const res = await fetch('/api/grades/import', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || 'Gagal import')
+
+      setImportResult(data)
+      if (data.success) {
+        toast.success(data.message || `${data.imported} nilai berhasil diimport`)
+        setImportFile(null)
+        fetchData()
+        fetchPerCp()
+      } else {
+        toast.error(data.message || 'Import gagal')
+      }
+    } catch (err) {
+      console.error('[grade-book] import error:', err)
+      toast.error(err instanceof Error ? err.message : 'Gagal import')
+      setImportResult({ success: false, message: err instanceof Error ? err.message : 'Gagal' })
+    } finally {
+      setImporting(false)
+    }
+  }, [importFile, importType, tahunAjaran, semester, fetchData, fetchPerCp])
 
   // Edit nilai manual (inline edit)
   const handleEditGrade = async (gradeId: string, newScore: string) => {
@@ -512,6 +559,154 @@ function GradeBookInner() {
                 <Download className="w-3.5 h-3.5 mr-1" />Download
               </Button>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── NEW: Import Nilai dari Excel ── */}
+      <Card className="border-2 border-violet-200">
+        <CardHeader className="bg-gradient-to-r from-violet-50 to-purple-50 pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Upload className="w-4 h-4 text-violet-600" />
+            Import Nilai dari Excel
+          </CardTitle>
+          <p className="text-xs text-slate-500 mt-1">
+            Download template, isi nilai siswa, lalu upload. Nilai akan otomatis masuk ke database sesuai CP/TP.
+          </p>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="grid sm:grid-cols-2 gap-4">
+            {/* Download Template Per CP */}
+            <div className="space-y-2 border border-slate-200 rounded-lg p-3 bg-white">
+              <Label className="text-xs font-semibold flex items-center gap-1">
+                <FileSpreadsheet className="w-3 h-3 text-violet-600" />
+                Template Nilai Per CP
+              </Label>
+              <p className="text-xs text-slate-500">
+                Template untuk import nilai Tugas Harian & Ulangan Harian per CP.
+                Termasuk daftar CP untuk referensi.
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full border-violet-300 text-violet-700 hover:bg-violet-50"
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`/api/grades/template?type=per_cp&kelas=${filterKelas}`)
+                    if (!res.ok) throw new Error('Gagal download template')
+                    const blob = await res.blob()
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = 'template-import-nilai-per-cp.xlsx'
+                    a.click()
+                    URL.revokeObjectURL(url)
+                    toast.success('Template berhasil didownload')
+                  } catch (err) {
+                    toast.error('Gagal download template')
+                  }
+                }}
+              >
+                <Download className="w-3.5 h-3.5 mr-1" />
+                Download Template Per CP
+              </Button>
+            </div>
+
+            {/* Download Template STS SAS */}
+            <div className="space-y-2 border border-slate-200 rounded-lg p-3 bg-white">
+              <Label className="text-xs font-semibold flex items-center gap-1">
+                <FileSpreadsheet className="w-3 h-3 text-violet-600" />
+                Template Nilai STS & SAS
+              </Label>
+              <p className="text-xs text-slate-500">
+                Template untuk import nilai STS (MID) dan SAS (UAS).
+                Input nilai untuk semua siswa sekaligus.
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full border-violet-300 text-violet-700 hover:bg-violet-50"
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`/api/grades/template?type=sts_sas&kelas=${filterKelas}`)
+                    if (!res.ok) throw new Error('Gagal download template')
+                    const blob = await res.blob()
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = 'template-import-nilai-sts-sas.xlsx'
+                    a.click()
+                    URL.revokeObjectURL(url)
+                    toast.success('Template berhasil didownload')
+                  } catch (err) {
+                    toast.error('Gagal download template')
+                  }
+                }}
+              >
+                <Download className="w-3.5 h-3.5 mr-1" />
+                Download Template STS & SAS
+              </Button>
+            </div>
+          </div>
+
+          {/* Upload Area */}
+          <div className="mt-4 space-y-2">
+            <Label className="text-xs font-semibold">Upload File Excel</Label>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Select
+                value={importType}
+                onValueChange={setImportType}
+              >
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Pilih jenis import" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="per_cp">Nilai Per CP (Tugas/UH)</SelectItem>
+                  <SelectItem value="sts_sas">Nilai STS & SAS</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                className="flex-1"
+              />
+              <Button
+                size="sm"
+                className="bg-violet-600 hover:bg-violet-700"
+                onClick={handleImport}
+                disabled={!importFile || importing}
+              >
+                {importing ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 mr-1 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-3.5 h-3.5 mr-1" />
+                    Import
+                  </>
+                )}
+              </Button>
+            </div>
+            {importResult && (
+              <div className={`p-3 rounded-lg text-xs ${importResult.success ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                <p className="font-semibold">{importResult.message}</p>
+                {importResult.imported > 0 && <p>Berhasil diimport: {importResult.imported} nilai</p>}
+                {importResult.skipped > 0 && <p>Dilewati: {importResult.skipped} baris</p>}
+                {importResult.errors && importResult.errors.length > 0 && (
+                  <div className="mt-1">
+                    <p className="font-semibold">Error:</p>
+                    <ul className="list-disc list-inside mt-0.5">
+                      {importResult.errors.map((err: string, i: number) => (
+                        <li key={i}>{err}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

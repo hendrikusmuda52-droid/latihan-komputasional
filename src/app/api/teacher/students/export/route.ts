@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
         select: {
           nisn: true,
           namaLengkap: true,
+          password: true,
           kelas: true,
           sekolah: true,
           jenisKelamin: true,
@@ -43,9 +44,13 @@ export async function GET(req: NextRequest) {
       })
     )
 
-    // Transform to Excel-friendly format
+    // ── FIX: Tambah kolom Password + ganti NISN jadi Username ──
+    // User request: siswa tidak bingung dengan NISN asli, jadi kolom header
+    // diganti jadi "Username" (nilai tetap = NISN, tapi label lebih user-friendly)
+    // Tambah kolom Password agar guru bisa lihat/reset password siswa
     const excelData = (students || []).map((s) => ({
-      NISN: s.nisn,
+      Username: s.nisn,
+      Password: s.password || '(kosong)',
       'Nama Lengkap': s.namaLengkap,
       Kelas: s.kelas,
       Sekolah: s.sekolah,
@@ -55,7 +60,8 @@ export async function GET(req: NextRequest) {
 
     const ws = XLSX.utils.json_to_sheet(excelData)
     ws['!cols'] = [
-      { wch: 15 },  // NISN
+      { wch: 15 },  // Username (was NISN)
+      { wch: 15 },  // Password
       { wch: 25 },  // Nama Lengkap
       { wch: 10 },  // Kelas
       { wch: 30 },  // Sekolah
