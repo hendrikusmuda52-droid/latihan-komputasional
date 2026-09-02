@@ -121,7 +121,7 @@ export async function GET(req: NextRequest) {
         const studentAuto = (autoResults || []).filter(r => r.studentId === s.id && r.cpId === cpId)
 
         const row: Record<string, unknown> = {
-          'NISN': s.nisn,
+          'Username': s.nisn,
           'Nama Siswa': s.namaLengkap,
           'Kelas': s.kelas,
         }
@@ -188,7 +188,7 @@ export async function GET(req: NextRequest) {
 
       data = (students || []).map(s => {
         const row: Record<string, unknown> = {
-          'NISN': s.nisn,
+          'Username': s.nisn,
           'Nama Siswa': s.namaLengkap,
           'Kelas': s.kelas,
         }
@@ -273,7 +273,7 @@ export async function GET(req: NextRequest) {
         const NA = Math.round((NH * bobotNH / 100 + STS * bobotSTS / 100 + SAS * bobotSAS / 100) * 10) / 10
 
         return {
-          'NISN': s.nisn,
+          'Username': s.nisn,
           'Nama Siswa': s.namaLengkap,
           'Kelas': s.kelas,
           'Rata-rata NH': NH,

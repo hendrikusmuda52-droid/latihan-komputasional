@@ -122,7 +122,7 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
           <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="relative z-10">
             <h2 className="text-2xl font-bold mb-1">Selamat datang, {student.namaLengkap}! 👋</h2>
-            <p className="text-emerald-100 text-sm">NISN: {student.nisn} • {student.sekolah} • Jenjang: {jenjang}</p>
+            <p className="text-emerald-100 text-sm">Username: {student.nisn} • {student.sekolah} • Jenjang: {jenjang}</p>
             {data?.hasActiveProgress && <div className="mt-3 inline-flex items-center gap-2 bg-white/20 backdrop-blur px-3 py-1.5 rounded-full text-sm"><Hourglass className="w-4 h-4" />Ada latihan yang belum selesai</div>}
           </div>
         </div>

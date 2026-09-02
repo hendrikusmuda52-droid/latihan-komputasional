@@ -32,7 +32,7 @@ export function StudentLogin({ onLogin }: { onLogin: (s: StudentInfo) => void })
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!nisn || !password) {
-      toast.error('NISN dan password wajib diisi')
+      toast.error('Username dan password wajib diisi')
       return
     }
     setLoading(true)
@@ -80,21 +80,21 @@ export function StudentLogin({ onLogin }: { onLogin: (s: StudentInfo) => void })
             <div>
               <CardTitle className="text-2xl">Login Siswa</CardTitle>
               <CardDescription className="mt-1">
-                Masuk dengan NISN dan password yang diberikan guru
+                Masuk dengan Username dan password yang diberikan guru
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="nisn">NISN</Label>
+                <Label htmlFor="nisn">Username</Label>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
                     id="nisn"
                     value={nisn}
                     onChange={(e) => setNisn(e.target.value)}
-                    placeholder="Masukkan NISN"
+                    placeholder="Masukkan Username"
                     className="pl-9"
                     autoFocus
                   />
@@ -126,7 +126,7 @@ export function StudentLogin({ onLogin }: { onLogin: (s: StudentInfo) => void })
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
                 <p className="font-semibold mb-1">💡 Belum punya akun?</p>
-                <p>Akun siswa dibuat oleh guru. Hubungi guru Anda untuk mendapatkan NISN dan password login.</p>
+                <p>Akun siswa dibuat oleh guru. Hubungi guru Anda untuk mendapatkan Username dan password login.</p>
               </div>
 
               <a

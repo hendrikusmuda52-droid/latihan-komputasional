@@ -175,7 +175,8 @@ export async function POST(req: NextRequest) {
           data: {
             nisn: r.nisn,
             namaLengkap: r.namaLengkap,
-            password: crypto.createHash('sha256').update(r.password).digest('hex'),
+            // ── FIX: Simpan password plain text (bukan hash) agar bisa di-export ──
+            password: r.password,
             kelas: r.kelas,  // ← sanitized string (e.g., "11DKV")
             sekolah: r.sekolah,
             jenisKelamin: r.jenisKelamin,

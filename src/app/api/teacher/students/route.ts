@@ -201,17 +201,19 @@ export async function POST(req: NextRequest) {
     // Cek duplikat NISN
     const existing = await db.student.findUnique({ where: { nisn } })
     if (existing) {
-      return NextResponse.json({ error: 'NISN sudah terdaftar' }, { status: 400 })
+      return NextResponse.json({ error: 'Username sudah terdaftar' }, { status: 400 })
     }
 
-    const hash = password ? crypto.createHash('sha256').update(password).digest('hex') : ''
+    // ── FIX: Simpan password plain text (bukan hash) agar bisa di-export dan dilihat guru ──
+    // Login akan cek plain text ATAU hash (backward compatible)
+    const passwordValue = password ? password : ''
 
     try {
       const student = await db.student.create({
         data: {
           namaLengkap,
           nisn,
-          password: hash,
+          password: passwordValue,
           kelas: normalizedKelas,        // FIX: simpan kelas yang sudah dinormalisasi
           jenjang: normalizedJenjang,    // FIX: turunkan jenjang dari kelas (SMP/SMK)
           sekolah,

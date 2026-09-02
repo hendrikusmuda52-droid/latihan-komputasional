@@ -124,16 +124,17 @@ export async function PUT(
     if (body.jenisKelamin !== undefined) updateData.jenisKelamin = body.jenisKelamin
     if (body.isActive !== undefined) updateData.isActive = body.isActive
 
-    // Update password hanya jika dikirim (non-empty)
+    // ── FIX: Simpan password plain text (bukan hash) agar bisa di-export ──
+    // Login akan cek plain text ATAU hash (backward compatible)
     if (body.password) {
-      updateData.password = crypto.createHash('sha256').update(String(body.password)).digest('hex')
+      updateData.password = String(body.password)
     }
 
     // Cek NISN unik jika berubah
     if (body.nisn !== undefined) {
       const existing = await db.student.findUnique({ where: { nisn: body.nisn as string } })
       if (existing && existing.id !== id) {
-        return NextResponse.json({ error: 'NISN sudah dipakai siswa lain' }, { status: 400 })
+        return NextResponse.json({ error: 'Username sudah dipakai siswa lain' }, { status: 400 })
       }
       updateData.nisn = body.nisn
     }

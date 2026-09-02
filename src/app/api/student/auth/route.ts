@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   try {
     const { nisn, password } = await req.json()
     if (!nisn || !password) {
-      return NextResponse.json({ error: 'NISN dan password wajib diisi' }, { status: 400 })
+      return NextResponse.json({ error: 'Username dan password wajib diisi' }, { status: 400 })
     }
 
     // Detect production HTTPS for secure cookie flag
@@ -25,14 +25,19 @@ export async function POST(req: NextRequest) {
     }
 
     if (!student) {
-      return NextResponse.json({ error: 'NISN tidak terdaftar' }, { status: 401 })
+      return NextResponse.json({ error: 'Username tidak terdaftar' }, { status: 401 })
     }
     if (!student.password) {
       return NextResponse.json({ error: 'Password belum diset oleh guru. Hubungi guru.' }, { status: 403 })
     }
 
+    // ── FIX: Support plain text password + SHA-256 hash (backward compatible) ──
+    // Sebelumnya: hanya cek hash SHA-256
+    // Sekarang: cek plain text dulu, lalu hash
+    // Ini agar siswa yang dibuat dengan password plain text (dari import/teacher UI)
+    // tetap bisa login, dan siswa lama dengan hash juga bisa login
     const hash = crypto.createHash('sha256').update(password).digest('hex')
-    if (student.password !== hash) {
+    if (student.password !== password && student.password !== hash) {
       return NextResponse.json({ error: 'Password salah' }, { status: 401 })
     }
 

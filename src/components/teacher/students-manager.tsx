@@ -138,7 +138,7 @@ export function StudentsManager() {
                 name="search-siswa"
                 type="search"
                 autoComplete="off"
-                placeholder="Cari nama/NISN..."
+                placeholder="Cari nama/Username..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-40 md:w-48"
@@ -180,7 +180,7 @@ export function StudentsManager() {
                 <TableHeader className="sticky top-0 bg-slate-50 z-10">
                   <TableRow>
                     <TableHead>Nama</TableHead>
-                    <TableHead>NISN</TableHead>
+                    <TableHead>Username</TableHead>
                     <TableHead>Kelas</TableHead>
                     <TableHead className="text-center hidden md:table-cell">Password</TableHead>
                     <TableHead className="text-center hidden md:table-cell">Latihan</TableHead>
@@ -287,7 +287,7 @@ function StudentForm({ student, onClose, onSaved }: { student: StudentRow | null
         <div className="space-y-3">
           <div className="space-y-1"><Label className="text-xs">Nama Lengkap *</Label><Input value={form.namaLengkap} onChange={(e) => setForm({ ...form, namaLengkap: e.target.value })} /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1"><Label className="text-xs">NISN *</Label><Input value={form.nisn} onChange={(e) => setForm({ ...form, nisn: e.target.value })} /></div>
+            <div className="space-y-1"><Label className="text-xs">Username *</Label><Input value={form.nisn} onChange={(e) => setForm({ ...form, nisn: e.target.value })} /></div>
             <div className="space-y-1"><Label className="text-xs">Kelas *</Label><Select value={form.kelas} onValueChange={(v) => setForm({ ...form, kelas: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{GRADE_OPTIONS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent></Select></div>
           </div>
           <div className="space-y-1"><Label className="text-xs">Asal Sekolah *</Label><Input value={form.sekolah} onChange={(e) => setForm({ ...form, sekolah: e.target.value })} /></div>
