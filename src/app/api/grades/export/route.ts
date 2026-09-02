@@ -67,7 +67,26 @@ export async function GET(req: NextRequest) {
       sheetName = `CP ${cp?.kodeCP || ''}`
       filename = `nilai-per-cp-${cp?.kodeCP || cpId}-${tahunAjaran.replace('/', '-')}-${semester}.xlsx`
 
-      data = (students || []).map(s => {
+      // ── FIX Bug: Filter siswa berdasarkan gradeLevel CP yang dipilih ──
+      // Sebelumnya: semua siswa masuk, walau CP kelas 7 dipilih, siswa kelas 8/9/11DKV juga muncul
+      // Sekarang: hanya siswa yang kelas-nya cocok dengan gradeLevel CP yang masuk
+      const cpGradeLevel = cp?.gradeLevel || ''
+      const kelasParam = req.nextUrl.searchParams.get('kelas')
+      const filteredStudents = (students || []).filter(s => {
+        if (kelasParam && kelasParam !== 'ALL') return s.kelas === kelasParam
+        // Filter berdasarkan gradeLevel CP
+        if (!cpGradeLevel) return true
+        // CP gradeLevel "7" → cocok dengan kelas 7A, 7B, 7C
+        // CP gradeLevel "11DKV" → cocok dengan kelas 11DKV
+        if (cpGradeLevel === '7') return s.kelas.startsWith('7')
+        if (cpGradeLevel === '8') return s.kelas.startsWith('8')
+        if (cpGradeLevel === '9') return s.kelas.startsWith('9')
+        if (cpGradeLevel === '11DKV') return s.kelas.startsWith('11')
+        if (cpGradeLevel === '12DKV') return s.kelas.startsWith('12')
+        return true
+      })
+
+      data = filteredStudents.map(s => {
         const studentGrades = (allGrades || []).filter(g => g.studentId === s.id && g.cpId === cpId)
         const studentAuto = (autoResults || []).filter(r => r.studentId === s.id && r.cpId === cpId)
 

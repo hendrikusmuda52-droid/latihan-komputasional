@@ -306,8 +306,7 @@ function GradeBookInner() {
       }
       push(row.tugas, 'tugas', 'tugas_harian')
       push(row.uh, 'uh', 'ulangan_harian')
-      push(row.sts, 'sts', 'sts')
-      push(row.sas, 'sas', 'sas')
+      // FIX: STS dan SAS tidak dimasukkan dari bulk input — punya tabel sendiri di Daftar Nilai Akhir
     }
 
     if (grades.length === 0) { toast.warning('Tidak ada nilai yang diisi'); return }
@@ -519,8 +518,9 @@ function GradeBookInner() {
             </Button>
           </div>
           <p className="text-xs text-slate-300 mt-2">
-            Pilih kelas untuk memunculkan daftar siswa. Isi kolom nilai (0-100) sesuai jenis penilaian.
-            Kolom: Tugas Harian, Ulangan Harian, STS (MID), SAS (UAS). Bobot nilai (NH/STS/SAS) dihitung otomatis.
+            Pilih kelas + CP untuk input <b>Tugas Harian</b> dan <b>Ulangan Harian</b> per CP.
+            STS (MID) dan SAS (UAS) diinput lewat tabel terpisah di bawah.
+            Nilai yang diinput di sini akan otomatis muncul di <b>Daftar Nilai per CP</b>.
             Periode: <strong className="text-emerald-300">{tahunAjaran} — {semester}</strong>
           </p>
         </CardHeader>
@@ -538,14 +538,20 @@ function GradeBookInner() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">CP / Bab (opsional — untuk Tugas Harian & Ulangan Harian)</Label>
+              <Label className="text-xs">
+                CP / Bab <span className="text-red-500">*</span>
+                <span className="text-slate-400 font-normal ml-1">(wajib pilih untuk Tugas/Ulangan Harian)</span>
+              </Label>
               <Select value={bulkBabId} onValueChange={setBulkBabId}>
-                <SelectTrigger><SelectValue placeholder="— Tanpa CP (umum) —" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="— Pilih CP —" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">— Tanpa CP (umum) —</SelectItem>
+                  <SelectItem value="__none__" disabled>— Pilih CP dulu —</SelectItem>
                   {(safeCps || []).map(c => c?.id ? <SelectItem key={c.id} value={c.id}>{c.kodeCP || c.deskripsi?.slice(0, 60) || '(tanpa judul)'}</SelectItem> : null)}
                 </SelectContent>
               </Select>
+              {bulkBabId === '__none__' && (
+                <p className="text-xs text-amber-600 mt-1">⚠ Pilih CP dulu agar nilai masuk ke CP yang benar</p>
+              )}
             </div>
           </div>
 
@@ -575,8 +581,6 @@ function GradeBookInner() {
                       <TableHead>Nama Siswa</TableHead>
                       <TableHead className="text-center w-32">Tugas Harian</TableHead>
                       <TableHead className="text-center w-32">Ulangan Harian</TableHead>
-                      <TableHead className="text-center w-28">STS (MID)</TableHead>
-                      <TableHead className="text-center w-28">SAS (UAS)</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -599,16 +603,6 @@ function GradeBookInner() {
                           <TableCell className="text-center">
                             <Input type="number" min="0" max="100" placeholder="—" value={row.uh}
                               onChange={e => updateBulkRow(s.id, 'uh', e.target.value)}
-                              className="w-20 mx-auto text-center" />
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Input type="number" min="0" max="100" placeholder="—" value={row.sts}
-                              onChange={e => updateBulkRow(s.id, 'sts', e.target.value)}
-                              className="w-20 mx-auto text-center" />
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Input type="number" min="0" max="100" placeholder="—" value={row.sas}
-                              onChange={e => updateBulkRow(s.id, 'sas', e.target.value)}
                               className="w-20 mx-auto text-center" />
                           </TableCell>
                         </TableRow>

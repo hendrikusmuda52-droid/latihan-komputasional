@@ -61,13 +61,14 @@ export async function GET(req: NextRequest) {
       orderBy: [{ gradeLevel: 'asc' }, { kodeCP: 'asc' }],
     })
 
-    // 3. Ambil semua nilai manual
+    // 3. Ambil semua nilai manual — HANYA tugas_harian + ulangan_harian (STS/SAS punya tabel sendiri)
     const manualGrades = await db.manualGrade.findMany({
       where: {
         studentId: { in: studentIds },
         subject: effectiveSubject,
         tahunAjaran,
         semester,
+        gradeCategory: { in: ['tugas_harian', 'ulangan_harian'] },
       },
       orderBy: { createdAt: 'asc' },
     })
