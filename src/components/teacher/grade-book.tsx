@@ -189,16 +189,19 @@ function GradeBookInner() {
   const [perCpLoading, setPerCpLoading] = useState(false)
   const [expandedCPs, setExpandedCPs] = useState<Set<string>>(new Set())
   const [editingGrade, setEditingGrade] = useState<{ id: string; score: string } | null>(null)
+  // FIX: filter lokal untuk card Daftar Nilai per CP (tidak bergantung pada filterKelas di card NA)
+  const [perCpKelas, setPerCpKelas] = useState<string>('__none__')
+  const [perCpCpFilter, setPerCpCpFilter] = useState<string>('ALL')  // ALL = tampilkan semua CP
 
   const fetchPerCp = useCallback(async () => {
-    if (!filterKelas || filterKelas === 'ALL' || filterKelas === '__none__') {
+    if (!perCpKelas || perCpKelas === 'ALL' || perCpKelas === '__none__') {
       setPerCpData(null)
       return
     }
     setPerCpLoading(true)
     try {
       const res = await fetch(
-        `/api/grades/per-cp?kelas=${encodeURIComponent(filterKelas)}&tahunAjaran=${tahunAjaran}&semester=${semester}`
+        `/api/grades/per-cp?kelas=${encodeURIComponent(perCpKelas)}&tahunAjaran=${tahunAjaran}&semester=${semester}`
       )
       const json = await res.json()
       setPerCpData(json)
@@ -208,7 +211,7 @@ function GradeBookInner() {
     } finally {
       setPerCpLoading(false)
     }
-  }, [filterKelas, tahunAjaran, semester])
+  }, [perCpKelas, tahunAjaran, semester])
 
   useEffect(() => {
     fetchPerCp()
@@ -634,45 +637,74 @@ function GradeBookInner() {
               <Target className="w-4 h-4 text-teal-600" />
               Daftar Nilai per CP
             </CardTitle>
-            <div className="flex items-center gap-2">
-              {filterKelas !== 'ALL' && filterKelas !== '__none__' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={fetchPerCp}
-                  disabled={perCpLoading}
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${perCpLoading ? 'animate-spin' : ''} mr-1`} />
-                  Refresh
-                </Button>
-              )}
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchPerCp}
+              disabled={perCpLoading || perCpKelas === '__none__'}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${perCpLoading ? 'animate-spin' : ''} mr-1`} />
+              Refresh
+            </Button>
           </div>
           <p className="text-xs text-slate-500 mt-2">
             Nilai siswa per Capaian Pembelajaran (CP) dan Tujuan Pembelajaran (TP).
-            Klik CP untuk expand/collapse detail nilai per TP.
-            {filterKelas === 'ALL' && ' ⚠ Pilih kelas dulu untuk menampilkan data.'}
+            Termasuk nilai otomatis dari tugas daring + nilai manual. Klik CP untuk expand/collapse.
           </p>
+          {/* ── FIX: Filter kelas + CP lokal di card ini ── */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">
+                Kelas <span className="text-red-500">*</span>
+              </Label>
+              <Select value={perCpKelas} onValueChange={setPerCpKelas}>
+                <SelectTrigger className="bg-white"><SelectValue placeholder="— Pilih Kelas —" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__" disabled>— Pilih Kelas —</SelectItem>
+                  {SAFE_GRADES.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Filter CP (opsional)</Label>
+              <Select value={perCpCpFilter} onValueChange={setPerCpCpFilter}>
+                <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Semua CP</SelectItem>
+                  {safeCps.map(c => c?.id ? <SelectItem key={c.id} value={c.id}>{c.kodeCP || c.deskripsi?.slice(0, 60) || `(CP ${c.id.slice(-4)})`}</SelectItem> : null)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1 hidden sm:block">
+              <Label className="text-xs font-medium">Periode</Label>
+              <div className="text-xs text-slate-600 bg-white border rounded-md px-3 py-2 h-9 flex items-center">
+                {tahunAjaran} — {semester}
+              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="pt-4">
-          {filterKelas === 'ALL' || filterKelas === '__none__' ? (
+          {perCpKelas === 'ALL' || perCpKelas === '__none__' ? (
             <div className="py-8 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-lg">
               <Target className="w-10 h-10 mx-auto mb-2 opacity-40" />
               <p className="text-sm font-medium">Pilih kelas di atas untuk menampilkan nilai per CP</p>
+              <p className="text-xs mt-1">Filter kelas ada di pojok kiri atas card ini</p>
             </div>
           ) : perCpLoading ? (
             <div className="py-8 text-center text-slate-400">
               <RefreshCw className="w-8 h-8 mx-auto animate-spin mb-2" />
-              <p className="text-sm">Memuat data nilai per CP...</p>
+              <p className="text-sm">Memuat data nilai per CP untuk kelas {perCpKelas}...</p>
             </div>
           ) : !perCpData?.cps || perCpData.cps.length === 0 ? (
             <div className="py-8 text-center text-slate-400">
-              <p className="text-sm">Belum ada data CP atau nilai untuk kelas {filterKelas}</p>
+              <p className="text-sm">Belum ada data CP atau nilai untuk kelas {perCpKelas}</p>
               <p className="text-xs mt-1">Pastikan CP/TP sudah dibuat di menu "CP & TP Manager"</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {perCpData.cps.map((cp: any) => {
+              {perCpData.cps
+                .filter((cp: any) => perCpCpFilter === 'ALL' || cp.cpId === perCpCpFilter)
+                .map((cp: any) => {
                 const hasData = cp.tps.some((tp: any) => tp.jumlahTugas > 0 || tp.jumlahUH > 0)
                 const isExpanded = expandedCPs.has(cp.cpId)
                 return (
