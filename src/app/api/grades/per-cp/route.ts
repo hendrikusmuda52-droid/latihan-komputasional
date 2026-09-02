@@ -101,8 +101,12 @@ export async function GET(req: NextRequest) {
     // 6. Build response grouped per CP → TP → student → grades
     const cpsWithGrades = cps.map(cp => {
       const tps = cp.tps.map(tp => {
-        const tpManual = manualGrades.filter(g => g.cpId === cp.id && g.tpId === tp.id)
-        const tpAuto = autoGrades.filter(g => g.cpId === cp.id && g.tpId === tp.id)
+        // FIX: manual grades dengan tpId = null (dari bulk input) tetap muncul
+        // di TP pertama dari CP tersebut (atau buat kategori "Tanpa TP")
+        // Sebelumnya: g.tpId === tp.id → manual grades dengan tpId=null TIDAK PERNAH match
+        // Sekarang: g.cpId === cp.id && (g.tpId === tp.id || g.tpId === null)
+        const tpManual = manualGrades.filter(g => g.cpId === cp.id && (g.tpId === tp.id || g.tpId === null))
+        const tpAuto = autoGrades.filter(g => g.cpId === cp.id && (g.tpId === tp.id || g.tpId === null))
 
         const studentsWithGrades = students.map(student => {
           const studentManual = tpManual.filter(g => g.studentId === student.id)

@@ -86,39 +86,99 @@ export async function GET(req: NextRequest) {
         return true
       })
 
+      // ── FIX: Export detail per tugas (dipisah, bukan langsung rata-rata) ──
+      // User mau: setiap tugas/manual tampil sebagai kolom terpisah
+      // Lalu di bawah ada rata-rata + NH
+
+      // Kumpulkan semua judul tugas unik untuk CP ini
+      const allTugasTitles = new Set<string>()
+      const allUHTitles = new Set<string>()
+      const allAutoTitles = new Set<string>()
+
+      filteredStudents.forEach(s => {
+        const sGrades = (allGrades || []).filter(g => g.studentId === s.id && g.cpId === cpId)
+        sGrades.forEach(g => {
+          if (g.gradeCategory === 'tugas_harian' || g.gradeType === 'tugas') {
+            allTugasTitles.add(g.title || 'Tugas')
+          }
+          if (g.gradeCategory === 'ulangan_harian' || g.gradeType === 'uh') {
+            allUHTitles.add(g.title || 'UH')
+          }
+        })
+        const sAuto = (autoResults || []).filter(r => r.studentId === s.id && r.cpId === cpId)
+        sAuto.forEach(r => {
+          // Pakai assignmentId sebagai key (judul belum di-fetch di sini)
+          allAutoTitles.add(r.assignmentId || 'Daring')
+        })
+      })
+
+      const tugasTitles = Array.from(allTugasTitles).sort()
+      const uhTitles = Array.from(allUHTitles).sort()
+      const autoTitles = Array.from(allAutoTitles).sort()
+
       data = filteredStudents.map(s => {
         const studentGrades = (allGrades || []).filter(g => g.studentId === s.id && g.cpId === cpId)
         const studentAuto = (autoResults || []).filter(r => r.studentId === s.id && r.cpId === cpId)
 
-        const tugasHarian = studentGrades.filter(g =>
-          g.gradeCategory === 'tugas_harian' || g.gradeType === 'tugas'
-        )
-        const ulanganHarian = studentGrades.filter(g =>
-          g.gradeCategory === 'ulangan_harian' || g.gradeType === 'uh'
-        )
-
-        const avgTugas = tugasHarian.length > 0
-          ? Math.round(tugasHarian.reduce((a, b) => a + (Number(b.score) || 0), 0) / tugasHarian.length * 10) / 10
-          : 0
-        const avgUH = ulanganHarian.length > 0
-          ? Math.round(ulanganHarian.reduce((a, b) => a + (Number(b.score) || 0), 0) / ulanganHarian.length * 10) / 10
-          : 0
-        const avgAuto = studentAuto.length > 0
-          ? Math.round(studentAuto.reduce((a, b) => a + (Number(b.totalScore) || 0), 0) / studentAuto.length * 10) / 10
-          : 0
-
-        return {
+        const row: Record<string, unknown> = {
           'NISN': s.nisn,
           'Nama Siswa': s.namaLengkap,
           'Kelas': s.kelas,
-          'Jumlah Tugas Harian': tugasHarian.length,
-          'Rata-rata Tugas Harian': avgTugas,
-          'Jumlah Ulangan Harian': ulanganHarian.length,
-          'Rata-rata Ulangan Harian': avgUH,
-          'Jumlah Tugas Daring': studentAuto.length,
-          'Rata-rata Daring': avgAuto,
-          'NH Bab': Math.round((avgTugas * 0.4 + avgUH * 0.6) * 10) / 10,
         }
+
+        // Kolom per tugas manual
+        const tugasScores: number[] = []
+        tugasTitles.forEach((title, idx) => {
+          const grade = studentGrades.find(g =>
+            (g.gradeCategory === 'tugas_harian' || g.gradeType === 'tugas') && g.title === title
+          )
+          const score = grade ? Number(grade.score) || 0 : null
+          row[`Tugas: ${title}`] = score === null ? '-' : score
+          if (score !== null) tugasScores.push(score)
+        })
+
+        // Kolom per UH manual
+        const uhScores: number[] = []
+        uhTitles.forEach((title, idx) => {
+          const grade = studentGrades.find(g =>
+            (g.gradeCategory === 'ulangan_harian' || g.gradeType === 'uh') && g.title === title
+          )
+          const score = grade ? Number(grade.score) || 0 : null
+          row[`UH: ${title}`] = score === null ? '-' : score
+          if (score !== null) uhScores.push(score)
+        })
+
+        // Kolom per tugas daring
+        const autoScores: number[] = []
+        autoTitles.forEach((key, idx) => {
+          const result = studentAuto.find(r => (r.assignmentId || 'Daring') === key)
+          const score = result ? Number(result.totalScore) || 0 : null
+          row[`Daring: ${key.slice(0, 20)}`] = score === null ? '-' : score
+          if (score !== null) autoScores.push(score)
+        })
+
+        // Rata-rata + NH
+        const avgTugas = tugasScores.length > 0
+          ? Math.round(tugasScores.reduce((a, b) => a + b, 0) / tugasScores.length * 10) / 10
+          : 0
+        const avgAuto = autoScores.length > 0
+          ? Math.round(autoScores.reduce((a, b) => a + b, 0) / autoScores.length * 10) / 10
+          : 0
+        const avgUH = uhScores.length > 0
+          ? Math.round(uhScores.reduce((a, b) => a + b, 0) / uhScores.length * 10) / 10
+          : 0
+
+        // Gabungkan tugas manual + daring untuk rata-rata tugas
+        const allTugas = [...tugasScores, ...autoScores]
+        const avgAllTugas = allTugas.length > 0
+          ? Math.round(allTugas.reduce((a, b) => a + b, 0) / allTugas.length * 10) / 10
+          : 0
+
+        row['Rata-rata Tugas'] = avgAllTugas || '-'
+        row['Rata-rata UH'] = avgUH || '-'
+        row['NH (Tugas 60% + UH 40%)'] = Math.round((avgAllTugas * 0.6 + avgUH * 0.4) * 10) / 10 || 0
+
+        return row
       })
 
     } else if (format === 'all_cp') {

@@ -41,8 +41,14 @@ interface BulkRow {
   studentId: string
   tugas: string  // Tugas Harian
   uh: string     // Ulangan Harian
-  sts: string    // STS (MID)
-  sas: string    // SAS (UAS)
+  sts: string    // STS (MID) — legacy, tidak dipakai di bulk input per CP
+  sas: string    // SAS (UAS) — legacy, tidak dipakai di bulk input per CP
+}
+
+// ── NEW: Nama tugas untuk bulk input (agar nilai punya judul jelas) ──
+interface BulkTaskName {
+  tugas: string  // nama tugas harian, mis: "Tugas 1 - Algoritma"
+  uh: string     // nama ulangan harian, mis: "UH 1 - Algoritma"
 }
 
 const DEFAULT_CONFIG: Config = { kkm: 75, bobotNH: 40, bobotSTS: 30, bobotSAS: 30 }
@@ -179,6 +185,11 @@ function GradeBookInner() {
   const [bulkBabId, setBulkBabId] = useState<string>('__none__')
   const [bulkSaving, setBulkSaving] = useState(false)
   const [bulkStudents, setBulkStudents] = useState<Student[]>([])
+  // ── NEW: Nama tugas untuk bulk input ──
+  const [bulkTaskNames, setBulkTaskNames] = useState<BulkTaskName>({
+    tugas: 'Tugas Harian',
+    uh: 'Ulangan Harian',
+  })
 
   // v2: CP selector for "Export Per CP" button
   const [selectedCpId, setSelectedCpId] = useState<string>('__none__')
@@ -289,26 +300,27 @@ function GradeBookInner() {
     setBulkRows(prev => (prev || []).map(r => r.studentId === studentId ? { ...r, [field]: value } : r))
   }, [])
 
-  // v2: handleBulkSave — POST grades array with cpId, tpId, tahunAjaran, semester.
+  // v2: handleBulkSave — POST grades array with cpId, tpId, tahunAjaran, semester + title.
   const handleBulkSave = useCallback(async () => {
     const grades: Array<{
       studentId: string; score: number; gradeType: string; gradeCategory: string;
       cpId: string | null; tpId: string | null; tahunAjaran: string; semester: string;
+      title: string;
     }> = []
     // Convert "__none__" sentinel back to null before posting.
     const effectiveCpId = bulkBabId && bulkBabId !== '__none__' ? bulkBabId : null
     for (const row of (bulkRows || [])) {
-      const push = (val: string, gradeType: string, gradeCategory: string) => {
+      const push = (val: string, gradeType: string, gradeCategory: string, title: string) => {
         const n = parseFloat(val)
         if (val !== '' && !isNaN(n) && n >= 0 && n <= 100) {
           grades.push({
             studentId: row.studentId, score: n, gradeType, gradeCategory,
-            cpId: effectiveCpId, tpId: null, tahunAjaran, semester,
+            cpId: effectiveCpId, tpId: null, tahunAjaran, semester, title,
           })
         }
       }
-      push(row.tugas, 'tugas', 'tugas_harian')
-      push(row.uh, 'uh', 'ulangan_harian')
+      push(row.tugas, 'tugas', 'tugas_harian', bulkTaskNames.tugas || 'Tugas Harian')
+      push(row.uh, 'uh', 'ulangan_harian', bulkTaskNames.uh || 'Ulangan Harian')
       // FIX: STS dan SAS tidak dimasukkan dari bulk input — punya tabel sendiri di Daftar Nilai Akhir
     }
 
@@ -325,11 +337,12 @@ function GradeBookInner() {
       toast.success(`${data?.count || grades.length} nilai manual berhasil disimpan`)
       setBulkRows(prev => (prev || []).map(r => ({ ...r, tugas: '', uh: '', sts: '', sas: '' })))
       fetchData()
+      fetchPerCp()  // FIX: refresh Daftar Nilai per CP juga
     } catch (err) {
       console.error('[GradeBook] handleBulkSave error:', err)
       toast.error(err instanceof Error ? err.message : 'Gagal menyimpan nilai')
     } finally { setBulkSaving(false) }
-  }, [bulkRows, bulkBabId, tahunAjaran, semester, fetchData])
+  }, [bulkRows, bulkBabId, bulkTaskNames, tahunAjaran, semester, fetchData, fetchPerCp])
 
   // v2: handleExport — download Excel files for 3 export formats.
   const handleExport = useCallback(async (format: 'per_cp' | 'all_cp' | 'na_summary') => {
@@ -572,6 +585,31 @@ function GradeBookInner() {
             </div>
           ) : (
             <>
+              {/* ── NEW: Input nama tugas untuk bulk input ── */}
+              <div className="grid grid-cols-2 gap-3 mb-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">
+                    Nama Tugas Harian <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    placeholder="mis: Tugas 1 - Algoritma"
+                    value={bulkTaskNames.tugas}
+                    onChange={(e) => setBulkTaskNames({ ...bulkTaskNames, tugas: e.target.value })}
+                    className="bg-white"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">
+                    Nama Ulangan Harian <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    placeholder="mis: UH 1 - Algoritma"
+                    value={bulkTaskNames.uh}
+                    onChange={(e) => setBulkTaskNames({ ...bulkTaskNames, uh: e.target.value })}
+                    className="bg-white"
+                  />
+                </div>
+              </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-600">Menampilkan <strong>{safeBulkStudents.length}</strong> siswa dari kelas <Badge variant="outline">{bulkKelas}</Badge></span>
                 <span className="text-slate-500">{bulkFilledCount} nilai terisi</span>
