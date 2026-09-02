@@ -1,6 +1,6 @@
 'use client'
 
-import { Component, useState, useMemo, useCallback, ReactNode } from 'react'
+import { Component, useState, useMemo, useCallback, useEffect, ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import {
   RefreshCw, Plus, ClipboardList, Settings, AlertTriangle, TrendingUp, Save,
   PencilLine, Download, FileSpreadsheet, Calendar, AlertCircle,
+  Target, ChevronRight, Pencil, Trash2, Check, X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ALL_GRADES, TAHUN_AJARAN_OPTIONS, SEMESTER_OPTIONS, GRADE_CATEGORIES } from '@/lib/constants'
@@ -24,8 +25,17 @@ interface CalcResult {
   NH: number; STS: number; SAS: number; NA: number; kkm: number; status: string;
 }
 interface Config { kkm: number; bobotNH: number; bobotSTS: number; bobotSAS: number }
-interface CP { id: string; code: string; description: string; chapter?: string; tps?: TP[] }
-interface TP { id: string; cpId: string; code: string; description: string }
+// ── FIX: interface CP sesuai field API /api/cp (kodeCP, deskripsi, gradeLevel) ──
+// Sebelumnya: code, description, chapter → tidak cocok dengan API → tampil "(tanpa judul)"
+interface CP {
+  id: string
+  kodeCP: string
+  deskripsi: string
+  gradeLevel: string
+  subject: string
+  tps?: TP[]
+}
+interface TP { id: string; cpId: string; kodeTP: string; deskripsi: string }
 
 interface BulkRow {
   studentId: string
@@ -173,6 +183,81 @@ function GradeBookInner() {
   // v2: CP selector for "Export Per CP" button
   const [selectedCpId, setSelectedCpId] = useState<string>('__none__')
   const [exporting, setExporting] = useState(false)
+
+  // ── NEW: State untuk Daftar Nilai per CP ──
+  const [perCpData, setPerCpData] = useState<any>(null)
+  const [perCpLoading, setPerCpLoading] = useState(false)
+  const [expandedCPs, setExpandedCPs] = useState<Set<string>>(new Set())
+  const [editingGrade, setEditingGrade] = useState<{ id: string; score: string } | null>(null)
+
+  const fetchPerCp = useCallback(async () => {
+    if (!filterKelas || filterKelas === 'ALL' || filterKelas === '__none__') {
+      setPerCpData(null)
+      return
+    }
+    setPerCpLoading(true)
+    try {
+      const res = await fetch(
+        `/api/grades/per-cp?kelas=${encodeURIComponent(filterKelas)}&tahunAjaran=${tahunAjaran}&semester=${semester}`
+      )
+      const json = await res.json()
+      setPerCpData(json)
+    } catch (err) {
+      console.error('[grade-book] fetchPerCp error:', err)
+      setPerCpData({ success: false, cps: [] })
+    } finally {
+      setPerCpLoading(false)
+    }
+  }, [filterKelas, tahunAjaran, semester])
+
+  useEffect(() => {
+    fetchPerCp()
+  }, [fetchPerCp])
+
+  const toggleCP = (cpId: string) => {
+    setExpandedCPs(prev => {
+      const next = new Set(prev)
+      if (next.has(cpId)) next.delete(cpId)
+      else next.add(cpId)
+      return next
+    })
+  }
+
+  // Edit nilai manual (inline edit)
+  const handleEditGrade = async (gradeId: string, newScore: string) => {
+    try {
+      const res = await fetch(`/api/manual-grades/${gradeId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ score: Number(newScore) }),
+      })
+      if (res.ok) {
+        toast.success('Nilai diperbarui')
+        setEditingGrade(null)
+        fetchPerCp()
+      } else {
+        toast.error('Gagal update nilai')
+      }
+    } catch {
+      toast.error('Gagal update nilai')
+    }
+  }
+
+  // Hapus nilai manual
+  const handleDeleteGrade = async (gradeId: string) => {
+    if (!confirm('Yakin ingin menghapus nilai ini?')) return
+    try {
+      const res = await fetch(`/api/manual-grades/${gradeId}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success('Nilai dihapus')
+        fetchPerCp()
+      } else {
+        toast.error('Gagal hapus nilai')
+      }
+    } catch {
+      toast.error('Gagal hapus nilai')
+    }
+  }
 
   // try-catch + fallback arrays for the bulk class loader.
   const handleBulkKelasChange = useCallback(async (kelas: string) => {
@@ -367,7 +452,7 @@ function GradeBookInner() {
                 <SelectTrigger className="w-full"><SelectValue placeholder="— Pilih CP —" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__" disabled>— Pilih CP —</SelectItem>
-                  {safeCps.map(c => c?.id ? <SelectItem key={c.id} value={c.id}>{c.code || c.chapter || c.description?.slice(0, 40) || `(CP ${c.id.slice(-4)})`}</SelectItem> : null)}
+                  {safeCps.map(c => c?.id ? <SelectItem key={c.id} value={c.id}>{c.kodeCP || c.deskripsi?.slice(0, 60) || `(CP ${c.id.slice(-4)})`}</SelectItem> : null)}
                 </SelectContent>
               </Select>
               <Button
@@ -458,7 +543,7 @@ function GradeBookInner() {
                 <SelectTrigger><SelectValue placeholder="— Tanpa CP (umum) —" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">— Tanpa CP (umum) —</SelectItem>
-                  {(safeCps || []).map(c => c?.id ? <SelectItem key={c.id} value={c.id}>{c.code || c.chapter || c.description?.slice(0, 40) || '(tanpa judul)'}</SelectItem> : null)}
+                  {(safeCps || []).map(c => c?.id ? <SelectItem key={c.id} value={c.id}>{c.kodeCP || c.deskripsi?.slice(0, 60) || '(tanpa judul)'}</SelectItem> : null)}
                 </SelectContent>
               </Select>
             </div>
@@ -543,6 +628,262 @@ function GradeBookInner() {
                 </Button>
               </div>
             </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── NEW: Daftar Nilai per CP (collapsible) ── */}
+      <Card className="border-2 border-teal-200">
+        <CardHeader className="bg-gradient-to-r from-teal-50 to-sky-50 pb-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Target className="w-4 h-4 text-teal-600" />
+              Daftar Nilai per CP
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              {filterKelas !== 'ALL' && filterKelas !== '__none__' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchPerCp}
+                  disabled={perCpLoading}
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${perCpLoading ? 'animate-spin' : ''} mr-1`} />
+                  Refresh
+                </Button>
+              )}
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 mt-2">
+            Nilai siswa per Capaian Pembelajaran (CP) dan Tujuan Pembelajaran (TP).
+            Klik CP untuk expand/collapse detail nilai per TP.
+            {filterKelas === 'ALL' && ' ⚠ Pilih kelas dulu untuk menampilkan data.'}
+          </p>
+        </CardHeader>
+        <CardContent className="pt-4">
+          {filterKelas === 'ALL' || filterKelas === '__none__' ? (
+            <div className="py-8 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-lg">
+              <Target className="w-10 h-10 mx-auto mb-2 opacity-40" />
+              <p className="text-sm font-medium">Pilih kelas di atas untuk menampilkan nilai per CP</p>
+            </div>
+          ) : perCpLoading ? (
+            <div className="py-8 text-center text-slate-400">
+              <RefreshCw className="w-8 h-8 mx-auto animate-spin mb-2" />
+              <p className="text-sm">Memuat data nilai per CP...</p>
+            </div>
+          ) : !perCpData?.cps || perCpData.cps.length === 0 ? (
+            <div className="py-8 text-center text-slate-400">
+              <p className="text-sm">Belum ada data CP atau nilai untuk kelas {filterKelas}</p>
+              <p className="text-xs mt-1">Pastikan CP/TP sudah dibuat di menu "CP & TP Manager"</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {perCpData.cps.map((cp: any) => {
+                const hasData = cp.tps.some((tp: any) => tp.jumlahTugas > 0 || tp.jumlahUH > 0)
+                const isExpanded = expandedCPs.has(cp.cpId)
+                return (
+                  <div
+                    key={cp.cpId}
+                    className={`rounded-lg border-2 ${isExpanded ? 'border-teal-300' : 'border-slate-200'} overflow-hidden`}
+                  >
+                    {/* CP Header — clickable to expand */}
+                    <button
+                      onClick={() => toggleCP(cp.cpId)}
+                      className={`w-full flex items-center justify-between p-3 text-left ${isExpanded ? 'bg-teal-50' : 'bg-slate-50'} hover:bg-teal-100 transition-colors`}
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <ChevronRight className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <Badge variant="outline" className="text-xs bg-white">
+                              {cp.kodeCP}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs bg-white">
+                              Kelas {cp.gradeLevel}
+                            </Badge>
+                            {hasData && (
+                              <Badge className={`text-xs ${cp.nhCP >= (config?.kkm || 75) ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                NH: {cp.nhCP}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-600 truncate">{cp.deskripsi}</p>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0 ml-2">
+                        <p className="text-xs text-slate-500">
+                          {cp.tps.filter((t: any) => t.jumlahTugas > 0 || t.jumlahUH > 0).length}/{cp.tps.length} TP
+                        </p>
+                      </div>
+                    </button>
+
+                    {/* TP Detail — expandable */}
+                    {isExpanded && (
+                      <div className="p-3 space-y-3 bg-white">
+                        {cp.tps.map((tp: any) => {
+                          const tpHasData = tp.jumlahTugas > 0 || tp.jumlahUH > 0
+                          return (
+                            <div key={tp.tpId} className="border border-slate-200 rounded-lg overflow-hidden">
+                              {/* TP Header */}
+                              <div className="bg-slate-50 px-3 py-2 flex items-center justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="text-xs">{tp.kodeTP}</Badge>
+                                    <p className="text-xs font-medium text-slate-700 truncate">
+                                      {tp.deskripsi}
+                                    </p>
+                                  </div>
+                                </div>
+                                {tpHasData && (
+                                  <div className="flex items-center gap-2 text-xs ml-2">
+                                    <span className="text-slate-500">
+                                      Tugas: <b className="text-slate-700">{tp.avgTugas}</b>
+                                    </span>
+                                    <span className="text-slate-500">
+                                      UH: <b className="text-slate-700">{tp.avgUH}</b>
+                                    </span>
+                                    <Badge className="text-xs bg-teal-100 text-teal-700">
+                                      NH: {tp.nhTP}
+                                    </Badge>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Student grades table */}
+                              {tpHasData || true ? (
+                                <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
+                                  <Table>
+                                    <TableHeader className="sticky top-0 bg-white z-10">
+                                      <TableRow>
+                                        <TableHead className="w-8">#</TableHead>
+                                        <TableHead>Nama Siswa</TableHead>
+                                        <TableHead className="text-center">Nilai</TableHead>
+                                        <TableHead className="text-center w-20">Jenis</TableHead>
+                                        <TableHead className="text-center w-24">Aksi</TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {tp.students.map((s: any, idx: number) => {
+                                        if (s.grades.length === 0) {
+                                          return (
+                                            <TableRow key={s.studentId} className="text-slate-400">
+                                              <TableCell className="text-xs">{idx + 1}</TableCell>
+                                              <TableCell>
+                                                <div className="text-sm">{s.namaLengkap}</div>
+                                                <div className="text-xs text-slate-400">NISN: {s.nisn}</div>
+                                              </TableCell>
+                                              <TableCell colSpan={3} className="text-center text-xs italic">
+                                                Belum ada nilai
+                                              </TableCell>
+                                            </TableRow>
+                                          )
+                                        }
+                                        return s.grades.map((g: any, gIdx: number) => (
+                                          <TableRow key={`${s.studentId}-${g.id}`}>
+                                            <TableCell className="text-xs text-slate-400">
+                                              {gIdx === 0 ? idx + 1 : ''}
+                                            </TableCell>
+                                            <TableCell>
+                                              {gIdx === 0 && (
+                                                <>
+                                                  <div className="text-sm font-medium">{s.namaLengkap}</div>
+                                                  <div className="text-xs text-slate-400">NISN: {s.nisn}</div>
+                                                </>
+                                              )}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                              {editingGrade?.id === g.id && editingGrade ? (
+                                                <Input
+                                                  type="number"
+                                                  min="0"
+                                                  max="100"
+                                                  value={editingGrade.score}
+                                                  onChange={(e) => setEditingGrade({ id: editingGrade.id, score: e.target.value })}
+                                                  className="w-16 text-center mx-auto"
+                                                  autoFocus
+                                                />
+                                              ) : (
+                                                <span className={`font-semibold ${g.kind === 'auto' ? 'text-sky-600' : 'text-slate-700'}`}>
+                                                  {g.score}
+                                                </span>
+                                              )}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                              <Badge
+                                                variant="outline"
+                                                className={`text-xs ${
+                                                  g.kind === 'auto'
+                                                    ? 'bg-sky-50 text-sky-700 border-sky-200'
+                                                    : 'bg-violet-50 text-violet-700 border-violet-200'
+                                                }`}
+                                              >
+                                                {g.kind === 'auto' ? '🖥️ Daring' : '📝 Manual'}
+                                              </Badge>
+                                              <div className="text-xs text-slate-400 mt-0.5">
+                                                {g.gradeCategory === 'tugas_harian' ? 'Tugas' :
+                                                  g.gradeCategory === 'ulangan_harian' ? 'UH' :
+                                                  g.gradeCategory === 'sts' ? 'STS' :
+                                                  g.gradeCategory === 'sas' ? 'SAS' : '-'}
+                                              </div>
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                              {editingGrade?.id === g.id && editingGrade ? (
+                                                <div className="flex gap-1 justify-center">
+                                                  <Button
+                                                    size="sm"
+                                                    className="h-7 px-2 bg-emerald-600 hover:bg-emerald-700"
+                                                    onClick={() => handleEditGrade(g.id, editingGrade.score)}
+                                                  >
+                                                    <Check className="w-3 h-3" />
+                                                  </Button>
+                                                  <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-7 px-2"
+                                                    onClick={() => setEditingGrade(null)}
+                                                  >
+                                                    <X className="w-3 h-3" />
+                                                  </Button>
+                                                </div>
+                                              ) : g.kind === 'manual' ? (
+                                                <div className="flex gap-1 justify-center">
+                                                  <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="h-7 px-2"
+                                                    onClick={() => setEditingGrade({ id: g.id, score: String(g.score) })}
+                                                  >
+                                                    <Pencil className="w-3 h-3" />
+                                                  </Button>
+                                                  <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="h-7 px-2 text-red-600 hover:text-red-700"
+                                                    onClick={() => handleDeleteGrade(g.id)}
+                                                  >
+                                                    <Trash2 className="w-3 h-3" />
+                                                  </Button>
+                                                </div>
+                                              ) : (
+                                                <span className="text-xs text-slate-400 italic">otomatis</span>
+                                              )}
+                                            </TableCell>
+                                          </TableRow>
+                                        ))
+                                      })}
+                                    </TableBody>
+                                  </Table>
+                                </div>
+                              ) : null}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -751,7 +1092,7 @@ function ConfigDialog({
               <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
                 {safeCps.map(c => (
                   <div key={c.id} className="flex justify-between text-xs bg-slate-50 px-2 py-1 rounded">
-                    <span className="truncate">{c.code || c.chapter || c.description?.slice(0, 40) || '-'}</span>
+                    <span className="truncate">{c.kodeCP || c.deskripsi?.slice(0, 60) || '-'}</span>
                   </div>
                 ))}
               </div>
@@ -862,7 +1203,7 @@ function AddGradeDialog({
               <SelectTrigger><SelectValue placeholder="— Pilih CP —" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="__none__">— Tanpa CP (umum) —</SelectItem>
-                {safeCps.map(c => c?.id ? <SelectItem key={c.id} value={c.id}>{c.code || c.chapter || c.description?.slice(0, 40) || `(CP ${c.id.slice(-4)})`}</SelectItem> : null)}
+                {safeCps.map(c => c?.id ? <SelectItem key={c.id} value={c.id}>{c.kodeCP || c.deskripsi?.slice(0, 60) || `(CP ${c.id.slice(-4)})`}</SelectItem> : null)}
               </SelectContent>
             </Select>
           </div>
@@ -874,7 +1215,7 @@ function AddGradeDialog({
                 <SelectTrigger><SelectValue placeholder="— Pilih TP —" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">— Tanpa TP —</SelectItem>
-                  {safeTps.map(t => t?.id ? <SelectItem key={t.id} value={t.id}>{t.code || t.description?.slice(0, 50) || `(TP ${t.id.slice(-4)})`}</SelectItem> : null)}
+                  {safeTps.map(t => t?.id ? <SelectItem key={t.id} value={t.id}>{t.kodeTP || t.deskripsi?.slice(0, 50) || `(TP ${t.id.slice(-4)})`}</SelectItem> : null)}
                 </SelectContent>
               </Select>
             </div>
