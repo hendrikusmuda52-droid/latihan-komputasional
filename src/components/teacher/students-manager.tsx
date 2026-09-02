@@ -39,6 +39,38 @@ export function StudentsManager() {
   const [editing, setEditing] = useState<StudentRow | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [showImport, setShowImport] = useState(false)
+  const [showResetPassword, setShowResetPassword] = useState(false)
+  const [resetPasswordValue, setResetPasswordValue] = useState('Sakola123!')
+  const [resettingPassword, setResettingPassword] = useState(false)
+
+  const handleResetPassword = async () => {
+    if (!resetPasswordValue || resetPasswordValue.length < 4) {
+      toast.error('Password minimal 4 karakter')
+      return
+    }
+    if (!confirm(`Yakin ingin reset password SEMUA siswa${activeTab !== 'ALL' ? ` di kelas ${activeTab}` : ''} ke "${resetPasswordValue}"? Siswa akan diminta mengubah password saat login.`)) return
+
+    setResettingPassword(true)
+    try {
+      const res = await fetch('/api/teacher/students/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          password: resetPasswordValue,
+          kelas: activeTab !== 'ALL' ? activeTab : undefined,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Gagal reset password')
+      toast.success(data.message)
+      setShowResetPassword(false)
+      fetchStudents()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Gagal reset password')
+    } finally {
+      setResettingPassword(false)
+    }
+  }
 
   const handleToggleActive = async (s: StudentRow) => {
     try {
@@ -147,6 +179,16 @@ export function StudentsManager() {
               <Button variant="outline" size="sm" onClick={handleDownloadTemplate} title="Download template"><Download className="w-4 h-4 mr-1" /><span className="hidden sm:inline">Template</span></Button>
               <Button variant="outline" size="sm" onClick={() => setShowImport(true)}><Upload className="w-4 h-4 mr-1" /><span className="hidden sm:inline">Import</span></Button>
               <Button variant="outline" size="sm" onClick={() => window.open('/api/teacher/students/export', '_blank')} title="Export ke Excel"><FileSpreadsheet className="w-4 h-4 mr-1" /><span className="hidden sm:inline">Export Excel</span></Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-amber-400 text-amber-700 hover:bg-amber-50"
+                onClick={() => setShowResetPassword(true)}
+                title="Reset password semua siswa"
+              >
+                <KeyRound className="w-4 h-4 mr-1" />
+                <span className="hidden sm:inline">Reset Password</span>
+              </Button>
               <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => { setEditing(null); setShowForm(true) }}><Plus className="w-4 h-4 mr-1" />Tambah</Button>
             </div>
           </div>
@@ -218,6 +260,16 @@ export function StudentsManager() {
       </Card>
 
       {showForm && <StudentForm student={editing} onClose={() => { setShowForm(false); setEditing(null) }} onSaved={() => { setShowForm(false); setEditing(null); fetchStudents() }} />}
+      {showResetPassword && (
+        <ResetPasswordDialog
+          onClose={() => setShowResetPassword(false)}
+          onReset={handleResetPassword}
+          kelas={activeTab}
+          passwordValue={resetPasswordValue}
+          setPasswordValue={setResetPasswordValue}
+          resetting={resettingPassword}
+        />
+      )}
       {showImport && (
         <Dialog open onOpenChange={() => setShowImport(false)}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -298,6 +350,62 @@ function StudentForm({ student, onClose, onSaved }: { student: StudentRow | null
           <div className="flex items-center gap-2"><input type="checkbox" id="stuActive" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="w-4 h-4" /><Label htmlFor="stuActive" className="text-sm cursor-pointer">Akun aktif</Label></div>
         </div>
         <DialogFooter><Button variant="outline" onClick={onClose}>Batal</Button><Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">{saving ? 'Menyimpan...' : 'Simpan'}</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ── NEW: Reset Password Massal Dialog ──
+function ResetPasswordDialog({
+  onClose, onReset, kelas, passwordValue, setPasswordValue, resetting,
+}: {
+  onClose: () => void
+  onReset: () => void
+  kelas: string
+  passwordValue: string
+  setPasswordValue: (v: string) => void
+  resetting: boolean
+}) {
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <KeyRound className="w-5 h-5 text-amber-600" />
+            Reset Password Massal
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+            <p className="font-semibold mb-1">⚠️ Peringatan</p>
+            <p>
+              Tindakan ini akan mereset password <b>{kelas === 'ALL' ? 'SEMUA siswa' : `siswa kelas ${kelas}`}</b> ke password yang Anda tentukan.
+              Setelah reset, siswa akan diminta mengubah password mereka saat login pertama.
+            </p>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs font-medium">Password Baru</Label>
+            <Input
+              type="text"
+              value={passwordValue}
+              onChange={(e) => setPasswordValue(e.target.value)}
+              placeholder="mis: Sakola123!"
+              className="text-base"
+              autoFocus
+            />
+            <p className="text-xs text-slate-500">Password ini akan disimpan sebagai plain text dan bisa dilihat di export Excel.</p>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={onClose}>Batal</Button>
+            <Button
+              onClick={onReset}
+              disabled={resetting}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              {resetting ? 'Meriset...' : 'Reset Password'}
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   )

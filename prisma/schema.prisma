@@ -15,6 +15,7 @@ model Student {
   namaLengkap  String
   nisn         String     @unique
   password     String     @default("")
+  mustChangePassword Boolean @default(false) // true saat guru reset password
   kelas        String     // "7A", "8B", "9C", "11DKV", "12DKV"
   jenjang      String     @default("SMP") // "SMP" atau "SMK"
   sekolah      String

@@ -3,15 +3,17 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   GraduationCap, LogOut, Play, History, Clock, CheckCircle2,
   Trophy, Type, Brain, Target, FileText, Calendar, RefreshCw,
   Lock, Hourglass, BookOpen, TrendingUp, Award, Zap, ChevronRight,
   ChevronLeft, Layers, Maximize2, X, Image as ImageIcon, Video, Presentation,
-  AlertCircle,
+  AlertCircle, KeyRound,
 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { useAppStore } from '@/lib/store'
 import { SMP_SUBJECTS, SMK_SUBJECTS, getSubjectsByJenjang, getJenjang } from '@/lib/constants'
@@ -32,6 +34,8 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
   const [materials, setMaterials] = useState<Material[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'tugas' | 'materi' | 'nilai' | 'capaian'>('tugas')
+  // ── NEW: State untuk ubah password ──
+  const [showChangePassword, setShowChangePassword] = useState(false)
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null)
   const [reviewResultId, setReviewResultId] = useState<string | null>(null)
 
@@ -111,6 +115,7 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
           </div>
           <div className="flex items-center gap-2">
             <a href="/?view=teacher" target="_blank"><Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">Guru</Button></a>
+            <Button variant="outline" size="sm" onClick={() => setShowChangePassword(true)} className="bg-white/10 border-white/20 text-white hover:bg-white/20"><KeyRound className="w-4 h-4 mr-1" />Ubah Password</Button>
             <Button variant="outline" size="sm" onClick={() => selectedSubject && fetchData(selectedSubject)} disabled={loading} className="bg-white/10 border-white/20 text-white hover:bg-white/20"><RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /></Button>
             <Button variant="outline" size="sm" onClick={handleLogout} className="bg-red-500/20 border-red-300/30 text-white hover:bg-red-500/30"><LogOut className="w-4 h-4 mr-1" />Logout</Button>
           </div>
@@ -317,6 +322,123 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
       )}
 
       <footer className="bg-slate-900 text-slate-400 py-4 mt-8"><div className="container max-w-5xl mx-auto px-4 text-center text-xs">SAKOLA — SMP Santo Augustinus</div></footer>
+
+      {/* ── NEW: Dialog ubah password siswa ── */}
+      {showChangePassword && (
+        <ChangePasswordDialog
+          onClose={() => setShowChangePassword(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── NEW: ChangePasswordDialog ──
+function ChangePasswordDialog({ onClose }: { onClose: () => void }) {
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (newPassword !== confirmPassword) {
+      toast.error('Password baru dan konfirmasi tidak cocok')
+      return
+    }
+    if (newPassword.length < 8) {
+      toast.error('Password minimal 8 karakter')
+      return
+    }
+    const hasUpper = /[A-Z]/.test(newPassword)
+    const hasLower = /[a-z]/.test(newPassword)
+    const hasDigit = /[0-9]/.test(newPassword)
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(newPassword)
+    if (!hasUpper || !hasLower || !hasDigit || !hasSpecial) {
+      toast.error('Password harus kombinasi: huruf besar, huruf kecil, angka, dan tanda baca')
+      return
+    }
+
+    setSaving(true)
+    try {
+      const res = await fetch('/api/student/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Gagal')
+      toast.success('Password berhasil diubah')
+      onClose()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Gagal mengubah password')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+      <Card className="w-full max-w-md shadow-2xl">
+        <CardHeader className="bg-emerald-50 rounded-t-lg">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <KeyRound className="w-5 h-5 text-emerald-600" />
+            Ubah Password
+          </CardTitle>
+          <CardDescription className="text-sm">
+            Password yang Anda ubah akan terlihat oleh guru di dashboard admin.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 text-xs text-blue-700">
+              <p className="font-semibold">Syarat password:</p>
+              <ul className="list-disc list-inside mt-0.5">
+                <li>Minimal 8 karakter</li>
+                <li>Huruf besar (A-Z) + huruf kecil (a-z)</li>
+                <li>Angka (0-9) + tanda baca (!@#$ dll)</li>
+              </ul>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Password Lama</Label>
+              <Input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Masukkan password lama"
+                autoFocus
+                required
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Password Baru</Label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Masukkan password baru"
+                required
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Konfirmasi Password Baru</Label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Ulangi password baru"
+                required
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={onClose}>Batal</Button>
+              <Button type="submit" disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+                {saving ? 'Menyimpan...' : 'Ubah Password'}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

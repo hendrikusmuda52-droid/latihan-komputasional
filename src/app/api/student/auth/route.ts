@@ -59,6 +59,8 @@ export async function POST(req: NextRequest) {
         sekolah: student.sekolah,
         jenisKelamin: student.jenisKelamin,
       },
+      // ── FIX: Return mustChangePassword flag agar frontend bisa tampilkan notifikasi ──
+      mustChangePassword: (student as Record<string, unknown>).mustChangePassword === true,
     })
     res.cookies.set('student_token', token, {
       httpOnly: true,
