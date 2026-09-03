@@ -38,12 +38,14 @@ export function MaterialsManager() {
   const [editing, setEditing] = useState<Material | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [showAIGenerate, setShowAIGenerate] = useState(false)
+  // ── FIX: Filter subject untuk multi-mapel ──
+  const [filterSubject, setFilterSubject] = useState<string>('ALL')
 
   // ── RESILIENT FETCH: auto-retry on 401/network error ──
   const { data: materialsData, loading, error, refetch, retryCount } = useResilientFetch<{
     success: boolean
     materials: Material[]
-  }>('/api/materials', { deps: [] })
+  }>(`/api/materials${filterSubject !== 'ALL' ? `?subject=${encodeURIComponent(filterSubject)}` : ''}`, { deps: [filterSubject] })
 
   const materials = materialsData?.materials ?? []
   const fetchMaterials = useCallback(() => { refetch() }, [refetch])
@@ -68,11 +70,24 @@ export function MaterialsManager() {
     <div className="space-y-4">
       <Card>
         <CardHeader className="bg-slate-50 pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <BookOpen className="w-4 h-4 text-emerald-600" /> Materi Belajar
             </CardTitle>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center flex-wrap">
+              {/* ── FIX: Filter subject dropdown untuk multi-mapel ── */}
+              <Select value={filterSubject} onValueChange={setFilterSubject}>
+                <SelectTrigger className="w-48 h-9">
+                  <SelectValue placeholder="Semua Mapel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Semua Mapel</SelectItem>
+                  <SelectItem value="Informatika">Informatika</SelectItem>
+                  <SelectItem value="Mata Pelajaran Kejuruan">Mata Pelajaran Kejuruan</SelectItem>
+                  <SelectItem value="Mata Pelajaran Pilihan">Mata Pelajaran Pilihan</SelectItem>
+                  <SelectItem value="DKV">DKV</SelectItem>
+                </SelectContent>
+              </Select>
               <Button variant="outline" size="sm" onClick={fetchMaterials} disabled={loading}>
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               </Button>
@@ -84,7 +99,10 @@ export function MaterialsManager() {
               </Button>
             </div>
           </div>
-          <p className="text-xs text-slate-500 mt-2">Materi belajar untuk siswa. Siswa bisa lihat materi aktif di dashboard mereka.</p>
+          <p className="text-xs text-slate-500 mt-2">
+            Materi belajar untuk siswa. Siswa bisa lihat materi aktif di dashboard mereka.
+            {filterSubject !== 'ALL' && ` Filter: ${filterSubject}`}
+          </p>
         </CardHeader>
         <CardContent className="pt-0">
           {loading ? (

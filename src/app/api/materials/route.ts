@@ -23,9 +23,24 @@ export async function GET(req: NextRequest) {
 
     const teacherSubject = teacher.subject || 'Informatika'
     const kelas = req.nextUrl.searchParams.get('kelas')
-    const where = kelas && kelas !== 'ALL'
-      ? { targetKelas: { contains: kelas }, subject: teacherSubject }
-      : { subject: teacherSubject }
+    const subjectParam = req.nextUrl.searchParams.get('subject')
+
+    // ── FIX: Support subject filter param (multi-mapel) ──
+    // Sebelumnya: selalu filter by teacherSubject dari JWT
+    // Sekarang: jika subject param diberikan, pakai itu
+    // Jika tidak, admin lihat semua, guru lihat subject JWT mereka
+    let effectiveSubject = subjectParam || teacherSubject
+
+    // Admin bisa lihat semua materi tanpa filter subject
+    if (teacher.role === 'admin' && !subjectParam) {
+      effectiveSubject = ''
+    }
+
+    const where: Record<string, unknown> = {}
+    if (effectiveSubject) where.subject = effectiveSubject
+    if (kelas && kelas !== 'ALL') {
+      where.targetKelas = { contains: kelas }
+    }
 
     const materials = await safeQuery(() =>
       db.material.findMany({ where, orderBy: { createdAt: 'desc' } }),
