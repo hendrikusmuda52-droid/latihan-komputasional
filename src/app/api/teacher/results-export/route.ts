@@ -53,10 +53,16 @@ export async function GET(req: NextRequest) {
     )
 
     // ── Fetch all results ──
+    // FIX: Filter results berdasarkan studentIds yang sudah difilter per kelas
+    // Sebelumnya: results dari semua siswa masuk → bercampur dengan kelas lain
+    const studentIds = (students || []).map(s => s.id)
     const resultWhere: Record<string, unknown> = {
       subject: teacherSubject,
       tahunAjaran,
       semester,
+    }
+    if (studentIds.length > 0) {
+      resultWhere.studentId = { in: studentIds }
     }
     if (assignmentId && assignmentId !== 'ALL') {
       resultWhere.assignmentId = assignmentId
