@@ -47,14 +47,20 @@ export async function GET(req: NextRequest) {
 
     let where: Record<string, unknown>
     if (teacher.role === 'admin') {
+      // ── FIX: Admin lihat semua tugas (bisa filter dengan ?subject=) ──
       where = querySubject ? { subject: querySubject } : {}
     } else {
-      where = {
-        OR: [
-          { teacherId: teacher.teacherId },
-          { subject: querySubject || teacherSubject },
-        ],
+      // ── FIX: Guru lihat tugas yang mereka buat (teacherId) ATAU tugas dengan subject JWT ──
+      // Tambah juga: tugas dengan subject yang match query param
+      const orConditions = [
+        { teacherId: teacher.teacherId },
+        { subject: querySubject || teacherSubject },
+      ]
+      // Jika querySubject diberikan dan berbeda dari teacherSubject, tambahkan ke OR
+      if (querySubject && querySubject !== teacherSubject) {
+        orConditions.push({ subject: querySubject })
       }
+      where = { OR: orConditions }
     }
 
     const assignments = await safeQuery(() =>
