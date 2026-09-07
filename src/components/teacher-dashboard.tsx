@@ -893,6 +893,9 @@ export function TeacherDashboard() {
           </CardContent>
         </Card>
 
+        {/* ── NEW: Tabel Rekap Pengerjaan Per Kelas (langsung di UI) ── */}
+        <RekapPengerjaan kelas={exportKelas} tahunAjaran="2026/2027" semester="ganjil" />
+
         {/* Filter & Search */}
         <Card className="border-slate-200 mb-6">
           <CardContent className="pt-4">
@@ -1396,5 +1399,148 @@ function GlobalDashboard({
         </Card>
       </div>
     </div>
+  )
+}
+
+// ── NEW: RekapPengerjaan — tabel rekap pengerjaan per kelas di UI ──
+function RekapPengerjaan({ kelas, tahunAjaran, semester }: { kelas: string; tahunAjaran: string; semester: string }) {
+  const [data, setData] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/teacher/results-rekap?kelas=${kelas}`)
+      .then(r => r.json())
+      .then(json => setData(json))
+      .catch(() => setData({ success: false, rekap: [], ringkasan: {} }))
+      .finally(() => setLoading(false))
+  }, [kelas, tahunAjaran, semester])
+
+  const ringkasan = data?.ringkasan || {}
+  const rekap = data?.rekap || []
+  const assignments = data?.assignments || []
+
+  return (
+    <Card className="border-2 border-teal-200 mb-6">
+      <CardHeader className="bg-gradient-to-r from-teal-50 to-sky-50 pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <FileCheck className="w-4 h-4 text-teal-600" />
+          Rekap Pengerjaan {kelas !== 'ALL' ? `Kelas ${kelas}` : 'Semua Kelas'}
+        </CardTitle>
+        <p className="text-xs text-slate-500 mt-1">
+          Lihat siapa yang sudah/belum mengerjakan. Tidak perlu download Excel untuk monitoring harian.
+        </p>
+      </CardHeader>
+      <CardContent className="pt-4">
+        {loading ? (
+          <div className="py-12 text-center text-slate-400">
+            <RefreshCw className="w-8 h-8 mx-auto animate-spin mb-2" />
+            <p className="text-sm">Memuat data rekap...</p>
+          </div>
+        ) : rekap.length === 0 ? (
+          <div className="py-8 text-center text-slate-400">
+            <p className="text-sm">Belum ada data untuk {kelas === 'ALL' ? 'semua kelas' : `kelas ${kelas}`}</p>
+          </div>
+        ) : (
+          <>
+            {/* Ringkasan */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              <div className="bg-slate-50 rounded-lg p-3 text-center">
+                <p className="text-xs text-slate-500 mb-1">Total Siswa</p>
+                <p className="text-2xl font-bold text-slate-700">{ringkasan.totalSiswa || 0}</p>
+              </div>
+              <div className="bg-emerald-50 rounded-lg p-3 text-center">
+                <p className="text-xs text-emerald-600 mb-1">Sudah Mengerjakan</p>
+                <p className="text-2xl font-bold text-emerald-700">{ringkasan.sudahMengerjakan || 0}</p>
+              </div>
+              <div className="bg-amber-50 rounded-lg p-3 text-center">
+                <p className="text-xs text-amber-600 mb-1">Belum Mengerjakan</p>
+                <p className="text-2xl font-bold text-amber-700">{ringkasan.belumMengerjakan || 0}</p>
+              </div>
+              <div className="bg-teal-50 rounded-lg p-3 text-center">
+                <p className="text-xs text-teal-600 mb-1">Rata-rata Kelas</p>
+                <p className="text-2xl font-bold text-teal-700">{ringkasan.rataRataKelas || 0}</p>
+              </div>
+            </div>
+
+            {/* Tabel Rekap */}
+            <div className="overflow-x-auto max-h-[500px] overflow-y-auto border border-slate-200 rounded-lg">
+              <Table>
+                <TableHeader className="sticky top-0 bg-slate-100 z-10">
+                  <TableRow>
+                    <TableHead className="w-8">#</TableHead>
+                    <TableHead>Nama Siswa</TableHead>
+                    <TableHead className="text-center">Kelas</TableHead>
+                    <TableHead className="text-center">Dikerjakan</TableHead>
+                    {assignments.map((a: any) => (
+                      <TableHead key={a.id} className="text-center text-xs" title={a.title}>
+                        {a.title.slice(0, 15)}{a.title.length > 15 ? '...' : ''}
+                      </TableHead>
+                    ))}
+                    <TableHead className="text-center">Rata²</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rekap.map((s: any, i: number) => (
+                    <TableRow key={s.studentId} className={s.totalDikerjakan === 0 ? 'bg-amber-50' : ''}>
+                      <TableCell className="text-slate-400 text-xs">{i + 1}</TableCell>
+                      <TableCell>
+                        <div className="font-medium text-sm">{s.namaLengkap}</div>
+                        <div className="text-xs text-slate-400">{s.nisn}</div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="text-xs">{s.kelas}</Badge>
+                      </TableCell>
+                      <TableCell className="text-center text-xs">
+                        {s.totalDikerjakan}/{s.totalTugas}
+                      </TableCell>
+                      {s.assignmentStatus.map((as: any) => (
+                        <TableCell key={as.assignmentId} className="text-center">
+                          {as.status === 'sudah' ? (
+                            <span className={`font-bold text-xs ${as.nilai >= 75 ? 'text-emerald-600' : 'text-orange-600'}`}>
+                              {as.nilai}
+                            </span>
+                          ) : (
+                            <span className="text-slate-300 text-xs">-</span>
+                          )}
+                        </TableCell>
+                      ))}
+                      <TableCell className="text-center">
+                        <span className={`font-bold text-sm ${s.rataRata >= 75 ? 'text-emerald-600' : s.rataRata > 0 ? 'text-orange-600' : 'text-slate-400'}`}>
+                          {s.rataRata > 0 ? s.rataRata : '-'}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {s.totalDikerjakan === 0 ? (
+                          <Badge className="bg-amber-100 text-amber-700 text-xs">Belum</Badge>
+                        ) : s.totalDikerjakan === s.totalTugas ? (
+                          <Badge className="bg-emerald-100 text-emerald-700 text-xs">Selesai</Badge>
+                        ) : (
+                          <Badge className="bg-sky-100 text-sky-700 text-xs">Sebagian</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Legend */}
+            <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 bg-emerald-100 rounded"></span> Lulus (≥75)
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 bg-orange-100 rounded"></span> Tidak Lulus (&lt;75)
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 bg-amber-100 rounded"></span> Belum Mengerjakan
+              </span>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
   )
 }

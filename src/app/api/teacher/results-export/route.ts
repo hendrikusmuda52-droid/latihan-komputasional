@@ -31,9 +31,19 @@ export async function GET(req: NextRequest) {
     const semester = req.nextUrl.searchParams.get('semester') || 'ganjil'
 
     // ── Fetch all assignments untuk info header ──
+    // FIX: filter assignments berdasarkan kelas juga — sebelumnya semua assignment
+    // masuk, sehingga siswa kelas 8 dapat kolom "Tugas 1" yang ternyata hanya untuk kelas 7
+    const assignmentWhere: Record<string, unknown> = { subject: teacherSubject, isActive: true }
+    if (kelasFilter && kelasFilter !== 'ALL') {
+      // assignment.targetKelas bisa "ALL" atau "7A,7B,7C" — pakai contains
+      assignmentWhere.OR = [
+        { targetKelas: 'ALL' },
+        { targetKelas: { contains: kelasFilter } },
+      ]
+    }
     const assignments = await safeQuery(() =>
       db.assignment.findMany({
-        where: { subject: teacherSubject, isActive: true },
+        where: assignmentWhere,
         select: { id: true, title: true, targetKelas: true, taskType: true, dueDate: true },
         orderBy: { createdAt: 'desc' },
       })
