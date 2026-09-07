@@ -40,6 +40,31 @@ export async function PUT(
     const updated = await db.assignment.update({
       where: { id },
       data: updateData,
+      // ── FIX: Select hanya field yang pasti ada di DB ──
+      // isPunishment dan parentAssignmentId mungkin belum ada di DB
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        subject: true,
+        targetKelas: true,
+        targetJenjang: true,
+        isActive: true,
+        dueDate: true,
+        exerciseType: true,
+        questionCount: true,
+        taskType: true,
+        teacherId: true,
+        cpId: true,
+        tpId: true,
+        taskCategory: true,
+        taskTypeName: true,
+        tahunAjaran: true,
+        semester: true,
+        duration: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     })
     return NextResponse.json({ success: true, assignment: updated })
   } catch (error) {
