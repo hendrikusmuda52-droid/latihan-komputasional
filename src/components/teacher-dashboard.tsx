@@ -894,7 +894,7 @@ export function TeacherDashboard() {
         </Card>
 
         {/* ── NEW: Tabel Rekap Pengerjaan Per Kelas (langsung di UI) ── */}
-        <RekapPengerjaan kelas={exportKelas} tahunAjaran="2026/2027" semester="ganjil" />
+        <RekapPengerjaan />
 
         {/* Filter & Search */}
         <Card className="border-slate-200 mb-6">
@@ -1402,34 +1402,125 @@ function GlobalDashboard({
   )
 }
 
-// ── NEW: RekapPengerjaan — tabel rekap pengerjaan per kelas di UI ──
-function RekapPengerjaan({ kelas, tahunAjaran, semester }: { kelas: string; tahunAjaran: string; semester: string }) {
+// ── NEW: RekapPengerjaan — tabel rekap pengerjaan dengan filter kelas + tugas ──
+function RekapPengerjaan() {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  // ── NEW: filter lokal untuk card ini ──
+  const [rekapKelas, setRekapKelas] = useState<string>('ALL')
+  const [rekapAssignmentId, setRekapAssignmentId] = useState<string>('ALL')
+  const [allAssignments, setAllAssignments] = useState<Array<{ id: string; title: string; targetKelas: string; createdAt: string; dueDate: string | null }>>([])
+
+  // Fetch assignments untuk dropdown
+  useEffect(() => {
+    fetch('/api/assignments')
+      .then(r => r.json())
+      .then(json => {
+        if (json.success && Array.isArray(json.assignments)) {
+          setAllAssignments(json.assignments.map((a: any) => ({
+            id: a.id, title: a.title, targetKelas: a.targetKelas,
+            createdAt: a.createdAt, dueDate: a.dueDate,
+          })))
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/teacher/results-rekap?kelas=${kelas}`)
+    fetch(`/api/teacher/results-rekap?kelas=${rekapKelas}`)
       .then(r => r.json())
       .then(json => setData(json))
       .catch(() => setData({ success: false, rekap: [], ringkasan: {} }))
       .finally(() => setLoading(false))
-  }, [kelas, tahunAjaran, semester])
+  }, [rekapKelas])
 
   const ringkasan = data?.ringkasan || {}
   const rekap = data?.rekap || []
   const assignments = data?.assignments || []
+
+  // ── NEW: Filter rekap berdasarkan tugas yang dipilih ──
+  const filteredRekap = rekapAssignmentId === 'ALL'
+    ? rekap
+    : rekap.map((s: any) => ({
+        ...s,
+        assignmentStatus: s.assignmentStatus.filter((as: any) => as.assignmentId === rekapAssignmentId),
+        totalDikerjakan: s.assignmentStatus.filter((as: any) => as.assignmentId === rekapAssignmentId && as.status === 'sudah').length,
+        totalTugas: 1,
+        rataRata: (() => {
+          const as = s.assignmentStatus.find((a: any) => a.assignmentId === rekapAssignmentId)
+          return as && as.status === 'sudah' ? as.nilai : 0
+        })(),
+      }))
+
+  // ── NEW: Info tugas yang dipilih (tanggal + deadline) ──
+  const selectedAssignment = allAssignments.find(a => a.id === rekapAssignmentId)
+  const filteredAssignments = rekapAssignmentId === 'ALL'
+    ? assignments
+    : assignments.filter((a: any) => a.id === rekapAssignmentId)
 
   return (
     <Card className="border-2 border-teal-200 mb-6">
       <CardHeader className="bg-gradient-to-r from-teal-50 to-sky-50 pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <FileCheck className="w-4 h-4 text-teal-600" />
-          Rekap Pengerjaan {kelas !== 'ALL' ? `Kelas ${kelas}` : 'Semua Kelas'}
+          Rekap Pengerjaan Tugas
         </CardTitle>
         <p className="text-xs text-slate-500 mt-1">
-          Lihat siapa yang sudah/belum mengerjakan. Tidak perlu download Excel untuk monitoring harian.
+          Pilih kelas dan tugas untuk lihat siapa yang sudah/belum mengerjakan.
         </p>
+        {/* ── NEW: Filter kelas + tugas di card ini ── */}
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          <div className="space-y-1">
+            <Label className="text-xs font-medium">Pilih Kelas</Label>
+            <Select value={rekapKelas} onValueChange={setRekapKelas}>
+              <SelectTrigger className="bg-white"><SelectValue placeholder="Semua Kelas" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Semua Kelas</SelectItem>
+                <SelectItem value="7A">7A</SelectItem>
+                <SelectItem value="7B">7B</SelectItem>
+                <SelectItem value="7C">7C</SelectItem>
+                <SelectItem value="8A">8A</SelectItem>
+                <SelectItem value="8B">8B</SelectItem>
+                <SelectItem value="8C">8C</SelectItem>
+                <SelectItem value="9A">9A</SelectItem>
+                <SelectItem value="9B">9B</SelectItem>
+                <SelectItem value="11DKV">11DKV</SelectItem>
+                <SelectItem value="12DKV">12DKV</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs font-medium">Pilih Tugas</Label>
+            <Select value={rekapAssignmentId} onValueChange={setRekapAssignmentId}>
+              <SelectTrigger className="bg-white"><SelectValue placeholder="Semua Tugas" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Semua Tugas</SelectItem>
+                {allAssignments.map(a => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.title.slice(0, 30)}{a.title.length > 30 ? '...' : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {/* ── NEW: Info tanggal pemberian + deadline ── */}
+        {selectedAssignment && (
+          <div className="flex items-center gap-4 mt-2 text-xs">
+            <span className="text-slate-500">
+              📅 Diberikan: <b className="text-slate-700">{new Date(selectedAssignment.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</b>
+            </span>
+            {selectedAssignment.dueDate ? (
+              <span className={`text-slate-500 ${new Date(selectedAssignment.dueDate) < new Date() ? 'text-red-600 font-medium' : ''}`}>
+                ⏰ Batas: <b className={new Date(selectedAssignment.dueDate) < new Date() ? 'text-red-600' : 'text-slate-700'}>{new Date(selectedAssignment.dueDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</b>
+                {new Date(selectedAssignment.dueDate) < new Date() && ' (Lewat!)'}
+              </span>
+            ) : (
+              <span className="text-slate-400">⏰ Tanpa batas waktu</span>
+            )}
+          </div>
+        )}
       </CardHeader>
       <CardContent className="pt-4">
         {loading ? (
@@ -1437,9 +1528,9 @@ function RekapPengerjaan({ kelas, tahunAjaran, semester }: { kelas: string; tahu
             <RefreshCw className="w-8 h-8 mx-auto animate-spin mb-2" />
             <p className="text-sm">Memuat data rekap...</p>
           </div>
-        ) : rekap.length === 0 ? (
+        ) : filteredRekap.length === 0 ? (
           <div className="py-8 text-center text-slate-400">
-            <p className="text-sm">Belum ada data untuk {kelas === 'ALL' ? 'semua kelas' : `kelas ${kelas}`}</p>
+            <p className="text-sm">Belum ada data untuk {rekapKelas === 'ALL' ? 'semua kelas' : `kelas ${rekapKelas}`}</p>
           </div>
         ) : (
           <>
@@ -1449,16 +1540,16 @@ function RekapPengerjaan({ kelas, tahunAjaran, semester }: { kelas: string; tahu
                 <p className="text-xs text-slate-500 mb-1">Total Siswa</p>
                 <p className="text-2xl font-bold text-slate-700">{ringkasan.totalSiswa || 0}</p>
               </div>
-              <div className="bg-emerald-50 rounded-lg p-3 text-center">
-                <p className="text-xs text-emerald-600 mb-1">Sudah Mengerjakan</p>
-                <p className="text-2xl font-bold text-emerald-700">{ringkasan.sudahMengerjakan || 0}</p>
+              <div className="bg-emerald-50 rounded-lg p-3 text-center border border-emerald-200">
+                <p className="text-xs text-emerald-600 mb-1">✓ Sudah Mengerjakan</p>
+                <p className="text-2xl font-bold text-emerald-700">{filteredRekap.filter((s: any) => s.totalDikerjakan > 0).length}</p>
               </div>
-              <div className="bg-amber-50 rounded-lg p-3 text-center">
-                <p className="text-xs text-amber-600 mb-1">Belum Mengerjakan</p>
-                <p className="text-2xl font-bold text-amber-700">{ringkasan.belumMengerjakan || 0}</p>
+              <div className="bg-red-50 rounded-lg p-3 text-center border border-red-200">
+                <p className="text-xs text-red-600 mb-1">✗ Belum Mengerjakan</p>
+                <p className="text-2xl font-bold text-red-700">{filteredRekap.filter((s: any) => s.totalDikerjakan === 0).length}</p>
               </div>
               <div className="bg-teal-50 rounded-lg p-3 text-center">
-                <p className="text-xs text-teal-600 mb-1">Rata-rata Kelas</p>
+                <p className="text-xs text-teal-600 mb-1">Rata-rata</p>
                 <p className="text-2xl font-bold text-teal-700">{ringkasan.rataRataKelas || 0}</p>
               </div>
             </div>
@@ -1471,71 +1562,80 @@ function RekapPengerjaan({ kelas, tahunAjaran, semester }: { kelas: string; tahu
                     <TableHead className="w-8">#</TableHead>
                     <TableHead>Nama Siswa</TableHead>
                     <TableHead className="text-center">Kelas</TableHead>
-                    <TableHead className="text-center">Dikerjakan</TableHead>
-                    {assignments.map((a: any) => (
+                    {filteredAssignments.map((a: any) => (
                       <TableHead key={a.id} className="text-center text-xs" title={a.title}>
                         {a.title.slice(0, 15)}{a.title.length > 15 ? '...' : ''}
                       </TableHead>
                     ))}
-                    <TableHead className="text-center">Rata²</TableHead>
+                    {rekapAssignmentId === 'ALL' && (
+                      <TableHead className="text-center">Rata²</TableHead>
+                    )}
                     <TableHead className="text-center">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rekap.map((s: any, i: number) => (
-                    <TableRow key={s.studentId} className={s.totalDikerjakan === 0 ? 'bg-amber-50' : ''}>
-                      <TableCell className="text-slate-400 text-xs">{i + 1}</TableCell>
-                      <TableCell>
-                        <div className="font-medium text-sm">{s.namaLengkap}</div>
-                        <div className="text-xs text-slate-400">{s.nisn}</div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="outline" className="text-xs">{s.kelas}</Badge>
-                      </TableCell>
-                      <TableCell className="text-center text-xs">
-                        {s.totalDikerjakan}/{s.totalTugas}
-                      </TableCell>
-                      {s.assignmentStatus.map((as: any) => (
-                        <TableCell key={as.assignmentId} className="text-center">
-                          {as.status === 'sudah' ? (
-                            <span className={`font-bold text-xs ${as.nilai >= 75 ? 'text-emerald-600' : 'text-orange-600'}`}>
-                              {as.nilai}
+                  {filteredRekap.map((s: any, i: number) => {
+                    const sudah = s.totalDikerjakan > 0
+                    return (
+                      <TableRow key={s.studentId} className={sudah ? 'bg-emerald-50/50' : 'bg-red-50/50'}>
+                        <TableCell className="text-slate-400 text-xs">{i + 1}</TableCell>
+                        <TableCell>
+                          <div className="font-medium text-sm">{s.namaLengkap}</div>
+                          <div className="text-xs text-slate-400">{s.nisn}</div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline" className="text-xs">{s.kelas}</Badge>
+                        </TableCell>
+                        {s.assignmentStatus.map((as: any) => (
+                          <TableCell key={as.assignmentId} className="text-center">
+                            {as.status === 'sudah' ? (
+                              <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${as.nilai >= 75 ? 'bg-emerald-200 text-emerald-800' : 'bg-orange-200 text-orange-800'}`}>
+                                {as.nilai}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-200 text-red-700 text-xs font-bold">
+                                ✗
+                              </span>
+                            )}
+                          </TableCell>
+                        ))}
+                        {rekapAssignmentId === 'ALL' && (
+                          <TableCell className="text-center">
+                            <span className={`font-bold text-sm ${s.rataRata >= 75 ? 'text-emerald-600' : s.rataRata > 0 ? 'text-orange-600' : 'text-slate-400'}`}>
+                              {s.rataRata > 0 ? s.rataRata : '-'}
                             </span>
+                          </TableCell>
+                        )}
+                        <TableCell className="text-center">
+                          {sudah ? (
+                            <Badge className="bg-emerald-100 text-emerald-700 text-xs">✓ Sudah</Badge>
                           ) : (
-                            <span className="text-slate-300 text-xs">-</span>
+                            <Badge className="bg-red-100 text-red-700 text-xs">✗ Belum</Badge>
                           )}
                         </TableCell>
-                      ))}
-                      <TableCell className="text-center">
-                        <span className={`font-bold text-sm ${s.rataRata >= 75 ? 'text-emerald-600' : s.rataRata > 0 ? 'text-orange-600' : 'text-slate-400'}`}>
-                          {s.rataRata > 0 ? s.rataRata : '-'}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {s.totalDikerjakan === 0 ? (
-                          <Badge className="bg-amber-100 text-amber-700 text-xs">Belum</Badge>
-                        ) : s.totalDikerjakan === s.totalTugas ? (
-                          <Badge className="bg-emerald-100 text-emerald-700 text-xs">Selesai</Badge>
-                        ) : (
-                          <Badge className="bg-sky-100 text-sky-700 text-xs">Sebagian</Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             </div>
 
             {/* Legend */}
-            <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+            <div className="flex items-center gap-4 mt-2 text-xs text-slate-500 flex-wrap">
               <span className="flex items-center gap-1">
-                <span className="w-3 h-3 bg-emerald-100 rounded"></span> Lulus (≥75)
+                <span className="w-3 h-3 bg-emerald-200 rounded-full"></span> Sudah (≥75 lulus)
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-3 h-3 bg-orange-100 rounded"></span> Tidak Lulus (&lt;75)
+                <span className="w-3 h-3 bg-orange-200 rounded-full"></span> Sudah (&lt;75 tidak lulus)
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-3 h-3 bg-amber-100 rounded"></span> Belum Mengerjakan
+                <span className="w-3 h-3 bg-red-200 rounded-full"></span> Belum mengerjakan
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 bg-emerald-50 border border-emerald-200 rounded"></span> Baris hijau: sudah
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 bg-red-50 border border-red-200 rounded"></span> Baris merah: belum
               </span>
             </div>
           </>
