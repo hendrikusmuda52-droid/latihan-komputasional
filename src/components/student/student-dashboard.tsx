@@ -21,10 +21,10 @@ import { SelfAssessment } from '@/components/student/self-assessment'
 import { MaterialMarkdownRenderer } from '@/components/student/material-markdown-renderer'
 
 interface StudentInfo { id: string; namaLengkap: string; nisn: string; kelas: string; sekolah: string; jenisKelamin: string }
-interface Assignment { id: string; title: string; description: string; dueDate: string | null; createdAt: string; exerciseType: string; questionCount: number; taskType: string; canRetake: boolean; hasCompleted: boolean; duration?: number; cpId?: string | null; tpId?: string | null; isExpired?: boolean }
+interface Assignment { id: string; title: string; description: string; dueDate: string | null; createdAt: string; exerciseType: string; questionCount: number; taskType: string; canRetake: boolean; hasCompleted: boolean; duration?: number; cpId?: string | null; tpId?: string | null; isExpired?: boolean; isPunishment?: boolean; isPassed?: boolean; isFailed?: boolean; score?: number | null }
 interface ResultItem { id: string; typingScore: number; quizScore: number; totalScore: number; typingSpeedWPM: number; typingAccuracy: number; quizCorrect: number; quizTotal: number; completedAt: string; releasedAt: string | null; assignmentId?: string | null }
 interface Material { id: string; title: string; content: string; category: string; createdAt: string; mediaType?: string; mediaUrl?: string | null; imageUrl?: string | null }
-interface DashboardData { student: StudentInfo; assignments: Assignment[]; results: ResultItem[]; pendingResultsCount: number; hasActiveProgress: boolean; activeProgressStage: string | null; hasCompletedAnyExercise: boolean }
+interface DashboardData { student: StudentInfo; assignments: Assignment[]; results: ResultItem[]; pendingResultsCount: number; hasActiveProgress: boolean; activeProgressStage: string | null; hasCompletedAnyExercise: boolean; kkm?: number }
 
 export function StudentDashboard({ student, onLogout }: { student: StudentInfo; onLogout: () => void }) {
   const { setStudent, setStage, setProgress } = useAppStore()
@@ -209,27 +209,58 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
               data.assignments.map((a) => {
                 // ── FIX 4: Per-assignment lock logic ──
                 // hasCompleted = student has a Result for THIS specific assignment
-                // canRetake = persiapan (always) OR !hasCompleted (assignment not yet done / was reset)
+                // canRetake = persiapan (always) OR !hasCompleted (assignment not yet done / was reset) OR isFailed (remedial)
                 const isLocked = a.hasCompleted && a.exerciseType === 'wajib' && !a.canRetake
+                const kkm = data?.kkm || 75
                 return (
-                <Card key={a.id} className={`border-0 shadow-md hover:shadow-xl transition-all cursor-pointer group overflow-hidden ${isLocked ? 'opacity-60' : ''}`} onClick={() => handleStartAssignment(a)}>
-                  <div className={`h-1 ${a.exerciseType === 'wajib' ? 'bg-red-500' : 'bg-blue-500'}`} />
+                <Card key={a.id} className={`border-0 shadow-md hover:shadow-xl transition-all cursor-pointer group overflow-hidden ${isLocked ? 'opacity-60' : ''} ${a.isPunishment ? 'border-2 border-amber-400' : ''}`} onClick={() => handleStartAssignment(a)}>
+                  <div className={`h-1 ${a.isPunishment ? 'bg-amber-500' : a.exerciseType === 'wajib' ? 'bg-red-500' : 'bg-blue-500'}`} />
                   <CardContent className="pt-5 pb-5">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <Badge variant="outline" className="text-xs">{a.taskType === 'game' ? 'Game' : a.taskType === 'drawing' ? 'Menggambar' : a.taskType === 'quiz_only' ? 'Soal HOTS' : a.taskType === 'refleksi_video' ? 'Video' : 'Mengetik + Soal'}</Badge>
                           <Badge className={`text-xs ${a.exerciseType === 'wajib' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{a.exerciseType === 'wajib' ? 'Wajib' : 'Persiapan'}</Badge>
-                          {isLocked && <Badge className="bg-slate-200 text-slate-600">Selesai</Badge>}
-                          {!isLocked && a.hasCompleted && <Badge className="bg-emerald-100 text-emerald-700">Remedial</Badge>}
+                          {/* ── NEW: Badge status lulus/remedial/hukuman ── */}
+                          {a.isPunishment && (
+                            <Badge className="bg-amber-100 text-amber-700 text-xs">⚠️ Tugas Hukuman</Badge>
+                          )}
+                          {a.isExpired && !a.isPunishment && (
+                            <Badge className="bg-red-100 text-red-700 text-xs">Dikunci (Deadline Lewat)</Badge>
+                          )}
+                          {a.hasCompleted && a.isPassed && !a.isPunishment && (
+                            <Badge className="bg-emerald-100 text-emerald-700 text-xs">✓ Lulus ({a.score})</Badge>
+                          )}
+                          {a.isFailed && !a.isPunishment && (
+                            <Badge className="bg-orange-100 text-orange-700 text-xs">Tidak Lulus ({a.score}) — Remedial</Badge>
+                          )}
+                          {isLocked && !a.isFailed && (
+                            <Badge className="bg-slate-200 text-slate-600">Selesai</Badge>
+                          )}
                         </div>
                         <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">{a.title}</h3>
                         {a.description && <p className="text-sm text-slate-500 mt-1">{a.description}</p>}
-                        <div className="flex items-center gap-3 text-xs text-slate-400 mt-3"><span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{new Date(a.createdAt).toLocaleDateString('id-ID')}</span></div>
+                        <div className="flex items-center gap-3 text-xs text-slate-400 mt-3">
+                          <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{new Date(a.createdAt).toLocaleDateString('id-ID')}</span>
+                          {a.dueDate && (
+                            <span className={`flex items-center gap-1 ${new Date(a.dueDate) < new Date() ? 'text-red-500 font-medium' : ''}`}>
+                              <Clock className="w-3 h-3" />
+                              Deadline: {new Date(a.dueDate).toLocaleDateString('id-ID')}
+                            </span>
+                          )}
+                          {/* ── NEW: KKM info ── */}
+                          <span className="text-slate-400">KKM: {kkm}</span>
+                        </div>
                       </div>
                       <div>
-                        {isLocked ? (
+                        {isLocked && !a.isFailed ? (
                           <Button size="sm" variant="outline" disabled className="opacity-50"><Lock className="w-3 h-3 mr-1" />Terkunci</Button>
+                        ) : a.isPunishment ? (
+                          // Tugas hukuman — bisa dikerjakan
+                          <Button size="sm" className="bg-amber-600 hover:bg-amber-700 shadow-md"><Play className="w-3 h-3 mr-1" />Kerjakan Hukuman</Button>
+                        ) : a.isFailed ? (
+                          // Tidak lulus — wajib remedial
+                          <Button size="sm" className="bg-orange-500 hover:bg-orange-600 shadow-md"><Play className="w-3 h-3 mr-1" />Wajib Remedial</Button>
                         ) : a.hasCompleted ? (
                           // Assignment was completed before but has been reset by guru → "Mulai Remedial"
                           <Button size="sm" className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-md"><Play className="w-3 h-3 mr-1" />Mulai Remedial</Button>

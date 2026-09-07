@@ -111,6 +111,11 @@ model Assignment {
   // 0 = no time limit (use default 25 min for quiz, 40 min for typing)
   // >0 = custom duration in minutes (e.g., 30 = 30 minutes)
   duration      Int       @default(0)
+  // ── NEW: Hukuman/Penalty system ──
+  // Jika true: tugas ini adalah tugas hukuman (otomatis dibuat saat deadline lewat)
+  // parentAssignmentId: link ke tugas asli yang tidak dikerjakan
+  isPunishment  Boolean   @default(false)
+  parentAssignmentId String? // tugas asli yang tidak dikerjakan
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }

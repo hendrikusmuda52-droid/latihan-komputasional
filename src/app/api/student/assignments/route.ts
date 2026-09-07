@@ -57,17 +57,29 @@ export async function GET(req: NextRequest) {
       orderBy: { updatedAt: 'desc' },
     })
 
-    // ── FIX #3: Deadline expiry auto-zero ──
-    // For each assignment with a dueDate that has passed AND the student
-    // hasn't submitted yet, auto-create a Result with score 0 and mark
-    // as completed. This locks the assignment permanently and the score
-    // appears in the teacher's grade book immediately.
+    // ── FIX #3: Deadline expiry auto-zero + hukuman system ──
+    // Alur:
+    // 1. Jika deadline lewat dan siswa belum mengerjakan → auto-zero + kunci
+    // 2. Cek apakah siswa yang sudah mengerjakan lulus/tidak (bandingkan dengan KKM)
+    // 3. Generate tugas hukuman otomatis untuk siswa yang tidak mengerjakan
     const now = new Date()
     const expiredAssignments: string[] = []
 
+    // ── Ambil KKM dari SubjectConfig ──
+    const subjectConfig = await db.subjectConfig.findFirst({
+      where: { subject, tahunAjaran: '2026/2027', semester: 'ganjil' },
+      select: { kkm: true },
+    })
+    const kkm = subjectConfig?.kkm || 75
+
     for (const a of assignments) {
-      // Skip if no deadline, or already completed
+      // Skip punishment assignments (mereka punya parent)
+      if ((a as Record<string, unknown>).isPunishment === true) continue
+
+      // Skip if no deadline
       if (!a.dueDate) continue
+
+      // Skip if already completed
       if (completedAssignmentIds.has(a.id)) continue
 
       // Check if deadline has passed
@@ -102,23 +114,82 @@ export async function GET(req: NextRequest) {
           })
           completedAssignmentIds.add(a.id)
           expiredAssignments.push(a.id)
+
+          // ── NEW: Generate tugas hukuman otomatis ──
+          // Cek apakah sudah ada tugas hukuman untuk tugas ini + siswa ini
+          const existingPunishment = await db.assignment.findFirst({
+            where: {
+              parentAssignmentId: a.id,
+              isPunishment: true,
+              isActive: true,
+            },
+          })
+
+          if (!existingPunishment) {
+            // Buat tugas hukuman: tugas asli + tugas tambahan
+            await db.assignment.create({
+              data: {
+                title: `⚠️ HUKUMAN: ${a.title} (Tidak Dikerjakan + Tugas Tambahan)`,
+                description: `Anda tidak mengerjakan tugas "${a.title}" yang deadline-nya ${new Date(a.dueDate).toLocaleDateString('id-ID')}. ` +
+                  `Sebagai hukuman, Anda wajib: (1) Mengerjakan ulang tugas asli, (2) Mengerjakan tugas tambahan ini. ` +
+                  `Nilai 0 sudah masuk ke daftar nilai. Selesaikan tugas hukuman ini untuk mendapat nilai pengganti.`,
+                subject: a.subject,
+                targetKelas: a.targetKelas,
+                targetJenjang: a.targetJenjang,
+                isActive: true,
+                dueDate: null, // tidak ada deadline (harus selesaikan)
+                exerciseType: 'wajib',
+                questionCount: a.questionCount,
+                taskType: a.taskType,
+                teacherId: a.teacherId,
+                cpId: a.cpId,
+                tpId: a.tpId,
+                taskCategory: a.taskCategory,
+                taskTypeName: a.taskTypeName,
+                tahunAjaran: a.tahunAjaran,
+                semester: a.semester,
+                duration: a.duration,
+                isPunishment: true,
+                parentAssignmentId: a.id,
+              },
+            })
+          }
         } catch (e) {
           // If result already exists (race condition), skip silently
-          console.error('[student/assignments] auto-zero error for assignment', a.id, e)
+          console.error('[student/assignments] auto-zero/punishment error for assignment', a.id, e)
         }
       }
     }
+
+    // ── Ambil tugas hukuman untuk siswa ini ──
+    const punishmentAssignments = assignments.filter(
+      (a) => (a as Record<string, unknown>).isPunishment === true
+    )
+
+    // ── Ambil nilai siswa untuk cek lulus/tidak ──
+    const studentResults = await db.result.findMany({
+      where: { studentId: session.studentId, subject },
+      select: { assignmentId: true, totalScore: true },
+    })
+    const resultMap = new Map(studentResults.map(r => [r.assignmentId, r.totalScore]))
 
     return NextResponse.json({
       success: true,
       student: { id: session.studentId, namaLengkap: session.namaLengkap, nisn: session.nisn, kelas: session.kelas },
       subject,
+      kkm, // ── NEW: kirim KKM ke frontend untuk cek lulus/tidak
       assignments: assignments.map((a) => {
         const hasCompletedThisAssignment = completedAssignmentIds.has(a.id)
-        // ── FIX #3: If assignment is expired, mark it as expired ──
         const isExpired = !a.dueDate ? false : new Date(a.dueDate) < now && hasCompletedThisAssignment && expiredAssignments.includes(a.id)
+        const isPunishment = (a as Record<string, unknown>).isPunishment === true
 
-        const canRetake = a.exerciseType === 'persiapan' || !hasCompletedThisAssignment
+        // ── NEW: Cek status lulus/tidak berdasarkan KKM ──
+        const score = resultMap.get(a.id)
+        const isPassed = hasCompletedThisAssignment && score !== undefined && score >= kkm
+        const isFailed = hasCompletedThisAssignment && score !== undefined && score < kkm
+
+        // canRetake: persiapan (always), atau belum dikerjakan, atau tidak lulus (remedial)
+        const canRetake = a.exerciseType === 'persiapan' || !hasCompletedThisAssignment || isFailed
 
         return {
           id: a.id, title: a.title, description: a.description,
@@ -131,6 +202,10 @@ export async function GET(req: NextRequest) {
           canRetake,
           hasCompleted: hasCompletedThisAssignment,
           isExpired,
+          isPunishment, // ── NEW: flag tugas hukuman
+          isPassed,     // ── NEW: lulus (≥ KKM)
+          isFailed,     // ── NEW: tidak lulus (< KKM)
+          score: score !== undefined ? Number(score) : null, // ── NEW: nilai siswa
         }
       }),
       results: results.map((r) => ({
