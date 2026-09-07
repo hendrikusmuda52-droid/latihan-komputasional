@@ -166,6 +166,54 @@ export function TeacherDashboard() {
   const [search, setSearch] = useState('')
   const [filterKelas, setFilterKelas] = useState<string>('ALL')
   const [filterSekolah, setFilterSekolah] = useState<string>('ALL')
+  // ── NEW: State untuk download rekap pengerjaan ──
+  const [exportAssignmentId, setExportAssignmentId] = useState<string>('ALL')
+  const [exportKelas, setExportKelas] = useState<string>('ALL')
+  const [downloadingRekap, setDownloadingRekap] = useState(false)
+  const [assignments, setAssignments] = useState<Array<{ id: string; title: string; targetKelas: string; taskType: string }>>([])
+
+  // ── NEW: Fetch assignments untuk dropdown ──
+  useEffect(() => {
+    if (activeMenu === 'results') {
+      fetch('/api/assignments')
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.assignments)) {
+            setAssignments(data.assignments.map((a: any) => ({
+              id: a.id, title: a.title, targetKelas: a.targetKelas, taskType: a.taskType,
+            })))
+          }
+        })
+        .catch(() => {})
+    }
+  }, [activeMenu])
+
+  // ── NEW: Handle download rekap ──
+  const handleDownloadRekap = async () => {
+    setDownloadingRekap(true)
+    try {
+      const params = new URLSearchParams()
+      if (exportAssignmentId !== 'ALL') params.set('assignmentId', exportAssignmentId)
+      if (exportKelas !== 'ALL') params.set('kelas', exportKelas)
+
+      const res = await fetch(`/api/teacher/results-export?${params.toString()}`)
+      if (!res.ok) throw new Error('Gagal download rekap')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = exportAssignmentId !== 'ALL'
+        ? `rekap-tugas-${exportAssignmentId.slice(0, 20)}.xlsx`
+        : `rekap-semua-tugas-${new Date().toISOString().slice(0, 10)}.xlsx`
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('Rekap berhasil didownload')
+    } catch (err) {
+      toast.error('Gagal download rekap')
+    } finally {
+      setDownloadingRekap(false)
+    }
+  }
   // MOBILE SIDEBAR: controls slide-over menu on screens < md (768px).
   const [sidebarOpen, setSidebarOpen] = useState(false)
   // DESKTOP SIDEBAR COLLAPSE: allow hiding sidebar on desktop to maximize table space
@@ -774,6 +822,74 @@ export function TeacherDashboard() {
                 </LineChart>
               </ResponsiveContainer>
             )}
+          </CardContent>
+        </Card>
+
+        {/* ── NEW: Download Rekap Pengerjaan ── */}
+        <Card className="border-2 border-violet-200 mb-6">
+          <CardHeader className="bg-gradient-to-r from-violet-50 to-purple-50 pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Download className="w-4 h-4 text-violet-600" />
+              Download Rekap Pengerjaan
+            </CardTitle>
+            <p className="text-xs text-slate-500 mt-1">
+              Download rekap pengerjaan tugas ke Excel. Lihat siapa yang sudah/belum mengerjakan, nilai, dan status.
+            </p>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 items-end">
+              <div className="space-y-1 flex-1 w-full">
+                <Label className="text-xs font-medium">Pilih Tugas</Label>
+                <Select value={exportAssignmentId} onValueChange={setExportAssignmentId}>
+                  <SelectTrigger><SelectValue placeholder="Semua Tugas" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Semua Tugas (Matrix)</SelectItem>
+                    {(assignments || []).map(a => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.title.slice(0, 40)} {a.targetKelas !== 'ALL' ? `(${a.targetKelas})` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1 w-full sm:w-40">
+                <Label className="text-xs font-medium">Filter Kelas</Label>
+                <Select value={exportKelas} onValueChange={setExportKelas}>
+                  <SelectTrigger><SelectValue placeholder="Semua Kelas" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Semua Kelas</SelectItem>
+                    <SelectItem value="7A">7A</SelectItem>
+                    <SelectItem value="7B">7B</SelectItem>
+                    <SelectItem value="7C">7C</SelectItem>
+                    <SelectItem value="8A">8A</SelectItem>
+                    <SelectItem value="8B">8B</SelectItem>
+                    <SelectItem value="8C">8C</SelectItem>
+                    <SelectItem value="9A">9A</SelectItem>
+                    <SelectItem value="9B">9B</SelectItem>
+                    <SelectItem value="11DKV">11DKV</SelectItem>
+                    <SelectItem value="12DKV">12DKV</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                size="sm"
+                className="bg-violet-600 hover:bg-violet-700 whitespace-nowrap"
+                onClick={handleDownloadRekap}
+                disabled={downloadingRekap}
+              >
+                {downloadingRekap ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 mr-1 animate-spin" />
+                    Mengunduh...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5 mr-1" />
+                    Download Excel
+                  </>
+                )}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
