@@ -67,6 +67,33 @@ export async function GET(req: NextRequest) {
       db.assignment.findMany({
         where,
         orderBy: { createdAt: 'desc' },
+        // ── FIX: Select hanya field yang pasti ada di DB ──
+        // isPunishment dan parentAssignmentId mungkin belum ada di DB
+        // sampai SQL migration dijalankan. Tanpa select explicit,
+        // Prisma akan select ALL fields termasuk yang belum ada → error.
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          subject: true,
+          targetKelas: true,
+          targetJenjang: true,
+          isActive: true,
+          dueDate: true,
+          exerciseType: true,
+          questionCount: true,
+          taskType: true,
+          teacherId: true,
+          cpId: true,
+          tpId: true,
+          taskCategory: true,
+          taskTypeName: true,
+          tahunAjaran: true,
+          semester: true,
+          duration: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       }),
     )
 
