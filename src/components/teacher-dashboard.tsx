@@ -105,6 +105,7 @@ import { CatatanSikapManager } from './teacher/sikap-manager'
 import { ResetCenter } from './teacher/reset-center'
 import { AnalyticsManager } from './teacher/analytics-manager'
 import { hasTypingFeature } from '@/lib/constants'
+import { TaskPhotoViewer } from '@/components/teacher/task-photo-viewer'
 
 interface ResultRow {
   id: string
@@ -127,6 +128,8 @@ interface ResultRow {
   completedAt: string
   isReleased: boolean
   releasedAt: string | null
+  assignmentId?: string | null
+  assignmentTitle?: string | null
 }
 
 interface Stats {
@@ -1045,6 +1048,15 @@ export function TeacherDashboard() {
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex justify-center gap-1">
+                            {/* ── NEW: Tombol Lihat Foto Catatan ── */}
+                            {r.assignmentId && (
+                              <TaskPhotoViewer
+                                assignmentId={r.assignmentId}
+                                studentId={r.studentId}
+                                studentName={r.namaLengkap}
+                                assignmentTitle={r.assignmentTitle || 'Tugas'}
+                              />
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"

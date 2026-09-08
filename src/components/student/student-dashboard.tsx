@@ -19,6 +19,7 @@ import { useAppStore } from '@/lib/store'
 import { SMP_SUBJECTS, SMK_SUBJECTS, getSubjectsByJenjang, getJenjang } from '@/lib/constants'
 import { SelfAssessment } from '@/components/student/self-assessment'
 import { MaterialMarkdownRenderer } from '@/components/student/material-markdown-renderer'
+import { UploadTaskPhoto } from '@/components/student/upload-task-photo'
 
 interface StudentInfo { id: string; namaLengkap: string; nisn: string; kelas: string; sekolah: string; jenisKelamin: string }
 interface Assignment { id: string; title: string; description: string; dueDate: string | null; createdAt: string; exerciseType: string; questionCount: number; taskType: string; canRetake: boolean; hasCompleted: boolean; duration?: number; cpId?: string | null; tpId?: string | null; isExpired?: boolean; isPunishment?: boolean; isPassed?: boolean; isFailed?: boolean; score?: number | null }
@@ -213,7 +214,8 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
                 const isLocked = a.hasCompleted && a.exerciseType === 'wajib' && !a.canRetake
                 const kkm = data?.kkm || 75
                 return (
-                <Card key={a.id} className={`border-0 shadow-md hover:shadow-xl transition-all cursor-pointer group overflow-hidden ${isLocked ? 'opacity-60' : ''} ${a.isPunishment ? 'border-2 border-amber-400' : ''}`} onClick={() => handleStartAssignment(a)}>
+                <div key={a.id} className="space-y-3">
+                <Card className={`border-0 shadow-md hover:shadow-xl transition-all cursor-pointer group overflow-hidden ${isLocked ? 'opacity-60' : ''} ${a.isPunishment ? 'border-2 border-amber-400' : ''}`} onClick={() => handleStartAssignment(a)}>
                   <div className={`h-1 ${a.isPunishment ? 'bg-amber-500' : a.exerciseType === 'wajib' ? 'bg-red-500' : 'bg-blue-500'}`} />
                   <CardContent className="pt-5 pb-5">
                     <div className="flex items-start justify-between gap-4">
@@ -271,6 +273,17 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* ── NEW: Upload foto catatan untuk tugas proyek/manual ── */}
+                {(a.taskType === 'tugas_proyek' || a.taskType === 'manual') && !isLocked && (
+                  <UploadTaskPhoto
+                    assignmentId={a.id}
+                    assignmentTitle={a.title}
+                    studentName={student.namaLengkap}
+                    kelas={student.kelas}
+                  />
+                )}
+                </div>
                 )
               })
             )}
