@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     // FIX Bug #2: pakai isKelasMatch agar pencocokan kelas case-insensitive
     // dan mengabaikan spasi. Sebelumnya memakai kelasList.includes(studentKelas)
     // yang case-sensitive, sehingga "11 DKV" tidak cocok dengan "11DKV".
-    const assignments = allActive.filter((a) => isKelasMatch(studentKelas, a.targetKelas))
+    const allMatching = allActive.filter((a) => isKelasMatch(studentKelas, a.targetKelas))
 
     // ── BUG A FIX: Check completion PER ASSIGNMENT, not globally per subject ──
     // Get ALL results for this student + subject, including assignmentId
@@ -41,6 +41,26 @@ export async function GET(req: NextRequest) {
 
     // hasCompletedAny = student has at least 1 result for this subject (for backward compat)
     const hasCompletedAny = allResults.length > 0
+
+    // ── FIX: Filter tugas hukuman — siswa yang sudah mengerjakan tugas asli ──
+    // TIDAK boleh melihat tugas hukuman untuk tugas asli tersebut.
+    // Tugas hukuman punya isPunishment=true dan parentAssignmentId link ke tugas asli.
+    // Jika siswa sudah punya Result untuk parentAssignmentId, sembunyikan tugas hukuman.
+    const assignments = allMatching.filter((a) => {
+      // Cek apakah ini tugas hukuman
+      const isPunishment = (a as Record<string, unknown>).isPunishment === true
+      const parentAssignmentId = (a as Record<string, unknown>).parentAssignmentId as string | undefined
+
+      if (isPunishment && parentAssignmentId) {
+        // Cek apakah siswa sudah mengerjakan tugas asli (parent)
+        // Jika sudah → sembunyikan tugas hukuman
+        if (completedAssignmentIds.has(parentAssignmentId)) {
+          return false
+        }
+      }
+
+      return true
+    })
 
     const results = await db.result.findMany({
       where: { studentId: session.studentId, isReleased: true, subject },

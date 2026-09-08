@@ -36,6 +36,10 @@ export async function GET(req: NextRequest) {
     )
 
     // 2. Fetch assignments (filtered by kelas)
+    // ── FIX: Jangan tampilkan tugas hukuman di rekap ──
+    // Tugas hukuman (isPunishment=true) hanya untuk siswa yang belum mengerjakan.
+    // Di rekap guru, tugas hukuman membingungkan karena muncul untuk semua siswa.
+    // Filter: hanya tampilkan tugas NON-hukuman.
     const assignmentWhere: Record<string, unknown> = { subject: teacherSubject, isActive: true }
     if (kelasFilter !== 'ALL') {
       assignmentWhere.OR = [
@@ -49,6 +53,13 @@ export async function GET(req: NextRequest) {
         select: { id: true, title: true, targetKelas: true, taskType: true, dueDate: true },
         orderBy: { createdAt: 'desc' },
       })
+    )
+
+    // ── FIX: Filter tugas hukuman dari rekap ──
+    // Tugas hukuman (title mulai dengan "⚠️ HUKUMAN") tidak ditampilkan di rekap
+    // karena hanya berlaku untuk siswa tertentu yang tidak mengerjakan
+    const filteredAssignments = (assignments || []).filter(a =>
+      !a.title.startsWith('⚠️ HUKUMAN') && !a.title.startsWith('HUKUMAN:')
     )
 
     // 3. Fetch all results for these students
@@ -86,7 +97,7 @@ export async function GET(req: NextRequest) {
       const terendah = scores.length > 0 ? Math.min(...scores) : 0
 
       // Status per assignment
-      const assignmentStatus = (assignments || []).map(a => {
+      const assignmentStatus = filteredAssignments.map(a => {
         const result = sResults.find(r => r.assignmentId === a.id)
         return {
           assignmentId: a.id,
@@ -104,7 +115,7 @@ export async function GET(req: NextRequest) {
         kelas: s.kelas,
         sekolah: s.sekolah,
         totalDikerjakan,
-        totalTugas: (assignments || []).length,
+        totalTugas: filteredAssignments.length,
         rataRata,
         tertinggi,
         terendah,
@@ -128,7 +139,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      assignments: (assignments || []).map(a => ({
+      assignments: filteredAssignments.map(a => ({
         id: a.id,
         title: a.title,
         targetKelas: a.targetKelas,

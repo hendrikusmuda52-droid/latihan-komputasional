@@ -49,6 +49,11 @@ export async function GET(req: NextRequest) {
       })
     )
 
+    // ── FIX: Filter tugas hukuman dari Excel export ──
+    const filteredAssignments = (assignments || []).filter(a =>
+      !a.title.startsWith('⚠️ HUKUMAN') && !a.title.startsWith('HUKUMAN:')
+    )
+
     // ── Fetch all students (filtered by kelas if provided) ──
     const studentWhere: Record<string, unknown> = { isActive: true }
     if (kelasFilter && kelasFilter !== 'ALL') {
@@ -187,7 +192,7 @@ export async function GET(req: NextRequest) {
       // ── Mode: Rekap semua tugas ──
       // Buat matrix: siswa × tugas → status + nilai
 
-      const assignmentList = assignments || []
+      const assignmentList = filteredAssignments
       const cols: Record<string, unknown> = {
         'Username': '',
         'Nama Siswa': '',
