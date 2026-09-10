@@ -211,6 +211,11 @@ function GradeBookInner() {
   const [perCpKelas, setPerCpKelas] = useState<string>('__none__')
   const [perCpCpFilter, setPerCpCpFilter] = useState<string>('ALL')  // ALL = tampilkan semua CP
 
+  // ── FIX: Reset CP filter saat kelas berubah ──
+  useEffect(() => {
+    setPerCpCpFilter('ALL')
+  }, [perCpKelas])
+
   const fetchPerCp = useCallback(async () => {
     if (!perCpKelas || perCpKelas === 'ALL' || perCpKelas === '__none__') {
       setPerCpData(null)
@@ -904,7 +909,24 @@ function GradeBookInner() {
                 <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">Semua CP</SelectItem>
-                  {safeCps.map(c => c?.id ? <SelectItem key={c.id} value={c.id}>{c.kodeCP || c.deskripsi?.slice(0, 60) || `(CP ${c.id.slice(-4)})`}</SelectItem> : null)}
+                  {/* ── FIX: Filter CP berdasarkan kelas yang dipilih ── */}
+                  {/* CP.7.x → kelas 7A/7B/7C, CP.8.x → kelas 8A/8B/8C, CP.DKV.x → 11DKV/12DKV */}
+                  {safeCps
+                    .filter(c => {
+                      if (!c?.id) return false
+                      // Jika belum pilih kelas (ALL/__none__), tampilkan semua
+                      if (!perCpKelas || perCpKelas === 'ALL' || perCpKelas === '__none__') return true
+                      // Filter berdasarkan gradeLevel CP vs kelas yang dipilih
+                      const cpGrade = c.gradeLevel || ''
+                      if (perCpKelas.startsWith('7')) return cpGrade === '7'
+                      if (perCpKelas.startsWith('8')) return cpGrade === '8'
+                      if (perCpKelas.startsWith('9')) return cpGrade === '9'
+                      if (perCpKelas.startsWith('11')) return cpGrade === '11DKV'
+                      if (perCpKelas.startsWith('12')) return cpGrade === '12DKV'
+                      return true
+                    })
+                    .map(c => c?.id ? <SelectItem key={c.id} value={c.id}>{c.kodeCP || c.deskripsi?.slice(0, 60) || `(CP ${c.id.slice(-4)})`}</SelectItem> : null)
+                  }
                 </SelectContent>
               </Select>
             </div>

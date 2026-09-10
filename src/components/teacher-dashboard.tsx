@@ -1421,22 +1421,15 @@ function RekapPengerjaan() {
   // ── NEW: filter lokal untuk card ini ──
   const [rekapKelas, setRekapKelas] = useState<string>('ALL')
   const [rekapAssignmentId, setRekapAssignmentId] = useState<string>('ALL')
-  const [allAssignments, setAllAssignments] = useState<Array<{ id: string; title: string; targetKelas: string; createdAt: string; dueDate: string | null }>>([])
 
-  // Fetch assignments untuk dropdown
+  // ── Fetch assignments dari results-rekap API (sudah filter per kelas) ──
+  // Tidak perlu fetch /api/assignments terpisah — rekap API sudah return
+  // assignments yang sesuai dengan kelas yang dipilih (tanpa hukuman)
+  const rekapAssignments = data?.assignments || []
+  // Reset pilihan tugas jika kelas berubah
   useEffect(() => {
-    fetch('/api/assignments')
-      .then(r => r.json())
-      .then(json => {
-        if (json.success && Array.isArray(json.assignments)) {
-          setAllAssignments(json.assignments.map((a: any) => ({
-            id: a.id, title: a.title, targetKelas: a.targetKelas,
-            createdAt: a.createdAt, dueDate: a.dueDate,
-          })))
-        }
-      })
-      .catch(() => {})
-  }, [])
+    setRekapAssignmentId('ALL')
+  }, [rekapKelas])
 
   useEffect(() => {
     setLoading(true)
@@ -1466,10 +1459,10 @@ function RekapPengerjaan() {
       }))
 
   // ── NEW: Info tugas yang dipilih (tanggal + deadline) ──
-  const selectedAssignment = allAssignments.find(a => a.id === rekapAssignmentId)
+  const selectedAssignment = rekapAssignments.find((a: any) => a.id === rekapAssignmentId)
   const filteredAssignments = rekapAssignmentId === 'ALL'
-    ? assignments
-    : assignments.filter((a: any) => a.id === rekapAssignmentId)
+    ? rekapAssignments
+    : rekapAssignments.filter((a: any) => a.id === rekapAssignmentId)
 
   return (
     <Card className="border-2 border-teal-200 mb-6">
@@ -1508,7 +1501,7 @@ function RekapPengerjaan() {
               <SelectTrigger className="bg-white"><SelectValue placeholder="Semua Tugas" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">Semua Tugas</SelectItem>
-                {allAssignments.map(a => (
+                {rekapAssignments.map((a: any) => (
                   <SelectItem key={a.id} value={a.id}>
                     {a.title.slice(0, 30)}{a.title.length > 30 ? '...' : ''}
                   </SelectItem>
