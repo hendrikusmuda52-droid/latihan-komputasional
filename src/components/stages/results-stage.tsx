@@ -291,13 +291,17 @@ export function ResultsStage() {
             <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
               {QUESTIONS.map((q, idx) => {
                 const userAnswer = quizResult.answers[q.id]
-                const isCorrect = userAnswer === q.correctAnswer
-                const isUnanswered = userAnswer === undefined
+                // ── Essai: jawaban tidak bisa di-auto-grade. Tampilkan sebagai info. ──
+                const isEssay = q.questionType === 'essai'
+                const isCorrect = !isEssay && userAnswer === q.correctAnswer
+                const isUnanswered = userAnswer === undefined || (typeof userAnswer === 'string' && userAnswer.trim() === '')
                 return (
                   <div
                     key={q.id}
                     className={`p-4 rounded-lg border ${
-                      isCorrect
+                      isEssay
+                        ? 'border-amber-200 bg-amber-50/50'
+                        : isCorrect
                         ? 'border-emerald-200 bg-emerald-50/50'
                         : isUnanswered
                         ? 'border-slate-200 bg-slate-50/50'
@@ -305,7 +309,11 @@ export function ResultsStage() {
                     }`}
                   >
                     <div className="flex items-start gap-2 mb-2">
-                      {isCorrect ? (
+                      {isEssay ? (
+                        <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 text-xs">
+                          Essai
+                        </Badge>
+                      ) : isCorrect ? (
                         <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                       ) : (
                         <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
@@ -318,7 +326,7 @@ export function ResultsStage() {
                           <Badge variant="outline" className="text-xs">
                             {q.category}
                           </Badge>
-                          {isUnanswered && (
+                          {isUnanswered && !isEssay && (
                             <Badge variant="outline" className="text-xs text-slate-500">
                               Tidak dijawab
                             </Badge>
@@ -330,36 +338,70 @@ export function ResultsStage() {
                             <img src={q.imageUrl} alt="Gambar soal" className="max-w-full max-h-48 rounded-lg border border-slate-200" />
                           </div>
                         )}
-                        <div className="space-y-1 text-xs">
-                          {!isUnanswered && (
-                            <div
-                              className={`flex items-start gap-1 ${
-                                isCorrect ? 'text-emerald-700' : 'text-red-700'
-                              }`}
-                            >
-                              <span className="font-semibold">Jawabanmu:</span>
-                              <span>
-                                {String.fromCharCode(65 + userAnswer)}.{' '}
-                                {q.options[userAnswer]}
-                              </span>
+                        {isEssay ? (
+                          // ── Render jawaban essai sebagai teks ──
+                          <div className="space-y-2 text-xs">
+                            {!isUnanswered ? (
+                              <div className="p-3 bg-amber-50 rounded border border-amber-200">
+                                <span className="font-semibold text-amber-800 block mb-1">
+                                  Jawabanmu:
+                                </span>
+                                <span className="text-slate-800 whitespace-pre-wrap">
+                                  {typeof userAnswer === 'string' ? userAnswer : ''}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="p-2 bg-slate-50 rounded text-slate-500">
+                                Essai tidak dijawab.
+                              </div>
+                            )}
+                            {q.essayAnswer && (
+                              <div className="p-3 bg-sky-50 rounded border border-sky-200">
+                                <span className="font-semibold text-sky-800 block mb-1">
+                                  Jawaban contoh / rubric:
+                                </span>
+                                <span className="text-slate-700 whitespace-pre-wrap">
+                                  {q.essayAnswer}
+                                </span>
+                              </div>
+                            )}
+                            <div className="text-amber-700 italic">
+                              Soal essai akan dinilai oleh guru secara manual.
                             </div>
-                          )}
-                          {!isCorrect && (
-                            <div className="flex items-start gap-1 text-emerald-700">
-                              <span className="font-semibold">
-                                Jawaban benar:
-                              </span>
-                              <span>
-                                {String.fromCharCode(65 + q.correctAnswer)}.{' '}
-                                {q.options[q.correctAnswer]}
-                              </span>
-                            </div>
-                          )}
+                          </div>
+                        ) : (
+                          <div className="space-y-1 text-xs">
+                            {!isUnanswered && typeof userAnswer === 'number' && (
+                              <div
+                                className={`flex items-start gap-1 ${
+                                  isCorrect ? 'text-emerald-700' : 'text-red-700'
+                                }`}
+                              >
+                                <span className="font-semibold">Jawabanmu:</span>
+                                <span>
+                                  {String.fromCharCode(65 + userAnswer)}.{' '}
+                                  {q.options[userAnswer]}
+                                </span>
+                              </div>
+                            )}
+                            {!isCorrect && (
+                              <div className="flex items-start gap-1 text-emerald-700">
+                                <span className="font-semibold">
+                                  Jawaban benar:
+                                </span>
+                                <span>
+                                  {String.fromCharCode(65 + q.correctAnswer)}.{' '}
+                                  {q.options[q.correctAnswer]}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                          {/* Pembahasan: tampil untuk PG dan Essai */}
                           <div className="flex items-start gap-1 text-slate-600 mt-2 pt-2 border-t border-slate-200">
                             <span className="font-semibold">Pembahasan:</span>
                             <span className="italic">{q.explanation}</span>
                           </div>
-                        </div>
                       </div>
                     </div>
                   </div>

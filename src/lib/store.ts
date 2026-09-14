@@ -33,7 +33,9 @@ export interface TypingResult {
 }
 
 export interface QuizResult {
-  answers: Record<number, number>
+  // answers bisa berupa number (untuk PG, index 0-3) atau string (untuk essai).
+  // Mixed assignment (PG + essay dalam tugas yang sama) memerlukan typed union.
+  answers: Record<number, number | string>
   quizCorrect: number
   quizTotal: number
   quizScore: number // 0-100
@@ -46,7 +48,8 @@ export interface ResumableProgress {
   typedText: string
   typingStartTime: string | null
   typingDuration: number
-  quizAnswers: Record<number, number>
+  // quizAnswers bisa berupa number (PG) atau string (essai) — typed union
+  quizAnswers: Record<number, number | string>
   quizStartTime: string | null
   quizDuration: number
   resumeStage: AppStage

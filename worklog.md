@@ -953,3 +953,91 @@ Stage Summary:
 - Code fix pushed to GitHub origin/main (commit ee6da83)
 - Vercel will auto-deploy, but env var update MUST be done manually by user
 - Without env var update, the error will persist even after code deploy
+
+---
+Task ID: tugas2-informatika-tp2-cp1
+Agent: main
+Task: Buat Tugas 2 Informatika (Kelas 7: Dekomposisi, Kelas 8: Pencarian Data, Kelas 9: Struktur Data Tree) — TP2 dalam CP1 yang sudah ada, dengan 45 PG + 5 essai per kelas (mixed dalam tugas yang sama), duration 90 menit, deadline 21 September 2026.
+
+Work Log:
+- Read Prisma schema: memahami Question model sudah support questionType='essai' + essayAnswer, Assignment model sudah support duration + dueDate + cpId/tpId
+- Read /api/content/questions/route.ts: API sudah return questionType + essayAnswer ke frontend
+- Read quiz-stage.tsx: HANYA render RadioGroup untuk PG, tidak handle essai → perlu update
+
+Frontend changes (di-push ke GitHub):
+1. src/lib/data.ts:
+   - Question interface +questionType, +essayAnswer, +correctAnswers, +shortAnswer
+2. src/lib/store.ts:
+   - QuizResult.answers: Record<number, number | string> (typed union untuk PG+essai)
+   - ResumableProgress.quizAnswers: sama
+3. src/components/stages/quiz-stage.tsx:
+   - Render otomatis berdasar questionType:
+     * 'pilihan_ganda' → RadioGroup (seperti sebelumnya)
+     * 'essai' → Textarea (text input panjang)
+   - Navigator soal: badge ✎ amber untuk essai, hijau untuk PG terjawab
+   - computeResult():
+     * Pisahkan PG dan essai
+     * quizScore dihitung dari PG saja (auto-grade)
+     * quizTotal = pgCount (essai tidak masuk hitungan auto)
+     * Jawaban essai tetap disimpan di quizAnswers JSON untuk review guru
+   - Badge "Essai" amber di question header
+4. src/components/stages/results-stage.tsx:
+   - Tampilan hasil untuk essai:
+     * Badge "Essai" amber
+     * Tampilkan jawaban siswa (textarea content)
+     * Tampilkan jawaban contoh / rubric dari essayAnswer
+     * Catatan: "Soal essai akan dinilai oleh guru secara manual."
+
+SQL data (file 228 KB, belum di-run di Supabase):
+- scripts/generate_tp2_materi_soal_tugas2.py — Python generator script
+- download/insert_tp2_materi_soal_tugas2_v2.sql — Output SQL file
+- download/PANDUAN_SETUP_TUGAS2_INFORMATIKA.md — Panduan setup + rubric penilaian essai
+
+Konten yang dibuat (per kelas × 3 kelas = 159 INSERT statements):
+- 3 TP baru (TP.7.1.2 Dekomposisi, TP.8.1.2 Pencarian Data, TP.9.1.2 Struktur Data Tree)
+- 3 Materi markdown kaya (sekitar 5000 kata per kelas, dengan contoh, kesalahan umum, self-assessment)
+- 150 soal (45 PG per kelas × 3 = 135 PG, 5 essai per kelas × 3 = 15 essai)
+  - Level kognitif: 15 C3 + 15 C4 + 15 C5 per kelas (PG), 5 C4-C5 (essai)
+  - Format: Markdown dengan **bold** keyword, callout scenarios
+  - Setiap essai punya essayAnswer (rubric / model answer)
+- 3 Assignment "Tugas 2":
+  - questionCount = 50 (45 PG + 5 essai dalam tugas yang sama — TIDAK terpisah)
+  - duration = 90 menit
+  - dueDate = 21 September 2026 23:59 WIB (ISO: 2026-09-21T23:59:00+07:00)
+  - targetKelas = 7A,7B,7C / 8A,8B,8C / 9A,9B
+  - cpId = cp_inf_7_1 / cp_inf_8_1 / cp_inf_9_1 (CP1 yang SUDAH ADA)
+  - tpId = tp_inf_7_1_2 / tp_inf_8_1_2 / tp_inf_9_1_2 (TP BARU)
+  - taskType = quiz_only
+  - exerciseType = wajib
+  - taskCategory = luring
+  - tahunAjaran = 2026/2027, semester = ganjil
+
+Trade-off penting (dijelaskan ke user):
+- Soal essai TIDAK di-auto-grade. Skor otomatis (quizScore) hanya dari PG.
+- Jawaban essai disimpan di Result.quizAnswers JSON untuk review guru di Daftar Nilai.
+- Guru perlu menilai essai manual via ManualGrade (API /api/manual-grades sudah ada).
+- Detail rubric per essai ada di PANDUAN_SETUP_TUGAS2_INFORMATIKA.md.
+
+Verified:
+- TypeScript: tsc --noEmit exit 0
+- ESLint: 0 errors, 2 pre-existing warnings (unused eslint-disable)
+- SQL file: 1656 lines, 159 INSERT statements (3 TP + 3 Material + 150 Question + 3 Assignment)
+
+ACTION REQUIRED FOR USER:
+1. JALANKAN SQL di Supabase SQL Editor:
+   - Buka file download/insert_tp2_materi_soal_tugas2_v2.sql
+   - Copy semua isi, paste ke Supabase SQL Editor
+   - Klik Run, tunggu "Success. No rows returned"
+2. Verifikasi: jalankan query SELECT di bagian bawah file SQL
+   - Expected: 45 PG + 5 essai per kelas = 150 total
+3. Tunggu Vercel auto-deploy (1-3 menit setelah push)
+4. Test sebagai siswa: login, lihat "Tugas 2 Kelas X", klik Kerjakan
+5. Test sebagai guru: Daftar Nilai → CP1 + TP2 baru harus muncul
+
+Stage Summary:
+- Frontend changes (4 file) di-push ke GitHub
+- File SQL siap dijalankan user di Supabase
+- Panduan setup lengkap dengan rubric essai tersedia di download/PANDUAN_SETUP_TUGAS2_INFORMATIKA.md
+- Setelah SQL di-run, tugas langsung live untuk siswa kelas 7, 8, 9
+- Deadline: 21 September 2026 23:59 WIB
+- Duration: 90 menit per tugas

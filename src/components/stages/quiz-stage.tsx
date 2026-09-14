@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,7 +39,10 @@ const DEFAULT_QUIZ_TIME_SECONDS = 25 * 60 // 25 menit (default)
 
 export function QuizStage() {
   const { setStage, setQuizResult, student, typingResult, progress } = useAppStore()
-  const [answers, setAnswers] = useState<Record<number, number>>({})
+  // answers: Record<questionId, number> untuk PG, Record<questionId, string> untuk essay.
+  // Mixed assignment (PG + essay dalam tugas yang sama) memerlukan typed union.
+  const [answers, setAnswersState] = useState<Record<number, number | string>>({})
+  const setAnswers = (next: Record<number, number | string>) => setAnswersState(next)
   const [currentIdx, setCurrentIdx] = useState(0)
   const [startTime, setStartTime] = useState<number | null>(null)
   const [now, setNow] = useState<number>(Date.now())
@@ -133,7 +137,17 @@ export function QuizStage() {
   const remainingSec = Math.max(0, quizDurationSec - elapsedSec)
   const timeUp = remainingSec === 0
 
-  const answeredCount = Object.keys(answers).length
+  // answeredCount: hitung soal yang sudah dijawab.
+  // ── PG (pilihan_ganda): answered bila answers[id] adalah number (0-3) ──
+  // ── Essai: answered bila answers[id] adalah string non-empty ──
+  // (empty string tidak dihitung agar siswa tidak lupa mengisi essay)
+  const answeredCount = QUESTIONS.filter((q) => {
+    const v = answers[q.id]
+    if (v === undefined) return false
+    if (typeof v === 'number') return true
+    if (typeof v === 'string') return v.trim().length > 0
+    return false
+  }).length
   const progressPct = QUESTIONS.length > 0 ? (answeredCount / QUESTIONS.length) * 100 : 0
 
   // Auto-save jawaban quiz ke DB setiap kali jawaban berubah
@@ -194,15 +208,24 @@ export function QuizStage() {
   }
 
   const computeResult = (): QuizResult => {
+    // Pisahkan PG dan essay untuk scoring.
+    // ── Rationale ──
+    // Saat assignment mengandung essay, jawaban essay tidak bisa di-auto-score
+    // (perlu rubric guru). Kita tetap menghitung quizScore berdasarkan PG saja
+    // agar siswa dapat feedback instan. Jawaban essay disimpan di quizAnswers
+    // (JSON) untuk review guru di Daftar Nilai.
+    const pgQuestions = QUESTIONS.filter((q) => !q.questionType || q.questionType === 'pilihan_ganda')
     let correct = 0
-    for (const q of QUESTIONS) {
+    for (const q of pgQuestions) {
       if (answers[q.id] === q.correctAnswer) correct++
     }
-    const score = Math.round((correct / QUESTIONS.length) * 100)
+    const totalGradeable = pgQuestions.length || QUESTIONS.length
+    const score = Math.round((correct / totalGradeable) * 100)
     return {
       answers,
       quizCorrect: correct,
-      quizTotal: QUESTIONS.length,
+      // quizTotal = total PG (auto-graded). Essay tidak masuk hitungan benar/salah.
+      quizTotal: pgQuestions.length,
       quizScore: score,
       quizDuration: elapsedSec,
     }
@@ -433,7 +456,12 @@ export function QuizStage() {
                   <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200 text-xs">
                     {currentQ.category}
                   </Badge>
-                  {currentQ.cpId && (
+                  {currentQ.questionType === 'essai' && (
+                    <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 text-xs">
+                      Essai
+                    </Badge>
+                  )}
+                  {currentQ.cpId && currentQ.questionType !== 'essai' && (
                     <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200 text-xs">
                       CP
                     </Badge>
@@ -457,56 +485,86 @@ export function QuizStage() {
                 </div>
               )}
 
-              {/* ── FIX: Opsi jawaban dengan layout lebih rapi ── */}
-              <div className="space-y-2.5">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
-                  Pilih jawaban:
-                </p>
-                <RadioGroup
-                  value={
-                    answers[currentQ.id] !== undefined
-                      ? String(answers[currentQ.id])
-                      : ''
-                  }
-                  onValueChange={(v) =>
-                    setAnswers({
-                      ...answers,
-                      [currentQ.id]: Number(v),
-                    })
-                  }
-                  className="space-y-2.5"
-                >
-                  {currentQ.options.map((opt, i) => (
-                    <div
-                      key={i}
-                      className={`flex items-start gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
-                        answers[currentQ.id] === i
-                          ? 'border-teal-500 bg-teal-50 shadow-sm'
-                          : 'border-slate-200 hover:border-teal-300 hover:bg-slate-50'
-                      }`}
-                    >
-                      <RadioGroupItem
-                        value={String(i)}
-                        id={`q${currentQ.id}-opt${i}`}
-                        className="mt-1"
-                      />
-                      <Label
-                        htmlFor={`q${currentQ.id}-opt${i}`}
-                        className="cursor-pointer flex-1 text-sm leading-relaxed text-slate-700"
-                      >
-                        <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md text-xs font-bold mr-2.5 ${
+              {/* ── Render input berdasarkan tipe soal ── */}
+              {/* Pilihan Ganda → RadioGroup. Essai → Textarea. */}
+              {/* Kedua tipe tampil dalam assignment yang sama, sesuai permintaan user. */}
+              {currentQ.questionType === 'essai' ? (
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
+                      Soal Essai (dikerjakan di sini, dinilai guru)
+                    </p>
+                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs">
+                      Essai
+                    </Badge>
+                  </div>
+                  <Textarea
+                    value={(typeof answers[currentQ.id] === 'string' ? answers[currentQ.id] as string : '')}
+                    onChange={(e) =>
+                      setAnswers({
+                        ...answers,
+                        [currentQ.id]: e.target.value,
+                      })
+                    }
+                    placeholder="Tulis jawaban essai Anda di sini. Jelaskan dengan lengkap dan jelas."
+                    className="min-h-[200px] text-sm leading-relaxed resize-y"
+                  />
+                  <p className="text-xs text-slate-500">
+                    Jawaban essai akan disimpan dan dinilai oleh guru secara manual.
+                    Skor otomatis saat ini hanya dihitung dari soal pilihan ganda.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                    Pilih jawaban:
+                  </p>
+                  <RadioGroup
+                    value={
+                      answers[currentQ.id] !== undefined && typeof answers[currentQ.id] === 'number'
+                        ? String(answers[currentQ.id])
+                        : ''
+                    }
+                    onValueChange={(v) =>
+                      setAnswers({
+                        ...answers,
+                        [currentQ.id]: Number(v),
+                      })
+                    }
+                    className="space-y-2.5"
+                  >
+                    {currentQ.options.map((opt, i) => (
+                      <div
+                        key={i}
+                        className={`flex items-start gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
                           answers[currentQ.id] === i
-                            ? 'bg-teal-600 text-white'
-                            : 'bg-slate-200 text-slate-600'
-                        }`}>
-                          {String.fromCharCode(65 + i)}
-                        </span>
-                        {opt}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
+                            ? 'border-teal-500 bg-teal-50 shadow-sm'
+                            : 'border-slate-200 hover:border-teal-300 hover:bg-slate-50'
+                        }`}
+                      >
+                        <RadioGroupItem
+                          value={String(i)}
+                          id={`q${currentQ.id}-opt${i}`}
+                          className="mt-1"
+                        />
+                        <Label
+                          htmlFor={`q${currentQ.id}-opt${i}`}
+                          className="cursor-pointer flex-1 text-sm leading-relaxed text-slate-700"
+                        >
+                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md text-xs font-bold mr-2.5 ${
+                            answers[currentQ.id] === i
+                              ? 'bg-teal-600 text-white'
+                              : 'bg-slate-200 text-slate-600'
+                          }`}>
+                            {String.fromCharCode(65 + i)}
+                          </span>
+                          {opt}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+              )}
 
               {/* Tombol navigasi */}
               <div className="flex justify-between items-center mt-6 pt-4 border-t">
@@ -587,8 +645,14 @@ export function QuizStage() {
             <CardContent className="pt-4">
               <div className="grid grid-cols-6 gap-2">
                 {QUESTIONS.map((q, i) => {
-                  const isAnswered = answers[q.id] !== undefined
+                  // ── Tentukan status jawaban berdasar tipe soal ──
+                  // PG: answered bila number. Essai: answered bila string non-empty.
+                  const v = answers[q.id]
+                  let isAnswered = false
+                  if (typeof v === 'number') isAnswered = true
+                  else if (typeof v === 'string' && v.trim().length > 0) isAnswered = true
                   const isCurrent = i === currentIdx
+                  const isEssay = q.questionType === 'essai'
                   return (
                     <button
                       key={q.id}
@@ -597,11 +661,12 @@ export function QuizStage() {
                         isCurrent
                           ? 'bg-teal-600 text-white ring-2 ring-teal-300 ring-offset-1'
                           : isAnswered
-                          ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                          ? (isEssay ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200')
+                          : (isEssay ? 'bg-amber-50 text-amber-500 hover:bg-amber-100 border border-amber-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200')
                       }`}
+                      title={isEssay ? `Soal ${i + 1} (Essai)` : `Soal ${i + 1}`}
                     >
-                      {i + 1}
+                      {i + 1}{isEssay ? '✎' : ''}
                     </button>
                   )
                 })}
@@ -614,6 +679,9 @@ export function QuizStage() {
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded bg-slate-100" /> Belum
                   dijawab ({QUESTIONS.length - answeredCount})
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded bg-amber-100" /> Soal essai (✎)
                 </div>
               </div>
 

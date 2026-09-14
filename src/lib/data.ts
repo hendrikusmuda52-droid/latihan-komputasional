@@ -27,6 +27,16 @@ export interface Question {
   pembahasanBenar?: string | null
   analisisDistraktor?: string | null
   dbId?: string
+  // ── v3 multi-type fields ──
+  // questionType: 'pilihan_ganda' | 'pilihan_ganda_kompleks' | 'mencocokkan' | 'isian_singkat' | 'essai'
+  // Digunakan quiz-stage untuk memutuskan render RadioGroup (PG) atau Textarea (essay)
+  questionType?: string
+  // essayAnswer: rubric / model answer untuk soal essai (dari DB)
+  essayAnswer?: string
+  // correctAnswers: JSON array untuk multi-answer (checkbox)
+  correctAnswers?: string
+  // shortAnswer: pipe-separated accepted answers untuk isian singkat
+  shortAnswer?: string
 }
 
 // =====================================================
