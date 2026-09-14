@@ -55,7 +55,13 @@ export async function GET(req: NextRequest) {
     const results = await safeQuery(() =>
       db.result.findMany({
         where: { subject: safeSubject },  // ← ALWAYS filtered, NEVER {}
-        include: { student: true },
+        include: {
+          student: true,
+          // ── FIX: Include assignment untuk dapat title (untuk filter & display) ──
+          assignment: {
+            select: { id: true, title: true, targetKelas: true, cpId: true, tpId: true },
+          },
+        },
         orderBy: { completedAt: 'desc' },
       }),
     )
@@ -85,6 +91,14 @@ export async function GET(req: NextRequest) {
       isReleased: !!r.isReleased,
       releasedAt: r.releasedAt ? r.releasedAt.toISOString() : null,
       subject: r.subject ?? safeSubject,
+      // ── NEW: assignment info untuk filter & display ──
+      assignmentId: r.assignmentId ?? null,
+      assignmentTitle: r.assignment?.title ?? null,
+      assignmentTargetKelas: r.assignment?.targetKelas ?? null,
+      cpId: r.cpId ?? null,
+      tpId: r.tpId ?? null,
+      // ── NEW: quizAnswers untuk ditampilkan di modal review (PG + essai) ──
+      quizAnswers: r.quizAnswers ?? '[]',
     }))
 
     // All aggregates default to 0 when there is no data — never null, never NaN.

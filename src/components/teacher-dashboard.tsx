@@ -24,6 +24,13 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -72,6 +79,8 @@ import {
   Activity,
   Plus,
   RotateCcw,
+  Eye,
+  XCircle,
 } from 'lucide-react'
 import {
   BarChart,
@@ -130,6 +139,10 @@ interface ResultRow {
   releasedAt: string | null
   assignmentId?: string | null
   assignmentTitle?: string | null
+  assignmentTargetKelas?: string | null
+  cpId?: string | null
+  tpId?: string | null
+  quizAnswers?: string  // JSON string dari DB, berisi Record<questionId, number | string>
 }
 
 interface Stats {
@@ -169,6 +182,17 @@ export function TeacherDashboard() {
   const [search, setSearch] = useState('')
   const [filterKelas, setFilterKelas] = useState<string>('ALL')
   const [filterSekolah, setFilterSekolah] = useState<string>('ALL')
+  // ── NEW: Filter tugas (kelas + tugas) — saat kelas dipilih, tugas terfilter ke yang match kelas ──
+  const [filterAssignment, setFilterAssignment] = useState<string>('ALL')
+  // ── NEW: Modal Lihat Jawaban (PG + Essai) ──
+  const [reviewResultId, setReviewResultId] = useState<string | null>(null)
+  const [reviewData, setReviewData] = useState<{
+    loading: boolean
+    result: any | null
+    questions: any[]
+    stats: any | null
+    error: string | null
+  }>({ loading: false, result: null, questions: [], stats: null, error: null })
   // ── NEW: State untuk download rekap pengerjaan ──
   const [exportAssignmentId, setExportAssignmentId] = useState<string>('ALL')
   const [exportKelas, setExportKelas] = useState<string>('ALL')
@@ -347,6 +371,36 @@ export function TeacherDashboard() {
     return Array.from(set).sort()
   }, [results])
 
+  // ── NEW: Daftar tugas yang unik dari result (untuk dropdown filter) ──
+  // Saat filterKelas dipilih, hanya tugas yang punya student dengan kelas itu (atau targetKelas match) yang muncul
+  const assignmentOptions = useMemo(() => {
+    const seen = new Map<string, { id: string; title: string; targetKelas?: string | null }>()
+    for (const r of results) {
+      if (!r.assignmentId || !r.assignmentTitle) continue
+      // Filter by kelas aktif
+      if (filterKelas !== 'ALL') {
+        // Match kalau student kelas = filterKelas ATAU assignment targetKelas contains filterKelas
+        const kelasMatch = r.kelas === filterKelas
+          || (r.assignmentTargetKelas || '').includes(filterKelas)
+          || (r.assignmentTargetKelas || '').toLowerCase() === 'all'
+        if (!kelasMatch) continue
+      }
+      if (!seen.has(r.assignmentId)) {
+        seen.set(r.assignmentId, {
+          id: r.assignmentId,
+          title: r.assignmentTitle,
+          targetKelas: r.assignmentTargetKelas,
+        })
+      }
+    }
+    return Array.from(seen.values())
+  }, [results, filterKelas])
+
+  // ── NEW: Reset filterAssignment ke ALL saat filterKelas berubah (hindari stuck di tugas yang tak match) ──
+  useEffect(() => {
+    setFilterAssignment('ALL')
+  }, [filterKelas])
+
   const filtered = useMemo(() => {
     return results.filter((r) => {
       const matchSearch =
@@ -355,9 +409,41 @@ export function TeacherDashboard() {
         r.nisn.toLowerCase().includes(search.toLowerCase())
       const matchKelas = filterKelas === 'ALL' || r.kelas === filterKelas
       const matchSekolah = filterSekolah === 'ALL' || r.sekolah === filterSekolah
-      return matchSearch && matchKelas && matchSekolah
+      const matchAssignment = filterAssignment === 'ALL' || r.assignmentId === filterAssignment
+      return matchSearch && matchKelas && matchSekolah && matchAssignment
     })
-  }, [results, search, filterKelas, filterSekolah])
+  }, [results, search, filterKelas, filterSekolah, filterAssignment])
+
+  // ── NEW: Open modal Lihat Jawaban — fetch detail result + soal-soal ──
+  const openReview = async (resultId: string) => {
+    setReviewResultId(resultId)
+    setReviewData({ loading: true, result: null, questions: [], stats: null, error: null })
+    try {
+      const res = await fetch(`/api/result/${resultId}/details`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Gagal memuat detail')
+      setReviewData({
+        loading: false,
+        result: data.result,
+        questions: data.questions || [],
+        stats: data.stats || null,
+        error: null,
+      })
+    } catch (err) {
+      setReviewData({
+        loading: false,
+        result: null,
+        questions: [],
+        stats: null,
+        error: err instanceof Error ? err.message : 'Gagal memuat detail hasil',
+      })
+    }
+  }
+
+  const closeReview = () => {
+    setReviewResultId(null)
+    setReviewData({ loading: false, result: null, questions: [], stats: null, error: null })
+  }
 
   // Data untuk grafik: rata-rata per kelas
   // #3 FIX: For non-IT subjects (where typing is not applicable), the "Mengetik" series
@@ -902,7 +988,8 @@ export function TeacherDashboard() {
         {/* Filter & Search */}
         <Card className="border-slate-200 mb-6">
           <CardContent className="pt-4">
-            <div className="grid md:grid-cols-3 gap-4">
+            {/* ── NEW: Layout 4 kolom untuk search + kelas + tugas + sekolah ── */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="search" className="text-xs">
                   <Search className="w-3 h-3 inline mr-1" />
@@ -916,7 +1003,10 @@ export function TeacherDashboard() {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs">Filter Kelas</Label>
+                <Label className="text-xs">
+                  <Users className="w-3 h-3 inline mr-1" />
+                  Filter Kelas
+                </Label>
                 <Select value={filterKelas} onValueChange={setFilterKelas}>
                   <SelectTrigger>
                     <SelectValue placeholder="Semua kelas" />
@@ -931,8 +1021,40 @@ export function TeacherDashboard() {
                     <SelectItem value="8C">8C</SelectItem>
                     <SelectItem value="9A">9A</SelectItem>
                     <SelectItem value="9B">9B</SelectItem>
+                    <SelectItem value="11DKV">11DKV</SelectItem>
+                    <SelectItem value="12DKV">12DKV</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              {/* ── NEW: Filter Tugas (otomatis terfilter berdasarkan kelas yang dipilih) ── */}
+              <div className="space-y-2">
+                <Label className="text-xs">
+                  <FileText className="w-3 h-3 inline mr-1" />
+                  Filter Tugas {filterKelas !== 'ALL' && <span className="text-slate-400">(kelas {filterKelas})</span>}
+                </Label>
+                <Select value={filterAssignment} onValueChange={setFilterAssignment} disabled={assignmentOptions.length === 0}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={
+                      assignmentOptions.length === 0
+                        ? (filterKelas !== 'ALL' ? 'Tidak ada tugas untuk kelas ini' : 'Semua tugas')
+                        : 'Semua tugas'
+                    } />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Semua tugas</SelectItem>
+                    {assignmentOptions.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.title.length > 50 ? a.title.slice(0, 50) + '...' : a.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {filterKelas !== 'ALL' && assignmentOptions.length === 0 && (
+                  <p className="text-xs text-amber-600">⚠️ Belum ada siswa dari kelas {filterKelas} yang mengerjakan tugas</p>
+                )}
+                {filterKelas !== 'ALL' && assignmentOptions.length > 0 && (
+                  <p className="text-xs text-slate-500">{assignmentOptions.length} tugas ditemukan untuk kelas {filterKelas}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label className="text-xs">Filter Sekolah</Label>
@@ -952,6 +1074,9 @@ export function TeacherDashboard() {
             <div className="mt-3 text-xs text-slate-500">
               Menampilkan <strong>{filtered.length}</strong> dari{' '}
               <strong>{results.length}</strong> hasil latihan
+              {filterAssignment !== 'ALL' && (
+                <span> • difilter berdasarkan tugas</span>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -981,6 +1106,8 @@ export function TeacherDashboard() {
                       <TableHead className="w-12">No</TableHead>
                       <TableHead>Identitas Siswa</TableHead>
                       <TableHead>Kelas</TableHead>
+                      {/* ── NEW: Kolom Tugas — tampilkan judul tugas untuk identifikasi cepat ── */}
+                      <TableHead className="min-w-[180px]">Tugas</TableHead>
                       <TableHead>Sekolah</TableHead>
                       <TableHead className="text-center">{isITSubject ? 'Mengetik' : 'Harian'}</TableHead>
                       <TableHead className="text-center">Quiz</TableHead>
@@ -1001,6 +1128,21 @@ export function TeacherDashboard() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="bg-slate-50">{r.kelas}</Badge>
+                        </TableCell>
+                        {/* ── NEW: Tugas yang dikerjakan (judul + badge tipe) ── */}
+                        <TableCell>
+                          {r.assignmentTitle ? (
+                            <div>
+                              <div className="text-xs font-medium text-slate-700 line-clamp-2" title={r.assignmentTitle}>
+                                {r.assignmentTitle}
+                              </div>
+                              {r.assignmentTargetKelas && r.assignmentTargetKelas !== 'ALL' && (
+                                <div className="text-xs text-slate-400 mt-0.5">untuk: {r.assignmentTargetKelas}</div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">Latihan umum</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-xs text-slate-600 max-w-[200px] truncate">{r.sekolah}</TableCell>
                         <TableCell className="text-center">
@@ -1048,6 +1190,17 @@ export function TeacherDashboard() {
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex justify-center gap-1">
+                            {/* ── NEW: Tombol Lihat Jawaban (PG + Essai) ── */}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2 text-violet-600 hover:bg-violet-50"
+                              onClick={() => openReview(r.id)}
+                              title={`Lihat jawaban ${r.namaLengkap}`}
+                            >
+                              <Eye className="w-4 h-4" />
+                              <span className="text-xs ml-1">Jawaban</span>
+                            </Button>
                             {/* ── NEW: Tombol Lihat Foto Catatan ── */}
                             {r.assignmentId && (
                               <TaskPhotoViewer
@@ -1180,6 +1333,254 @@ export function TeacherDashboard() {
       {activeMenu === 'profile' && (
         <TeacherProfile teacher={teacher} onUpdated={setTeacher} />
       )}
+
+      {/* ── MODAL: Lihat Jawaban (PG + Essai) ── */}
+      {/* Tampil saat guru klik tombol "Jawaban" di baris hasil siswa */}
+      {/* Menampilkan: info siswa + tugas + skor, lalu list semua soal dengan jawaban siswa */}
+      <Dialog open={!!reviewResultId} onOpenChange={(open) => { if (!open) closeReview() }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-5 h-5 text-violet-600" />
+              Review Jawaban Siswa
+            </DialogTitle>
+            <DialogDescription className="sr-only">Detail jawaban pilihan ganda dan essai</DialogDescription>
+          </DialogHeader>
+
+          {reviewData.loading ? (
+            <div className="py-20 text-center text-slate-400">
+              <RefreshCw className="w-8 h-8 mx-auto animate-spin mb-2" />
+              <p className="text-sm">Memuat jawaban siswa...</p>
+            </div>
+          ) : reviewData.error ? (
+            <div className="py-12 text-center">
+              <AlertCircle className="w-10 h-10 mx-auto text-red-400 mb-2" />
+              <p className="text-sm text-red-600 font-medium">{reviewData.error}</p>
+              <Button variant="outline" onClick={closeReview} className="mt-4">Tutup</Button>
+            </div>
+          ) : reviewData.result ? (
+            <>
+              {/* ── Info Siswa + Tugas + Skor ── */}
+              <div className="border-b border-slate-200 pb-4 mb-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-slate-500">Siswa</p>
+                    <p className="font-semibold text-slate-900">{reviewData.result.student?.namaLengkap || '-'}</p>
+                    <p className="text-xs text-slate-500">NISN: {reviewData.result.student?.nisn || '-'}</p>
+                    <p className="text-xs text-slate-500">Kelas: {reviewData.result.student?.kelas || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Tugas</p>
+                    <p className="font-semibold text-slate-900 text-sm">
+                      {reviewData.result.assignment?.title || 'Latihan umum'}
+                    </p>
+                    {reviewData.result.assignment?.targetKelas && (
+                      <p className="text-xs text-slate-500">Target: {reviewData.result.assignment.targetKelas}</p>
+                    )}
+                    <p className="text-xs text-slate-500">
+                      Selesai: {reviewData.result.completedAt
+                        ? new Date(reviewData.result.completedAt).toLocaleString('id-ID')
+                        : '-'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Skor</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`text-2xl font-bold ${getScoreColor(reviewData.result.totalScore)}`}>
+                        {reviewData.result.totalScore}
+                      </span>
+                      <Badge className={getScoreBadge(reviewData.result.totalScore)}>/100</Badge>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Quiz: {reviewData.result.quizScore} ({reviewData.result.quizCorrect}/{reviewData.result.quizTotal} benar)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Stats ringkasan */}
+                {reviewData.stats && (
+                  <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                    <div className="p-2 bg-slate-50 rounded">
+                      <p className="text-slate-500">Total Soal</p>
+                      <p className="font-bold text-slate-900">{reviewData.stats.totalQuestions}</p>
+                    </div>
+                    <div className="p-2 bg-emerald-50 rounded">
+                      <p className="text-emerald-600">PG Benar</p>
+                      <p className="font-bold text-emerald-700">
+                        {reviewData.stats.correctPG}/{reviewData.stats.totalPG}
+                      </p>
+                    </div>
+                    <div className="p-2 bg-amber-50 rounded">
+                      <p className="text-amber-700">Essai Dijawab</p>
+                      <p className="font-bold text-amber-800">
+                        {reviewData.stats.answeredEssay}/{reviewData.stats.totalEssay}
+                      </p>
+                    </div>
+                    <div className="p-2 bg-violet-50 rounded">
+                      <p className="text-violet-700">Status</p>
+                      <p className="font-bold text-violet-800">
+                        {reviewData.result.isReleased ? 'Dirilis' : 'Belum Dirilis'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ── List Soal + Jawaban ── */}
+              <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+                {reviewData.questions.length === 0 ? (
+                  <div className="py-8 text-center text-slate-400">
+                    <FileText className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Tidak ada soal terkait di database</p>
+                    <p className="text-xs mt-1">
+                      Soal mungkin sudah dihapus atau CP/TP tidak match.
+                      Jawaban siswa masih tersimpan di database.
+                    </p>
+                  </div>
+                ) : (
+                  reviewData.questions.map((q: any) => {
+                    const isEssay = q.questionType === 'essai'
+                    return (
+                      <div
+                        key={q.id}
+                        className={`p-4 rounded-lg border ${
+                          isEssay
+                            ? 'border-amber-200 bg-amber-50/30'
+                            : q.isCorrect
+                            ? 'border-emerald-200 bg-emerald-50/30'
+                            : q.isAnswered
+                            ? 'border-red-200 bg-red-50/30'
+                            : 'border-slate-200 bg-slate-50/30'
+                        }`}
+                      >
+                        {/* Header soal */}
+                        <div className="flex items-start gap-2 mb-2">
+                          <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold flex-shrink-0 ${
+                            isEssay ? 'bg-amber-500 text-white' : q.isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-300 text-slate-700'
+                          }`}>
+                            {q.no}
+                          </span>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                              <Badge variant="outline" className="text-xs">{q.category}</Badge>
+                              {q.levelKognitif && (
+                                <Badge variant="outline" className="text-xs bg-violet-50 text-violet-700">
+                                  {q.levelKognitif}
+                                </Badge>
+                              )}
+                              {isEssay ? (
+                                <Badge variant="outline" className="text-xs bg-amber-100 text-amber-800 border-amber-300">
+                                  Essai
+                                </Badge>
+                              ) : q.isCorrect ? (
+                                <Badge className="text-xs bg-emerald-100 text-emerald-700">
+                                  <CheckCircle2 className="w-3 h-3 mr-1" /> Benar
+                                </Badge>
+                              ) : q.isAnswered ? (
+                                <Badge className="text-xs bg-red-100 text-red-700">
+                                  <XCircle className="w-3 h-3 mr-1" /> Salah
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-xs text-slate-500">
+                                  Tidak dijawab
+                                </Badge>
+                              )}
+                            </div>
+                            {/* Soal — tampilkan sebagai plain text (bukan markdown) untuk hindari inject risk */}
+                            <p className="text-sm text-slate-800 whitespace-pre-wrap">{q.question}</p>
+                          </div>
+                        </div>
+
+                        {/* Jawaban untuk PG */}
+                        {!isEssay && (
+                          <div className="ml-9 space-y-1 text-xs">
+                            {q.options.length > 0 && q.options.map((opt: string, i: number) => {
+                              const isStudentChoice = q.studentAnswer === i
+                              const isCorrect = q.correctAnswer === i
+                              return (
+                                <div
+                                  key={i}
+                                  className={`flex items-start gap-2 p-2 rounded ${
+                                    isCorrect
+                                      ? 'bg-emerald-100 text-emerald-800'
+                                      : isStudentChoice
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-white text-slate-600'
+                                  }`}
+                                >
+                                  <span className="font-bold flex-shrink-0">{String.fromCharCode(65 + i)}.</span>
+                                  <span className="flex-1">{opt}</span>
+                                  {isCorrect && <CheckCircle2 className="w-3 h-3 text-emerald-600 flex-shrink-0 mt-0.5" />}
+                                  {isStudentChoice && !isCorrect && <XCircle className="w-3 h-3 text-red-600 flex-shrink-0 mt-0.5" />}
+                                  {isStudentChoice && (
+                                    <span className="text-xs italic flex-shrink-0">(jawabanmu)</span>
+                                  )}
+                                </div>
+                              )
+                            })}
+                            {!q.isAnswered && (
+                              <p className="text-slate-500 italic">Siswa tidak menjawab soal ini</p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Jawaban untuk Essai */}
+                        {isEssay && (
+                          <div className="ml-9 space-y-2 text-xs">
+                            <div>
+                              <p className="font-semibold text-amber-800 mb-1">Jawaban Siswa:</p>
+                              {q.isAnswered ? (
+                                <div className="p-3 bg-amber-50 border border-amber-200 rounded text-slate-800 whitespace-pre-wrap">
+                                  {String(q.studentAnswer || '')}
+                                </div>
+                              ) : (
+                                <div className="p-2 bg-slate-50 rounded text-slate-500 italic">
+                                  Essai tidak dijawab
+                                </div>
+                              )}
+                            </div>
+                            {q.essayAnswer && (
+                              <div>
+                                <p className="font-semibold text-sky-800 mb-1">Jawaban Contoh / Rubric (untuk guru):</p>
+                                <div className="p-3 bg-sky-50 border border-sky-200 rounded text-slate-700 whitespace-pre-wrap">
+                                  {q.essayAnswer}
+                                </div>
+                              </div>
+                            )}
+                            <p className="text-amber-700 italic text-xs mt-1">
+                              ⚠️ Soal essai perlu dinilai manual oleh guru. Skor otomatis hanya dihitung dari PG.
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Pembahasan (untuk PG) */}
+                        {!isEssay && q.explanation && (
+                          <div className="ml-9 mt-2 pt-2 border-t border-slate-200 text-xs">
+                            <p className="text-slate-600">
+                              <span className="font-semibold">Pembahasan:</span> {q.explanation}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+
+              {/* Footer dengan tombol tutup */}
+              <div className="border-t border-slate-200 pt-3 mt-3 flex justify-between items-center">
+                <p className="text-xs text-slate-500">
+                  💡 Essai tidak di-auto-grade. Beri nilai manual lewat Daftar Nilai.
+                </p>
+                <Button onClick={closeReview} variant="outline">
+                  Tutup
+                </Button>
+              </div>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
         </main>
 
         <footer className="bg-slate-900 text-slate-400 py-4 mt-auto">
