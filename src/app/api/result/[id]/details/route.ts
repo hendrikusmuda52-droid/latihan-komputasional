@@ -71,6 +71,25 @@ export async function GET(
       parsedAnswers = {}
     }
 
+    // ── NEW v4: Parse essayGrades JSON (format: Record<questionId, score>) ──
+    // essayGrades menyimpan nilai essai yang sudah di-input guru per soal essai
+    let parsedEssayGrades: Record<string, number> = {}
+    try {
+      const raw = (result as Record<string, unknown>).essayGrades
+      if (raw && typeof raw === 'string') {
+        parsedEssayGrades = JSON.parse(raw)
+      } else if (raw && typeof raw === 'object') {
+        parsedEssayGrades = raw as Record<string, number>
+      }
+    } catch (e) {
+      console.error('[result/details] Gagal parse essayGrades:', e)
+      parsedEssayGrades = {}
+    }
+
+    // essayScore (average) — ambil dari result, fallback 0
+    const essayScoreRaw = (result as Record<string, unknown>).essayScore
+    const storedEssayScore = typeof essayScoreRaw === 'number' ? essayScoreRaw : 0
+
     // ── 3. Derive gradeLevel dari kelas siswa (untuk query soal) ──
     const kelas = result.student?.kelas || ''
     let gradeLevel = '7'
@@ -148,6 +167,9 @@ export async function GET(
         isCorrect = studentAnswer === q.correctAnswer
       }
 
+      // ── NEW: Ambil essayGrade yang sudah di-input guru untuk soal essai ini (jika ada) ──
+      const essayGrade = isEssay ? (parsedEssayGrades[q.id] ?? null) : null
+
       return {
         // idx untuk numbering display (1, 2, 3, ...)
         no: idx + 1,
@@ -166,8 +188,23 @@ export async function GET(
         studentAnswer,
         isAnswered,
         isCorrect,
+        // ── NEW: essayGrade (nilai guru) — null jika belum dinilai ──
+        essayGrade,
       }
     })
+
+    // ── Hitung ulang essayScore dari essayGrades (untuk display) ──
+    const essayGradesCount = Object.keys(parsedEssayGrades).length
+    const essayScoreFromGrades = essayGradesCount > 0
+      ? Math.round((Object.values(parsedEssayGrades).reduce((a, b) => a + b, 0) / essayGradesCount) * 100) / 100
+      : 0
+
+    // ── Hitung totalScore dengan rumus 60/40 (jika ada essai yang dinilai) ──
+    const pgScore = result.quizScore
+    const hasEssayGraded = essayGradesCount > 0
+    const computedTotalScore = hasEssayGraded
+      ? Math.round((0.6 * pgScore + 0.4 * essayScoreFromGrades) * 100) / 100
+      : result.totalScore
 
     return NextResponse.json({
       success: true,
@@ -176,13 +213,19 @@ export async function GET(
         student: result.student,
         assignment: result.assignment,
         // Skor
-        totalScore: result.totalScore,
+        totalScore: result.totalScore, // stored value
+        computedTotalScore, // computed dari rumus 60/40 (untuk display real-time)
         quizScore: result.quizScore,
         quizCorrect: result.quizCorrect,
         quizTotal: result.quizTotal,
         typingScore: result.typingScore,
         typingSpeedWPM: result.typingSpeedWPM,
         typingAccuracy: result.typingAccuracy,
+        // ── NEW: Essai grading info ──
+        essayScore: storedEssayScore,
+        essayGrades: parsedEssayGrades, // pre-fill untuk modal input
+        essayGradedCount: essayGradesCount,
+        hasEssay: formattedQuestions.some(q => q.questionType === 'essai'),
         // Timing
         completedAt: result.completedAt ? result.completedAt.toISOString() : null,
         isReleased: result.isReleased,
@@ -193,7 +236,7 @@ export async function GET(
       },
       answers: parsedAnswers,
       questions: formattedQuestions,
-      // Stats: hitung berapa essai ada, berapa dijawab
+      // Stats: hitung berapa essai ada, berapa dijawab, berapa sudah dinilai
       stats: {
         totalQuestions: formattedQuestions.length,
         totalPG: formattedQuestions.filter(q => q.questionType !== 'essai').length,
@@ -201,6 +244,9 @@ export async function GET(
         answeredPG: formattedQuestions.filter(q => q.questionType !== 'essai' && q.isAnswered).length,
         correctPG: formattedQuestions.filter(q => q.questionType !== 'essai' && q.isCorrect).length,
         answeredEssay: formattedQuestions.filter(q => q.questionType === 'essai' && q.isAnswered).length,
+        gradedEssay: essayGradesCount, // sudah dinilai guru
+        essayScore: essayScoreFromGrades, // average
+        formula: hasEssayGraded ? '60% PG + 40% Essai' : (formattedQuestions.some(q => q.questionType === 'essai') ? 'Belum dinilai (100% PG sementara)' : '100% PG (tanpa essai)'),
       },
     })
   } catch (error) {

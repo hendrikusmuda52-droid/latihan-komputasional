@@ -279,6 +279,13 @@ model Result {
   completedAt     DateTime @default(now())
   isReleased      Boolean  @default(false)
   releasedAt      DateTime?
+  // ── NEW v4: Essai manual grading ──
+  // essayGrades: JSON string {questionId: score} — score 0-100 per essai question
+  // essayScore: rata-rata dari essayGrades (auto-computed saat guru simpan)
+  // Saat assignment punya essai, totalScore = 0.6 * quizScore + 0.4 * essayScore (60/40 rumus)
+  // Saat assignment TIDAK punya essai, totalScore tetap = quizScore (default)
+  essayGrades   String   @default("{}") // JSON {questionId: score}
+  essayScore    Float    @default(0)     // average of essayGrades (0 if no essay)
   @@index([subject, tahunAjaran, semester])
 }
 

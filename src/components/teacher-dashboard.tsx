@@ -81,6 +81,7 @@ import {
   RotateCcw,
   Eye,
   XCircle,
+  Save,
 } from 'lucide-react'
 import {
   BarChart,
@@ -422,6 +423,9 @@ export function TeacherDashboard() {
       const res = await fetch(`/api/result/${resultId}/details`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Gagal memuat detail')
+      // ── NEW: Init state essayGradeInputs dari essayGrades yang sudah ada ──
+      const existingGrades = (data.result?.essayGrades || {}) as Record<string, number>
+      setEssayGradeInputs(existingGrades)
       setReviewData({
         loading: false,
         result: data.result,
@@ -443,6 +447,51 @@ export function TeacherDashboard() {
   const closeReview = () => {
     setReviewResultId(null)
     setReviewData({ loading: false, result: null, questions: [], stats: null, error: null })
+    setEssayGradeInputs({})
+    setSavingEssay(false)
+  }
+
+  // ── NEW: State untuk input nilai essai (per soal) ──
+  // essayGradeInputs: Record<questionId, number> — local state untuk input guru
+  const [essayGradeInputs, setEssayGradeInputs] = useState<Record<string, number>>({})
+  const [savingEssay, setSavingEssay] = useState(false)
+
+  // ── NEW: Save essay grades ke backend ──
+  const handleSaveEssayGrades = async () => {
+    if (!reviewResultId || savingEssay) return
+    setSavingEssay(true)
+    try {
+      // Validasi: semua nilai harus 0-100
+      const validGrades: Record<string, number> = {}
+      for (const [qId, score] of Object.entries(essayGradeInputs)) {
+        const n = Number(score)
+        if (isNaN(n) || n < 0 || n > 100) {
+          toast.error(`Nilai tidak valid (harus 0-100) untuk salah satu soal essai`)
+          setSavingEssay(false)
+          return
+        }
+        validGrades[qId] = n
+      }
+      const res = await fetch(`/api/result/${reviewResultId}/essay-grade`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ grades: validGrades }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Gagal simpan nilai essai')
+
+      toast.success(`Nilai essai disimpan! ${data.meta?.formula || ''}`)
+
+      // Refresh modal untuk tampil totalScore baru
+      await openReview(reviewResultId)
+
+      // Refresh dashboard untuk update skor di tabel
+      fetchData()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Gagal simpan nilai essai')
+    } finally {
+      setSavingEssay(false)
+    }
   }
 
   // Data untuk grafik: rata-rata per kelas
@@ -1411,16 +1460,51 @@ export function TeacherDashboard() {
                       </p>
                     </div>
                     <div className="p-2 bg-amber-50 rounded">
-                      <p className="text-amber-700">Essai Dijawab</p>
+                      <p className="text-amber-700">Essai (dinilai/total)</p>
                       <p className="font-bold text-amber-800">
-                        {reviewData.stats.answeredEssay}/{reviewData.stats.totalEssay}
+                        {reviewData.stats.gradedEssay}/{reviewData.stats.totalEssay}
+                      </p>
+                      <p className="text-amber-600 text-xs mt-0.5">
+                        Score: {reviewData.stats.essayScore}
                       </p>
                     </div>
                     <div className="p-2 bg-violet-50 rounded">
-                      <p className="text-violet-700">Status</p>
-                      <p className="font-bold text-violet-800">
-                        {reviewData.result.isReleased ? 'Dirilis' : 'Belum Dirilis'}
+                      <p className="text-violet-700">Rumus & Status</p>
+                      <p className="font-bold text-violet-800 text-xs">{reviewData.stats.formula}</p>
+                      <p className="text-violet-600 text-xs mt-0.5">
+                        {reviewData.result.isReleased ? '✓ Dirilis' : '⚠ Belum Dirilis'}
                       </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── NEW: Preview skor dengan rumus 60/40 ── */}
+                {reviewData.result.hasEssay && (
+                  <div className="mt-3 p-3 bg-gradient-to-r from-violet-50 to-amber-50 border border-violet-200 rounded-lg">
+                    <div className="grid grid-cols-3 gap-4 text-center text-xs">
+                      <div>
+                        <p className="text-slate-500 mb-1">PG (60%)</p>
+                        <p className="text-lg font-bold text-emerald-600">
+                          {Math.round((reviewData.result.quizScore || 0) * 0.6 * 100) / 100}
+                        </p>
+                        <p className="text-slate-400 text-xs">dari {reviewData.result.quizScore} × 60%</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 mb-1">Essai (40%)</p>
+                        <p className="text-lg font-bold text-amber-600">
+                          {Math.round((reviewData.stats.essayScore || 0) * 0.4 * 100) / 100}
+                        </p>
+                        <p className="text-slate-400 text-xs">dari {reviewData.stats.essayScore} × 40%</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 mb-1">Nilai Akhir</p>
+                        <p className={`text-2xl font-bold ${getScoreColor(reviewData.result.computedTotalScore ?? reviewData.result.totalScore)}`}>
+                          {reviewData.result.computedTotalScore ?? reviewData.result.totalScore}
+                        </p>
+                        <p className="text-slate-400 text-xs">
+                          {reviewData.stats.gradedEssay > 0 ? '✓ Sesuai rumus' : '⚠ Pending essai'}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1547,8 +1631,59 @@ export function TeacherDashboard() {
                                 </div>
                               </div>
                             )}
+
+                            {/* ── NEW: Input nilai essai oleh guru ── */}
+                            <div className="mt-3 p-3 bg-violet-50 border border-violet-200 rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="font-semibold text-violet-800">
+                                  ✏️ Penilaian Essai (Input Manual)
+                                </p>
+                                <span className="text-xs text-violet-600">0 - 100</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  step={1}
+                                  value={essayGradeInputs[q.id] ?? ''}
+                                  onChange={(e) => {
+                                    const v = e.target.value
+                                    setEssayGradeInputs(prev => ({
+                                      ...prev,
+                                      [q.id]: v === '' ? 0 : Number(v),
+                                    }))
+                                  }}
+                                  placeholder="0"
+                                  className="w-24 text-center font-bold text-base"
+                                />
+                                <span className="text-violet-700 font-semibold">/ 100</span>
+                                <div className="flex-1" />
+                                {/* Quick set buttons */}
+                                <div className="flex gap-1">
+                                  {[50, 70, 85, 100].map(n => (
+                                    <button
+                                      key={n}
+                                      type="button"
+                                      onClick={() => {
+                                        setEssayGradeInputs(prev => ({ ...prev, [q.id]: n }))
+                                      }}
+                                      className="px-2 py-1 text-xs rounded bg-white border border-violet-200 hover:bg-violet-100 text-violet-700"
+                                    >
+                                      {n}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                              {q.essayGrade !== null && q.essayGrade !== undefined && (
+                                <p className="text-xs text-violet-600 mt-1">
+                                  ✓ Sudah dinilai: {q.essayGrade}
+                                </p>
+                              )}
+                            </div>
+
                             <p className="text-amber-700 italic text-xs mt-1">
-                              ⚠️ Soal essai perlu dinilai manual oleh guru. Skor otomatis hanya dihitung dari PG.
+                              ⚠️ Nilai akhir = 60% PG + 40% rata-rata essai. Klik tombol "Simpan Nilai Essai" di bawah untuk menerapkan.
                             </p>
                           </div>
                         )}
@@ -1567,14 +1702,47 @@ export function TeacherDashboard() {
                 )}
               </div>
 
-              {/* Footer dengan tombol tutup */}
-              <div className="border-t border-slate-200 pt-3 mt-3 flex justify-between items-center">
-                <p className="text-xs text-slate-500">
-                  💡 Essai tidak di-auto-grade. Beri nilai manual lewat Daftar Nilai.
-                </p>
-                <Button onClick={closeReview} variant="outline">
-                  Tutup
-                </Button>
+              {/* Footer dengan tombol Simpan + Tutup */}
+              <div className="border-t border-slate-200 pt-3 mt-3 flex justify-between items-center gap-2">
+                <div className="text-xs text-slate-500 flex-1">
+                  {reviewData.result?.hasEssay ? (
+                    <div className="space-y-1">
+                      <p className="text-violet-700 font-medium">
+                        💡 Rumus nilai akhir: <strong>60% PG + 40% Essai</strong>
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Dinilai: {reviewData.stats?.gradedEssay}/{reviewData.stats?.totalEssay} essai.
+                        Setelah simpan, nilai akhir otomatis dihitung ulang.
+                      </p>
+                    </div>
+                  ) : (
+                    <p>💡 Essai tidak di-auto-grade. Tugas ini tidak punya soal essai.</p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {reviewData.result?.hasEssay && (
+                    <Button
+                      onClick={handleSaveEssayGrades}
+                      disabled={savingEssay}
+                      className="bg-violet-600 hover:bg-violet-700 text-white"
+                    >
+                      {savingEssay ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                          Menyimpan...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-1" />
+                          Simpan Nilai Essai
+                        </>
+                      )}
+                    </Button>
+                  )}
+                  <Button onClick={closeReview} variant="outline">
+                    Tutup
+                  </Button>
+                </div>
               </div>
             </>
           ) : null}
