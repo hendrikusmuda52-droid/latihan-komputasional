@@ -118,6 +118,8 @@ model Assignment {
   parentAssignmentId String? // tugas asli yang tidak dikerjakan
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  // ── NEW v4: back-relation ke Result (untuk include di Prisma query) ──
+  results       Result[]
 }
 
 model Material {
@@ -276,6 +278,7 @@ model Result {
   tahunAjaran   String    @default("2026/2027")
   semester      String    @default("ganjil")
   assignmentId  String?   // link ke Assignment that generated this result
+  assignment    Assignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
   completedAt     DateTime @default(now())
   isReleased      Boolean  @default(false)
   releasedAt      DateTime?
