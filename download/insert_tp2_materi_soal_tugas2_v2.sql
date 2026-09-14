@@ -35,7 +35,7 @@
 
 -- TP 2 untuk Kelas 7 (Dekomposisi Mendalam)
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
-VALUES ('tp_inf_7_1_2', 'cp_inf_7_1', 'TP.7.1.2', 'Siswa mampu menerapkan dekomposisi untuk memecah masalah kompleks menjadi langkah-langkah sistematis.', true, NOW(), NOW())
+VALUES ('tp_inf_7_1_2', 'cp_inf_7_1', 'TP.7.1.2', 'Siswa mampu memecah masalah kompleks jadi langkah-langkah sistematis dengan dekomposisi.', true, NOW(), NOW())
 ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
 -- Materi Kelas 7: Memperdalam Dekomposisi
@@ -493,7 +493,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- TP 2 untuk Kelas 8 (Pencarian Data)
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
-VALUES ('tp_inf_8_1_2', 'cp_inf_8_1', 'TP.8.1.2', 'Siswa mampu menerapkan algoritma pencarian data (sequential dan binary search) untuk menyelesaikan masalah.', true, NOW(), NOW())
+VALUES ('tp_inf_8_1_2', 'cp_inf_8_1', 'TP.8.1.2', 'Siswa mampu menerapkan algoritma pencarian data (sequential dan binary search).', true, NOW(), NOW())
 ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
 -- Materi Kelas 8: Memperdalam Pencarian Data
@@ -1004,7 +1004,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- TP 2 untuk Kelas 9 (Struktur Data Tree)
 INSERT INTO "TujuanPembelajaran" (id, "cpId", "kodeTP", deskripsi, "isActive", "createdAt", "updatedAt")
-VALUES ('tp_inf_9_1_2', 'cp_inf_9_1', 'TP.9.1.2', 'Siswa mampu menerapkan struktur data tree (binary tree dan BST) untuk pengorganisasian data efisien.', true, NOW(), NOW())
+VALUES ('tp_inf_9_1_2', 'cp_inf_9_1', 'TP.9.1.2', 'Siswa mampu menerapkan struktur data tree (binary tree dan BST) untuk data efisien.', true, NOW(), NOW())
 ON CONFLICT ("cpId", "kodeTP") DO NOTHING;
 
 -- Materi Kelas 9: Memperdalam Struktur Data Tree
