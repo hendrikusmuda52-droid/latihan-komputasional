@@ -59,6 +59,13 @@ interface Question {
   cpDeskripsi?: string | null
   tpKode?: string | null
   tpDeskripsi?: string | null
+  // ── NEW v4: 5 question type fields ──
+  questionType?: string
+  correctAnswers?: string  // JSON array untuk PG Kompleks
+  matchPairs?: string      // JSON array of {key, value} untuk Mencocokkan
+  shortAnswer?: string     // pipe-separated untuk Isian Singkat
+  essayAnswer?: string     // rubric untuk Essai
+  levelKognitif?: string
 }
 
 // ── CP/TP types for cascading dropdowns ──
@@ -318,6 +325,23 @@ export function QuestionBank() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="text-xs font-semibold text-slate-500">#{i + 1}</span>
+                        {/* ── NEW: Badge tipe soal (warna sesuai tipe) ── */}
+                        {(() => {
+                          const qt = q.questionType || 'pilihan_ganda'
+                          const config: Record<string, { label: string; className: string }> = {
+                            pilihan_ganda: { label: 'PG', className: 'bg-teal-50 text-teal-700' },
+                            pilihan_ganda_kompleks: { label: 'PG Kompleks', className: 'bg-sky-50 text-sky-700' },
+                            isian_singkat: { label: 'Isian', className: 'bg-emerald-50 text-emerald-700' },
+                            mencocokkan: { label: 'Mencocokkan', className: 'bg-purple-50 text-purple-700' },
+                            essai: { label: 'Essai', className: 'bg-amber-50 text-amber-700' },
+                          }
+                          const c = config[qt] || config.pilihan_ganda
+                          return (
+                            <Badge variant="outline" className={`text-xs ${c.className}`}>
+                              {c.label}
+                            </Badge>
+                          )
+                        })()}
                         {/* ── Bug #3 fix: show CP/TP badges instead of category ── */}
                         {q.tpKode && (
                           <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700" title={q.tpDeskripsi || undefined}>
@@ -1020,19 +1044,52 @@ function QuestionForm({
   onClose: () => void
   onSaved: () => void
 }) {
+  // ── Form state dengan field untuk 5 tipe soal ──
+  // - pilihan_ganda: optionA-D + correctAnswer (number 0-3)
+  // - pilihan_ganda_kompleks: optionA-D + correctAnswers (array [0,2])
+  // - isian_singkat: shortAnswer (pipe-separated accepted answers)
+  // - mencocokkan: matchPairs (array of {key, value})
+  // - essai: essayAnswer (rubric / model answer)
   const [form, setForm] = useState({
     gradeLevel: question?.gradeLevel ?? defaultGrade,
+    subject: question?.subject ?? '',
+    questionType: question?.questionType ?? 'pilihan_ganda',
     question: question?.question ?? '',
+    // PG & PG Kompleks
     optionA: question?.optionA ?? '',
     optionB: question?.optionB ?? '',
     optionC: question?.optionC ?? '',
     optionD: question?.optionD ?? '',
-    correctAnswer: question?.correctAnswer ?? 0,
+    correctAnswer: question?.correctAnswer ?? 0, // untuk PG single
+    correctAnswers: (() => {
+      try {
+        return Array.isArray(question?.correctAnswers)
+          ? question!.correctAnswers
+          : (typeof question?.correctAnswers === 'string' && question!.correctAnswers
+              ? JSON.parse(question!.correctAnswers)
+              : [])
+      } catch { return [] }
+    })() as number[], // untuk PG Kompleks
+    // Isian Singkat
+    shortAnswer: question?.shortAnswer ?? '',
+    // Mencocokkan
+    matchPairs: (() => {
+      try {
+        return Array.isArray(question?.matchPairs)
+          ? question!.matchPairs
+          : (typeof question?.matchPairs === 'string' && question!.matchPairs
+              ? JSON.parse(question!.matchPairs)
+              : [])
+      } catch { return [] }
+    })() as Array<{ key: string; value: string }>,
+    // Essai
+    essayAnswer: question?.essayAnswer ?? '',
+    // Umum
     explanation: question?.explanation ?? '',
     imageUrl: question?.imageUrl ?? '',
     cpId: question?.cpId ?? '',
     tpId: question?.tpId ?? '',
-    subject: question?.subject ?? '',
+    levelKognitif: (question as any)?.levelKognitif ?? 'C3',
   })
   const [saving, setSaving] = useState(false)
 
@@ -1108,31 +1165,99 @@ function QuestionForm({
   }
 
   const handleSave = async () => {
-    if (!form.question || !form.optionA || !form.optionB || !form.optionC || !form.optionD || !form.explanation) {
-      toast.error('Semua field wajib diisi')
+    // ── Validasi sesuai tipe soal ──
+    if (!form.question) {
+      toast.error('Pertanyaan wajib diisi')
       return
+    }
+    const qType = form.questionType
+    if (qType === 'pilihan_ganda') {
+      if (!form.optionA || !form.optionB || !form.optionC || !form.optionD || !form.explanation) {
+        toast.error('Semua opsi (A-D) dan pembahasan wajib diisi untuk PG')
+        return
+      }
+    } else if (qType === 'pilihan_ganda_kompleks') {
+      if (!form.optionA || !form.optionB || !form.optionC || !form.optionD) {
+        toast.error('Semua opsi (A-D) wajib diisi untuk PG Kompleks')
+        return
+      }
+      if (form.correctAnswers.length < 2) {
+        toast.error('Pilih minimal 2 jawaban benar untuk PG Kompleks')
+        return
+      }
+    } else if (qType === 'isian_singkat') {
+      if (!form.shortAnswer) {
+        toast.error('Jawaban singkat wajib diisi (pisahkan dengan | untuk alternatif)')
+        return
+      }
+    } else if (qType === 'mencocokkan') {
+      if (form.matchPairs.length < 2) {
+        toast.error('Minimal 2 pasangan untuk soal mencocokkan')
+        return
+      }
+      const allFilled = form.matchPairs.every(p => p.key.trim() && p.value.trim())
+      if (!allFilled) {
+        toast.error('Semua pasangan key-value wajib diisi')
+        return
+      }
+    } else if (qType === 'essai') {
+      if (!form.essayAnswer) {
+        toast.error('Rubric / jawaban contoh wajib diisi untuk essai')
+        return
+      }
     }
     setSaving(true)
     try {
       const url = question ? `/api/questions/${question.id}` : '/api/questions'
       const method = question ? 'PUT' : 'POST'
-      // ── Explicit payload — NO category field (Bug #2 fix) ──
-      // Whitelist fields sent to backend. cpId/tpId become null when empty
-      // so the FK constraint doesn't block the insert. Backend will default
-      // `category` to 'Umum' if not provided (DB column is NOT NULL).
+      // ── Payload sesuai tipe soal ──
       const body: Record<string, unknown> = {
         gradeLevel: form.gradeLevel,
         subject: form.subject,
+        questionType: form.questionType,
         question: form.question,
-        optionA: form.optionA,
-        optionB: form.optionB,
-        optionC: form.optionC,
-        optionD: form.optionD,
-        correctAnswer: form.correctAnswer,
         explanation: form.explanation,
+        levelKognitif: form.levelKognitif,
         imageUrl: form.imageUrl || null,
         cpId: form.cpId && form.cpId !== NONE ? form.cpId : null,
         tpId: form.cpId && form.cpId !== NONE && form.tpId && form.tpId !== NONE ? form.tpId : null,
+      }
+      // Tambah field spesifik per tipe
+      if (qType === 'pilihan_ganda') {
+        Object.assign(body, {
+          optionA: form.optionA,
+          optionB: form.optionB,
+          optionC: form.optionC,
+          optionD: form.optionD,
+          correctAnswer: form.correctAnswer,
+        })
+      } else if (qType === 'pilihan_ganda_kompleks') {
+        Object.assign(body, {
+          optionA: form.optionA,
+          optionB: form.optionB,
+          optionC: form.optionC,
+          optionD: form.optionD,
+          correctAnswer: form.correctAnswers[0] ?? 0, // first correct, for backward compat
+          correctAnswers: JSON.stringify(form.correctAnswers),
+        })
+      } else if (qType === 'isian_singkat') {
+        Object.assign(body, {
+          optionA: '', optionB: '', optionC: '', optionD: '',
+          correctAnswer: 0,
+          shortAnswer: form.shortAnswer,
+        })
+      } else if (qType === 'mencocokkan') {
+        Object.assign(body, {
+          optionA: '', optionB: '', optionC: '', optionD: '',
+          correctAnswer: 0,
+          matchPairs: JSON.stringify(form.matchPairs),
+        })
+      } else if (qType === 'essai') {
+        Object.assign(body, {
+          optionA: '', optionB: '', optionC: '', optionD: '',
+          correctAnswer: 0,
+          essayAnswer: form.essayAnswer,
+        })
       }
       const res = await fetch(url, {
         method,
@@ -1267,6 +1392,70 @@ function QuestionForm({
             </div>
           </div>
 
+          {/* ── Tipe Soal Selector ── */}
+          <div className="space-y-1">
+            <Label className="text-xs font-semibold">Tipe Soal *</Label>
+            <Select
+              value={form.questionType}
+              onValueChange={(v) => setForm({ ...form, questionType: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pilihan_ganda">
+                  <div className="flex flex-col">
+                    <span className="font-semibold">Pilihan Ganda</span>
+                    <span className="text-xs text-slate-500">Single choice (A/B/C/D) — auto-grade</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="pilihan_ganda_kompleks">
+                  <div className="flex flex-col">
+                    <span className="font-semibold">Pilihan Ganda Kompleks</span>
+                    <span className="text-xs text-slate-500">Multi-choice (checkbox) — auto-grade</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="isian_singkat">
+                  <div className="flex flex-col">
+                    <span className="font-semibold">Isian Singkat</span>
+                    <span className="text-xs text-slate-500">Kata/frasa — auto-grade (case-insensitive)</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="mencocokkan">
+                  <div className="flex flex-col">
+                    <span className="font-semibold">Mencocokkan / Jodohkan</span>
+                    <span className="text-xs text-slate-500">Pasangkan item — dinilai manual</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="essai">
+                  <div className="flex flex-col">
+                    <span className="font-semibold">Essai / Uraian</span>
+                    <span className="text-xs text-slate-500">Jawaban panjang — dinilai manual</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* ── Level Kognitif ── */}
+          <div className="space-y-1">
+            <Label className="text-xs">Level Kognitif (Bloom)</Label>
+            <Select
+              value={form.levelKognitif}
+              onValueChange={(v) => setForm({ ...form, levelKognitif: v })}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="C1">C1 — Mengingat</SelectItem>
+                <SelectItem value="C2">C2 — Memahami</SelectItem>
+                <SelectItem value="C3">C3 — Menerapkan</SelectItem>
+                <SelectItem value="C4">C4 — Menganalisis</SelectItem>
+                <SelectItem value="C5">C5 — Mengevaluasi</SelectItem>
+                <SelectItem value="C6">C6 — Mencipta</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="space-y-1">
             <Label htmlFor="qf-question" className="text-xs">Pertanyaan</Label>
             <Textarea
@@ -1279,35 +1468,207 @@ function QuestionForm({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-xs">Pilihan Jawaban (pilih yang benar)</Label>
-            {(['A', 'B', 'C', 'D'] as const).map((letter, idx) => {
-              const key = `option${letter}` as keyof typeof form
-              return (
-                <div key={letter} className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="correct"
-                    checked={form.correctAnswer === idx}
-                    onChange={() => setForm({ ...form, correctAnswer: idx })}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm font-semibold w-6">{letter}.</span>
-                  <Input
-                    id={`qf-option-${letter}`}
-                    name={`qf-option-${letter}`}
-                    value={form[key] as string}
-                    onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                    placeholder={`Opsi ${letter}`}
-                    className="flex-1"
-                  />
+          {/* ────────────────────────────────────────────────────────── */}
+          {/* FORM SPESIFIK PER TIPE SOAL */}
+          {/* ────────────────────────────────────────────────────────── */}
+
+          {/* 1. PILIHAN GANDA — radio single choice */}
+          {form.questionType === 'pilihan_ganda' && (
+            <div className="space-y-2 p-3 bg-teal-50/50 border border-teal-200 rounded-lg">
+              <Label className="text-xs font-semibold text-teal-800">
+                Pilihan Jawaban (pilih satu yang benar)
+              </Label>
+              {(['A', 'B', 'C', 'D'] as const).map((letter, idx) => {
+                const key = `option${letter}` as keyof typeof form
+                return (
+                  <div key={letter} className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="correct"
+                      checked={form.correctAnswer === idx}
+                      onChange={() => setForm({ ...form, correctAnswer: idx })}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm font-semibold w-6">{letter}.</span>
+                    <Input
+                      value={form[key] as string}
+                      onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                      placeholder={`Opsi ${letter}`}
+                      className="flex-1 min-w-0"
+                    />
+                  </div>
+                )
+              })}
+              <p className="text-xs text-teal-700">✓ Tandai radio button di samping opsi yang benar.</p>
+            </div>
+          )}
+
+          {/* 2. PILIHAN GANDA KOMPLEKS — checkbox multi choice */}
+          {form.questionType === 'pilihan_ganda_kompleks' && (
+            <div className="space-y-2 p-3 bg-sky-50/50 border border-sky-200 rounded-lg">
+              <Label className="text-xs font-semibold text-sky-800">
+                Pilihan Jawaban (centang SEMUA yang benar)
+              </Label>
+              {(['A', 'B', 'C', 'D'] as const).map((letter, idx) => {
+                const key = `option${letter}` as keyof typeof form
+                const checked = form.correctAnswers.includes(idx)
+                return (
+                  <div key={letter} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => {
+                        const next = checked
+                          ? form.correctAnswers.filter((x) => x !== idx)
+                          : [...form.correctAnswers, idx]
+                        setForm({ ...form, correctAnswers: next })
+                      }}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm font-semibold w-6">{letter}.</span>
+                    <Input
+                      value={form[key] as string}
+                      onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                      placeholder={`Opsi ${letter}`}
+                      className="flex-1 min-w-0"
+                    />
+                  </div>
+                )
+              })}
+              <p className="text-xs text-sky-700">
+                ✓ Terpilih <strong>{form.correctAnswers.length}</strong> jawaban benar.
+                Minimal 2 (karena ini PG Kompleks).
+              </p>
+            </div>
+          )}
+
+          {/* 3. ISIAN SINGKAT — text input + accepted answers */}
+          {form.questionType === 'isian_singkat' && (
+            <div className="space-y-2 p-3 bg-emerald-50/50 border border-emerald-200 rounded-lg">
+              <Label className="text-xs font-semibold text-emerald-800">
+                Jawaban yang diterima (pisahkan dengan tanda |)
+              </Label>
+              <Input
+                value={form.shortAnswer}
+                onChange={(e) => setForm({ ...form, shortAnswer: e.target.value })}
+                placeholder="contoh: jakarta|Jakarta|JAKARTA|dki jakarta"
+                className="font-mono"
+              />
+              <p className="text-xs text-emerald-700">
+                💡 Siswa dianggap benar jika jawaban cocok dengan salah satu alternatif (case-insensitive).
+                Gunakan <code className="bg-emerald-100 px-1 rounded">|</code> sebagai pemisah antar alternatif.
+              </p>
+              <div className="mt-2 text-xs text-slate-600">
+                <p className="font-semibold mb-1">Preview alternatif jawaban:</p>
+                <div className="flex flex-wrap gap-1">
+                  {form.shortAnswer.split('|').filter(Boolean).map((ans, i) => (
+                    <span key={i} className="px-2 py-0.5 bg-white border border-emerald-200 rounded text-xs">
+                      {ans.trim()}
+                    </span>
+                  ))}
+                  {form.shortAnswer.split('|').filter(Boolean).length === 0 && (
+                    <span className="text-slate-400 italic">Belum ada jawaban</span>
+                  )}
                 </div>
-              )
-            })}
-          </div>
+              </div>
+            </div>
+          )}
+
+          {/* 4. MENCOCOKKAN — dynamic list of key-value pairs */}
+          {form.questionType === 'mencocokkan' && (
+            <div className="space-y-2 p-3 bg-purple-50/50 border border-purple-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold text-purple-800">
+                  Pasangan Item (kiri = pertanyaan, kanan = jawaban)
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => setForm({
+                    ...form,
+                    matchPairs: [...form.matchPairs, { key: '', value: '' }],
+                  })}
+                >
+                  + Tambah Pasangan
+                </Button>
+              </div>
+              {form.matchPairs.map((pair, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500 w-6">{idx + 1}.</span>
+                  <Input
+                    value={pair.key}
+                    onChange={(e) => {
+                      const next = [...form.matchPairs]
+                      next[idx] = { ...next[idx], key: e.target.value }
+                      setForm({ ...form, matchPairs: next })
+                    }}
+                    placeholder="Item kiri (prompt)"
+                    className="flex-1 min-w-0"
+                  />
+                  <span className="text-purple-500">⇄</span>
+                  <Input
+                    value={pair.value}
+                    onChange={(e) => {
+                      const next = [...form.matchPairs]
+                      next[idx] = { ...next[idx], value: e.target.value }
+                      setForm({ ...form, matchPairs: next })
+                    }}
+                    placeholder="Item kanan (jawaban)"
+                    className="flex-1 min-w-0"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-600 hover:bg-red-50 h-8 w-8 p-0"
+                    onClick={() => {
+                      const next = form.matchPairs.filter((_, i) => i !== idx)
+                      setForm({ ...form, matchPairs: next })
+                    }}
+                    title="Hapus pasangan ini"
+                  >
+                    ✕
+                  </Button>
+                </div>
+              ))}
+              {form.matchPairs.length === 0 && (
+                <p className="text-xs text-slate-400 italic text-center py-2">
+                  Belum ada pasangan. Klik "+ Tambah Pasangan" untuk mulai.
+                </p>
+              )}
+              <p className="text-xs text-purple-700">
+                💡 Siswa akan melihat item kiri dalam urutan asli, tapi item kanan di-shuffle acak.
+                Soal ini dinilai manual oleh guru.
+              </p>
+            </div>
+          )}
+
+          {/* 5. ESSAI — textarea rubric */}
+          {form.questionType === 'essai' && (
+            <div className="space-y-2 p-3 bg-amber-50/50 border border-amber-200 rounded-lg">
+              <Label className="text-xs font-semibold text-amber-800">
+                Rubric / Jawaban Contoh (untuk panduan penilaian guru)
+              </Label>
+              <Textarea
+                value={form.essayAnswer}
+                onChange={(e) => setForm({ ...form, essayAnswer: e.target.value })}
+                rows={5}
+                placeholder="Tulis jawaban contoh atau rubric penilaian di sini. Ini akan ditampilkan ke guru saat review jawaban siswa."
+                className="font-mono text-xs"
+              />
+              <p className="text-xs text-amber-700">
+                💡 Soal essai TIDAK di-auto-grade. Guru akan menilai manual via modal "Lihat Jawaban".
+                Skor akhir = 60% PG + 40% rata-rata essai (jika ada essai di tugas).
+              </p>
+            </div>
+          )}
 
           <div className="space-y-1">
-            <Label htmlFor="qf-explanation" className="text-xs">Pembahasan</Label>
+            <Label htmlFor="qf-explanation" className="text-xs">
+              Pembahasan {form.questionType === 'essai' || form.questionType === 'mencocokkan' ? '(opsional)' : '*'}
+            </Label>
             <Textarea
               id="qf-explanation"
               name="qf-explanation"

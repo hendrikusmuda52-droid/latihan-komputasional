@@ -1148,21 +1148,25 @@ export function TeacherDashboard() {
                 <p className="text-xs mt-1">Data akan muncul setelah siswa menyelesaikan latihan</p>
               </div>
             ) : (
-              <div className="overflow-x-auto max-h-[600px] overflow-y-auto -mx-3 md:mx-0">
-                <Table className="min-w-[1100px]">
+              <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                {/* ── FIX: min-w pakai 100% supaya tabel fit ke container di desktop ── */}
+                {/* Mobile: tabel horizontal scroll (karena kolom banyak) */}
+                {/* Desktop: tabel shrink-fit ke container, NO horizontal scroll di body */}
+                <Table className="min-w-full lg:min-w-full">
                   <TableHeader className="sticky top-0 bg-slate-50 z-10">
                     <TableRow>
-                      <TableHead className="w-12">No</TableHead>
-                      <TableHead className="min-w-[180px]">Identitas Siswa</TableHead>
-                      <TableHead className="min-w-[70px]">Kelas</TableHead>
-                      <TableHead className="min-w-[180px]">Tugas</TableHead>
-                      <TableHead className="min-w-[140px]">Sekolah</TableHead>
-                      <TableHead className="text-center min-w-[100px]">{isITSubject ? 'Mengetik' : 'Harian'}</TableHead>
-                      <TableHead className="text-center min-w-[100px]">Quiz</TableHead>
-                      <TableHead className="text-center min-w-[100px]">Nilai Akhir</TableHead>
-                      <TableHead className="text-center min-w-[120px]">Status Rilis</TableHead>
-                      <TableHead className="min-w-[150px] whitespace-nowrap">Waktu Selesai</TableHead>
-                      <TableHead className="text-center min-w-[220px]">Aksi</TableHead>
+                      <TableHead className="w-10 text-xs">#</TableHead>
+                      <TableHead className="text-xs">Identitas Siswa</TableHead>
+                      <TableHead className="text-xs hidden md:table-cell">Kelas</TableHead>
+                      {/* Tugas kolom — sembunyi di mobile, tampil di desktop */}
+                      <TableHead className="min-w-[180px] text-xs hidden lg:table-cell">Tugas</TableHead>
+                      <TableHead className="text-xs hidden xl:table-cell">Sekolah</TableHead>
+                      <TableHead className="text-center text-xs hidden sm:table-cell">{isITSubject ? 'Mengetik' : 'Harian'}</TableHead>
+                      <TableHead className="text-center text-xs">Quiz</TableHead>
+                      <TableHead className="text-center text-xs">Nilai</TableHead>
+                      <TableHead className="text-center text-xs hidden md:table-cell">Status</TableHead>
+                      <TableHead className="text-xs hidden lg:table-cell whitespace-nowrap">Waktu</TableHead>
+                      <TableHead className="text-center text-xs">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1170,15 +1174,23 @@ export function TeacherDashboard() {
                       <TableRow key={r.id} className="hover:bg-slate-50">
                         <TableCell className="text-slate-400 text-xs">{i + 1}</TableCell>
                         <TableCell>
-                          <div className="font-medium text-slate-900">{r.namaLengkap}</div>
+                          <div className="font-medium text-slate-900 text-sm">{r.namaLengkap}</div>
                           <div className="text-xs text-slate-500">NISN: {r.nisn}</div>
-                          <div className="text-xs text-slate-400">{r.jenisKelamin}</div>
+                          {/* Mobile-only: tampilkan kelas + tugas inline (karena kolom tersembunyi) */}
+                          <div className="md:hidden mt-1 flex flex-wrap items-center gap-1">
+                            <Badge variant="outline" className="bg-slate-50 text-xs">{r.kelas}</Badge>
+                            {r.assignmentTitle && (
+                              <span className="text-xs text-slate-500 truncate max-w-[200px]" title={r.assignmentTitle}>
+                                {r.assignmentTitle}
+                              </span>
+                            )}
+                          </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <Badge variant="outline" className="bg-slate-50">{r.kelas}</Badge>
                         </TableCell>
-                        {/* ── NEW: Tugas yang dikerjakan (judul + badge tipe) ── */}
-                        <TableCell>
+                        {/* Tugas — sembunyi di mobile, tampil di lg+ */}
+                        <TableCell className="hidden lg:table-cell">
                           {r.assignmentTitle ? (
                             <div>
                               <div className="text-xs font-medium text-slate-700 line-clamp-2" title={r.assignmentTitle}>
@@ -1192,32 +1204,31 @@ export function TeacherDashboard() {
                             <span className="text-xs text-slate-400 italic">Latihan umum</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-xs text-slate-600 max-w-[200px] truncate">{r.sekolah}</TableCell>
-                        <TableCell className="text-center">
-                          {/* #3 FIX: For IT subjects show typing score; for non-IT show totalScore as "Harian". */}
+                        <TableCell className="text-xs text-slate-600 max-w-[200px] truncate hidden xl:table-cell">{r.sekolah}</TableCell>
+                        <TableCell className="text-center hidden sm:table-cell">
                           {isITSubject ? (
                             <>
-                              <div className={`font-bold ${getScoreColor(r.typingScore)}`}>{r.typingScore}</div>
+                              <div className={`font-bold text-sm ${getScoreColor(r.typingScore)}`}>{r.typingScore}</div>
                               <div className="text-xs text-slate-400">
                                 {r.typingSpeedWPM} WPM • {r.typingAccuracy}%
                               </div>
                             </>
                           ) : (
-                            <div className={`font-bold ${getScoreColor(r.totalScore)}`}>{r.totalScore}</div>
+                            <div className={`font-bold text-sm ${getScoreColor(r.totalScore)}`}>{r.totalScore}</div>
                           )}
                         </TableCell>
                         <TableCell className="text-center">
-                          <div className={`font-bold ${getScoreColor(r.quizScore)}`}>{r.quizScore}</div>
+                          <div className={`font-bold text-sm ${getScoreColor(r.quizScore)}`}>{r.quizScore}</div>
                           <div className="text-xs text-slate-400">
-                            {r.quizCorrect}/{r.quizTotal} benar
+                            {r.quizCorrect}/{r.quizTotal}
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
-                          <span className={`inline-flex items-center justify-center min-w-[3rem] px-2 py-1 rounded-full text-sm font-bold ${getScoreBadge(r.totalScore)}`}>
+                          <span className={`inline-flex items-center justify-center min-w-[2.5rem] px-2 py-1 rounded-full text-sm font-bold ${getScoreBadge(r.totalScore)}`}>
                             {r.totalScore}
                           </span>
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center hidden md:table-cell">
                           {r.isReleased ? (
                             <Badge className="bg-emerald-100 text-emerald-700 text-xs">
                               <CheckCircle2 className="w-3 h-3 mr-1" />
@@ -1226,11 +1237,11 @@ export function TeacherDashboard() {
                           ) : (
                             <Badge className="bg-amber-100 text-amber-700 text-xs">
                               <Lock className="w-3 h-3 mr-1" />
-                              Belum Dirilis
+                              Belum
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-xs text-slate-500">
+                        <TableCell className="text-xs text-slate-500 hidden lg:table-cell whitespace-nowrap">
                           {new Date(r.completedAt).toLocaleString('id-ID', {
                             day: '2-digit', month: 'short', year: 'numeric',
                             hour: '2-digit', minute: '2-digit',
@@ -2129,7 +2140,7 @@ function RekapPengerjaan() {
 
             {/* Tabel Rekap */}
             <div className="overflow-x-auto max-h-[500px] overflow-y-auto border border-slate-200 rounded-lg">
-              <Table className="min-w-[800px]">
+              <Table className="min-w-full">
                 <TableHeader className="sticky top-0 bg-slate-100 z-10">
                   <TableRow>
                     <TableHead className="w-8">#</TableHead>

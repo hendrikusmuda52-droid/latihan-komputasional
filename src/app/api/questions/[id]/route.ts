@@ -18,6 +18,7 @@ export async function PUT(
 
     const updateData: Record<string, unknown> = {}
     if (body.gradeLevel !== undefined) updateData.gradeLevel = body.gradeLevel
+    if (body.subject !== undefined) updateData.subject = body.subject
     if (body.question !== undefined) updateData.question = body.question
     if (body.optionA !== undefined) updateData.optionA = body.optionA
     if (body.optionB !== undefined) updateData.optionB = body.optionB
@@ -31,6 +32,13 @@ export async function PUT(
     // ── Bug #2 fix: accept cpId + tpId for Kurikulum Merdeka anchoring ──
     if (body.cpId !== undefined) updateData.cpId = body.cpId || null
     if (body.tpId !== undefined) updateData.tpId = body.tpId || null
+    // ── NEW v4: accept question type-specific fields ──
+    if (body.questionType !== undefined) updateData.questionType = body.questionType
+    if (body.correctAnswers !== undefined) updateData.correctAnswers = body.correctAnswers
+    if (body.matchPairs !== undefined) updateData.matchPairs = body.matchPairs
+    if (body.shortAnswer !== undefined) updateData.shortAnswer = body.shortAnswer
+    if (body.essayAnswer !== undefined) updateData.essayAnswer = body.essayAnswer
+    if (body.levelKognitif !== undefined) updateData.levelKognitif = body.levelKognitif
 
     const updated = await db.question.update({
       where: { id },

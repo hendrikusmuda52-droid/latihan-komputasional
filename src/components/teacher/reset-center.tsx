@@ -259,42 +259,48 @@ export function ResetCenter() {
                 <p className="text-xs mt-1">Semua permintaan sudah diproses</p>
               </div>
             ) : (
-              <div className="overflow-x-auto max-h-[500px] overflow-y-auto -mx-3 md:mx-0">
-                <Table className="min-w-[800px]">
+              <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+                <Table className="min-w-full">
                   <TableHeader className="sticky top-0 bg-slate-50 z-10">
                     <TableRow>
-                      <TableHead className="min-w-[150px]">Nama Siswa</TableHead>
-                      <TableHead className="min-w-[100px] whitespace-nowrap">NISN</TableHead>
-                      <TableHead className="min-w-[70px]">Kelas</TableHead>
-                      <TableHead className="min-w-[120px]">Subject</TableHead>
-                      <TableHead className="min-w-[200px]">Alasan</TableHead>
-                      <TableHead className="min-w-[100px] whitespace-nowrap">Tanggal</TableHead>
-                      <TableHead className="text-center min-w-[180px]">Aksi</TableHead>
+                      <TableHead className="text-xs">Nama Siswa</TableHead>
+                      <TableHead className="text-xs hidden sm:table-cell whitespace-nowrap">NISN</TableHead>
+                      <TableHead className="text-xs">Kelas</TableHead>
+                      <TableHead className="text-xs hidden md:table-cell">Subject</TableHead>
+                      <TableHead className="text-xs hidden lg:table-cell">Alasan</TableHead>
+                      <TableHead className="text-xs hidden lg:table-cell whitespace-nowrap">Tanggal</TableHead>
+                      <TableHead className="text-center text-xs">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {requests.map((r) => (
                       <TableRow key={r.id}>
-                        <TableCell className="font-medium text-slate-900">
+                        <TableCell className="font-medium text-slate-900 text-sm">
                           {r.student?.namaLengkap || '-'}
+                          {/* Mobile-only: tampilkan NISN, kelas, subject inline */}
+                          <div className="sm:hidden mt-1 flex flex-wrap items-center gap-1 text-xs">
+                            <span className="font-mono text-slate-500">{r.student?.nisn || '-'}</span>
+                            <Badge variant="outline" className="text-xs">{r.student?.kelas || r.kelas || '-'}</Badge>
+                            <Badge variant="secondary" className="text-xs">{r.subject}</Badge>
+                          </div>
                         </TableCell>
-                        <TableCell className="font-mono text-xs">
+                        <TableCell className="font-mono text-xs hidden sm:table-cell">
                           {r.student?.nisn || '-'}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">
+                          <Badge variant="outline" className="text-xs">
                             {r.student?.kelas || r.kelas || '-'}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{r.subject}</Badge>
+                        <TableCell className="hidden md:table-cell">
+                          <Badge variant="secondary" className="text-xs">{r.subject}</Badge>
                         </TableCell>
-                        <TableCell className="max-w-xs text-xs text-slate-600">
+                        <TableCell className="max-w-xs text-xs text-slate-600 hidden lg:table-cell">
                           {r.reason || (
                             <span className="italic text-slate-400">Tidak ada alasan</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-xs text-slate-500 whitespace-nowrap">
+                        <TableCell className="text-xs text-slate-500 hidden lg:table-cell whitespace-nowrap">
                           {r.createdAt
                             ? new Date(r.createdAt).toLocaleDateString('id-ID', {
                                 day: '2-digit',
