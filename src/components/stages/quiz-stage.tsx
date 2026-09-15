@@ -12,6 +12,15 @@ import { Badge } from '@/components/ui/badge'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -138,14 +147,32 @@ export function QuizStage() {
   const timeUp = remainingSec === 0
 
   // answeredCount: hitung soal yang sudah dijawab.
-  // ── PG (pilihan_ganda): answered bila answers[id] adalah number (0-3) ──
-  // ── Essai: answered bila answers[id] adalah string non-empty ──
-  // (empty string tidak dihitung agar siswa tidak lupa mengisi essay)
+  // ── pilihan_ganda: answered bila answers[id] adalah number ──
+  // ── pilihan_ganda_kompleks: answered bila answers[id] adalah JSON string array non-empty ──
+  // ── isian_singkat: answered bila answers[id] adalah string non-empty ──
+  // ── mencocokkan: answered bila answers[id] adalah JSON object dengan semua key terisi ──
+  // ── essai: answered bila answers[id] adalah string non-empty ──
   const answeredCount = QUESTIONS.filter((q) => {
     const v = answers[q.id]
-    if (v === undefined) return false
-    if (typeof v === 'number') return true
-    if (typeof v === 'string') return v.trim().length > 0
+    if (v === undefined || v === null) return false
+    const qType = q.questionType || 'pilihan_ganda'
+    if (qType === 'pilihan_ganda') return typeof v === 'number'
+    if (qType === 'pilihan_ganda_kompleks') {
+      // v bisa JSON string "[0,2]" atau number[]
+      try {
+        const arr = typeof v === 'string' ? JSON.parse(v) : (Array.isArray(v) ? v : [])
+        return Array.isArray(arr) && arr.length > 0
+      } catch { return false }
+    }
+    if (qType === 'isian_singkat') return typeof v === 'string' && v.trim().length > 0
+    if (qType === 'mencocokkan') {
+      // v adalah JSON object {key: value}
+      try {
+        const obj = typeof v === 'string' ? JSON.parse(v) : (typeof v === 'object' ? v : {})
+        return typeof obj === 'object' && obj !== null && Object.keys(obj).length > 0
+      } catch { return false }
+    }
+    if (qType === 'essai') return typeof v === 'string' && v.trim().length > 0
     return false
   }).length
   const progressPct = QUESTIONS.length > 0 ? (answeredCount / QUESTIONS.length) * 100 : 0
@@ -208,24 +235,55 @@ export function QuizStage() {
   }
 
   const computeResult = (): QuizResult => {
-    // Pisahkan PG dan essay untuk scoring.
+    // Pisahkan berdasarkan tipe soal untuk scoring.
     // ── Rationale ──
-    // Saat assignment mengandung essay, jawaban essay tidak bisa di-auto-score
-    // (perlu rubric guru). Kita tetap menghitung quizScore berdasarkan PG saja
-    // agar siswa dapat feedback instan. Jawaban essay disimpan di quizAnswers
-    // (JSON) untuk review guru di Daftar Nilai.
-    const pgQuestions = QUESTIONS.filter((q) => !q.questionType || q.questionType === 'pilihan_ganda')
+    // - pilihan_ganda: auto-grade (number === correctAnswer)
+    // - pilihan_ganda_kompleks: auto-grade (array sama dengan correctAnswers, urutan bebas)
+    // - isian_singkat: auto-grade (string cocok salah satu di shortAnswer, case-insensitive)
+    // - mencocokkan: TIDAK di-auto-grade (butuh validasi kompleks) → dianggap essay-like
+    // - essai: TIDAK di-auto-grade (perlu rubric guru)
+    // Jawaban essai + mencocokkan disimpan di quizAnswers (JSON) untuk review guru.
+    const autoGradeTypes = ['pilihan_ganda', 'pilihan_ganda_kompleks', 'isian_singkat']
+    const gradeableQuestions = QUESTIONS.filter((q) => !q.questionType || autoGradeTypes.includes(q.questionType))
     let correct = 0
-    for (const q of pgQuestions) {
-      if (answers[q.id] === q.correctAnswer) correct++
+    for (const q of gradeableQuestions) {
+      const studentAnswer = answers[q.id]
+      const qType = q.questionType || 'pilihan_ganda'
+
+      if (qType === 'pilihan_ganda') {
+        if (typeof studentAnswer === 'number' && studentAnswer === q.correctAnswer) correct++
+      } else if (qType === 'pilihan_ganda_kompleks') {
+        // Parse correctAnswers dari JSON string — format: [0, 2] artinya opsi A dan C benar
+        try {
+          const correctArr: number[] = JSON.parse(q.correctAnswers || '[]')
+          // Student answer untuk PG Kompleks disimpan sebagai JSON string "[0,2]"
+          let studentArr: number[] = []
+          if (typeof studentAnswer === 'string') {
+            studentArr = JSON.parse(studentAnswer || '[]')
+          } else if (Array.isArray(studentAnswer)) {
+            studentArr = studentAnswer as unknown as number[]
+          }
+          // Bandingkan sebagai set (urutan bebas)
+          const sameSet = correctArr.length === studentArr.length &&
+            correctArr.every((v) => studentArr.includes(v))
+          if (sameSet) correct++
+        } catch (e) {
+          // JSON parse failed — skip
+        }
+      } else if (qType === 'isian_singkat') {
+        // Parse shortAnswer pipe-separated — "jakarta|Jakarta|JAKARTA"
+        const accepted = (q.shortAnswer || '').split('|').map(s => s.trim().toLowerCase()).filter(Boolean)
+        const student = typeof studentAnswer === 'string' ? studentAnswer.trim().toLowerCase() : ''
+        if (student && accepted.includes(student)) correct++
+      }
     }
-    const totalGradeable = pgQuestions.length || QUESTIONS.length
+    const totalGradeable = gradeableQuestions.length || QUESTIONS.length
     const score = Math.round((correct / totalGradeable) * 100)
     return {
       answers,
       quizCorrect: correct,
-      // quizTotal = total PG (auto-graded). Essay tidak masuk hitungan benar/salah.
-      quizTotal: pgQuestions.length,
+      // quizTotal = total auto-gradable. Essai + mencocokkan tidak masuk hitungan benar/salah.
+      quizTotal: gradeableQuestions.length,
       quizScore: score,
       quizDuration: elapsedSec,
     }
@@ -343,6 +401,29 @@ export function QuizStage() {
   }, [])
 
   const currentQ = QUESTIONS[currentIdx]
+
+  // ── NEW: Shuffled values untuk mencocokkan (dipindah ke top-level supaya pakai useMemo legal) ──
+  // Parse matchPairs untuk currentQ kalau tipenya mencocokkan
+  const currentMatchPairs: Array<{ key: string; value: string }> = useMemo(() => {
+    if (!currentQ || currentQ.questionType !== 'mencocockan') return []
+    try {
+      return JSON.parse(currentQ.matchPairs || '[]')
+    } catch {
+      return []
+    }
+  }, [currentQ?.id, currentQ?.matchPairs, currentQ?.questionType])
+
+  // Shuffle deterministic per question (seeded by questionId)
+  const shuffledMatchValues = useMemo(() => {
+    if (currentMatchPairs.length === 0) return []
+    const vals = currentMatchPairs.map((p) => p.value)
+    const seed = currentQ?.id || 'default'
+    for (let i = vals.length - 1; i > 0; i--) {
+      const j = (seed.charCodeAt(0) + i) % (i + 1)
+      ;[vals[i], vals[j]] = [vals[j], vals[i]]
+    }
+    return vals
+  }, [currentMatchPairs, currentQ?.id])
 
   // Subject aktif siswa (untuk ForceStop overlay); default Informatika
   const subject = typeof window !== 'undefined' ? localStorage.getItem('currentSubject') || 'Informatika' : 'Informatika'
@@ -486,38 +567,15 @@ export function QuizStage() {
               )}
 
               {/* ── Render input berdasarkan tipe soal ── */}
-              {/* Pilihan Ganda → RadioGroup. Essai → Textarea. */}
-              {/* Kedua tipe tampil dalam assignment yang sama, sesuai permintaan user. */}
-              {currentQ.questionType === 'essai' ? (
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
-                      Soal Essai (dikerjakan di sini, dinilai guru)
-                    </p>
-                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs">
-                      Essai
-                    </Badge>
-                  </div>
-                  <Textarea
-                    value={(typeof answers[currentQ.id] === 'string' ? answers[currentQ.id] as string : '')}
-                    onChange={(e) =>
-                      setAnswers({
-                        ...answers,
-                        [currentQ.id]: e.target.value,
-                      })
-                    }
-                    placeholder="Tulis jawaban essai Anda di sini. Jelaskan dengan lengkap dan jelas."
-                    className="min-h-[200px] text-sm leading-relaxed resize-y"
-                  />
-                  <p className="text-xs text-slate-500">
-                    Jawaban essai akan disimpan dan dinilai oleh guru secara manual.
-                    Skor otomatis saat ini hanya dihitung dari soal pilihan ganda.
-                  </p>
-                </div>
-              ) : (
+              {/* 5 tipe: pilihan_ganda, pilihan_ganda_kompleks, mencocokkan, isian_singkat, essai */}
+
+              {/* ──────────────────────────────────────────────────────── */}
+              {/* 1. PILIHAN GANDA (default) — RadioGroup single choice */}
+              {/* ──────────────────────────────────────────────────────── */}
+              {(!currentQ.questionType || currentQ.questionType === 'pilihan_ganda') && (
                 <div className="space-y-2.5">
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
-                    Pilih jawaban:
+                    Pilih satu jawaban:
                   </p>
                   <RadioGroup
                     value={
@@ -563,6 +621,225 @@ export function QuizStage() {
                       </div>
                     ))}
                   </RadioGroup>
+                </div>
+              )}
+
+              {/* ──────────────────────────────────────────────────────── */}
+              {/* 2. PILIHAN GANDA KOMPLEKS — Checkbox multi-choice */}
+              {/* ──────────────────────────────────────────────────────── */}
+              {currentQ.questionType === 'pilihan_ganda_kompleks' && (
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-sky-700 uppercase tracking-wide">
+                      Pilih semua jawaban yang benar (boleh lebih dari satu)
+                    </p>
+                    <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200 text-xs">
+                      PG Kompleks
+                    </Badge>
+                  </div>
+                  {(() => {
+                    // Student answer untuk PG Kompleks disimpan sebagai JSON string "[0,2]"
+                    const currentArr: number[] = (() => {
+                      const v = answers[currentQ.id]
+                      if (!v) return []
+                      try {
+                        if (typeof v === 'string') return JSON.parse(v)
+                        if (Array.isArray(v)) return v
+                      } catch {}
+                      return []
+                    })()
+                    const toggle = (idx: number) => {
+                      const newArr = currentArr.includes(idx)
+                        ? currentArr.filter((x) => x !== idx)
+                        : [...currentArr, idx]
+                      setAnswers({
+                        ...answers,
+                        [currentQ.id]: JSON.stringify(newArr),
+                      })
+                    }
+                    return (
+                      <div className="space-y-2.5">
+                        {currentQ.options.map((opt, i) => {
+                          const checked = currentArr.includes(i)
+                          return (
+                            <div
+                              key={i}
+                              className={`flex items-start gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                                checked
+                                  ? 'border-sky-500 bg-sky-50 shadow-sm'
+                                  : 'border-slate-200 hover:border-sky-300 hover:bg-slate-50'
+                              }`}
+                              onClick={() => toggle(i)}
+                            >
+                              <Checkbox
+                                checked={checked}
+                                onCheckedChange={() => toggle(i)}
+                                id={`q${currentQ.id}-chk${i}`}
+                                className="mt-1"
+                              />
+                              <Label
+                                htmlFor={`q${currentQ.id}-chk${i}`}
+                                className="cursor-pointer flex-1 text-sm leading-relaxed text-slate-700"
+                              >
+                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md text-xs font-bold mr-2.5 ${
+                                  checked ? 'bg-sky-600 text-white' : 'bg-slate-200 text-slate-600'
+                                }`}>
+                                  {String.fromCharCode(65 + i)}
+                                </span>
+                                {opt}
+                              </Label>
+                            </div>
+                          )
+                        })}
+                        <p className="text-xs text-slate-500 mt-2">
+                          ✓ Terpilih: <strong>{currentArr.length}</strong> jawaban
+                        </p>
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
+
+              {/* ──────────────────────────────────────────────────────── */}
+              {/* 3. ISIAN SINGKAT — Input text single line */}
+              {/* ──────────────────────────────────────────────────────── */}
+              {currentQ.questionType === 'isian_singkat' && (
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
+                      Isi jawaban singkat (kata atau frasa)
+                    </p>
+                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
+                      Isian Singkat
+                    </Badge>
+                  </div>
+                  <Input
+                    type="text"
+                    value={typeof answers[currentQ.id] === 'string' ? answers[currentQ.id] as string : ''}
+                    onChange={(e) =>
+                      setAnswers({
+                        ...answers,
+                        [currentQ.id]: e.target.value,
+                      })
+                    }
+                    placeholder="Ketik jawaban Anda di sini..."
+                    className="text-base"
+                    autoComplete="off"
+                  />
+                  <p className="text-xs text-slate-500">
+                    💡 Jawaban akan dicek otomatis. Pastikan ejaan benar.
+                  </p>
+                </div>
+              )}
+
+              {/* ──────────────────────────────────────────────────────── */}
+              {/* 4. MENCOCOKKAN / JODOHKAN — dropdown per item */}
+              {/* ──────────────────────────────────────────────────────── */}
+              {currentQ.questionType === 'mencocockan' && (() => {
+                // pairs & shuffledValues sudah di-compute di top-level (currentMatchPairs & shuffledMatchValues)
+                const pairs = currentMatchPairs
+                const shuffledValues = shuffledMatchValues
+
+                // Get current student answers as object
+                const currentMatches: Record<string, string> = (() => {
+                  const v = answers[currentQ.id]
+                  if (!v) return {}
+                  try {
+                    if (typeof v === 'string') return JSON.parse(v)
+                    if (typeof v === 'object') return v as Record<string, string>
+                  } catch {}
+                  return {}
+                })()
+
+                const setMatch = (key: string, value: string) => {
+                  setAnswers({
+                    ...answers,
+                    [currentQ.id]: JSON.stringify({ ...currentMatches, [key]: value }),
+                  })
+                }
+
+                if (pairs.length === 0) {
+                  return (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded text-amber-700 text-xs">
+                      ⚠️ Soal mencocokkan belum dikonfigurasi (matchPairs kosong). Hubungi guru.
+                    </div>
+                  )
+                }
+
+                return (
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide">
+                        Cocokkan item di kiri dengan jawaban di kanan
+                      </p>
+                      <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-xs">
+                        Mencocokkan
+                      </Badge>
+                    </div>
+                    <div className="space-y-2">
+                      {pairs.map((pair, idx) => (
+                        <div
+                          key={idx}
+                          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-3 rounded-xl border-2 border-slate-200 bg-slate-50"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs text-slate-500 mr-2">{idx + 1}.</span>
+                            <span className="text-sm font-medium text-slate-800">{pair.key}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-400 text-xs hidden sm:inline">→</span>
+                            <Select
+                              value={currentMatches[pair.key] || ''}
+                              onValueChange={(v) => setMatch(pair.key, v)}
+                            >
+                              <SelectTrigger className="w-full sm:w-48 h-9">
+                                <SelectValue placeholder="Pilih jawaban..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {shuffledValues.map((val) => (
+                                  <SelectItem key={val} value={val}>{val}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      💡 Pilih jawaban yang paling cocok untuk setiap item. Soal ini akan dinilai manual oleh guru.
+                    </p>
+                  </div>
+                )
+              })()}
+
+              {/* ──────────────────────────────────────────────────────── */}
+              {/* 5. ESSAI — Textarea (panjang, dinilai manual) */}
+              {/* ──────────────────────────────────────────────────────── */}
+              {currentQ.questionType === 'essai' && (
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
+                      Soal Essai (dikerjakan di sini, dinilai guru)
+                    </p>
+                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs">
+                      Essai
+                    </Badge>
+                  </div>
+                  <Textarea
+                    value={(typeof answers[currentQ.id] === 'string' ? answers[currentQ.id] as string : '')}
+                    onChange={(e) =>
+                      setAnswers({
+                        ...answers,
+                        [currentQ.id]: e.target.value,
+                      })
+                    }
+                    placeholder="Tulis jawaban essai Anda di sini. Jelaskan dengan lengkap dan jelas."
+                    className="min-h-[200px] text-sm leading-relaxed resize-y"
+                  />
+                  <p className="text-xs text-slate-500">
+                    Jawaban essai akan disimpan dan dinilai oleh guru secara manual.
+                    Skor otomatis saat ini hanya dihitung dari soal yang bisa di-auto-grade.
+                  </p>
                 </div>
               )}
 
@@ -646,13 +923,45 @@ export function QuizStage() {
               <div className="grid grid-cols-6 gap-2">
                 {QUESTIONS.map((q, i) => {
                   // ── Tentukan status jawaban berdasar tipe soal ──
-                  // PG: answered bila number. Essai: answered bila string non-empty.
                   const v = answers[q.id]
+                  const qType = q.questionType || 'pilihan_ganda'
                   let isAnswered = false
-                  if (typeof v === 'number') isAnswered = true
-                  else if (typeof v === 'string' && v.trim().length > 0) isAnswered = true
+                  if (qType === 'pilihan_ganda') {
+                    isAnswered = typeof v === 'number'
+                  } else if (qType === 'pilihan_ganda_kompleks') {
+                    try {
+                      const arr = typeof v === 'string' ? JSON.parse(v) : (Array.isArray(v) ? v : [])
+                      isAnswered = Array.isArray(arr) && arr.length > 0
+                    } catch { isAnswered = false }
+                  } else if (qType === 'isian_singkat') {
+                    isAnswered = typeof v === 'string' && v.trim().length > 0
+                  } else if (qType === 'mencocokkan') {
+                    try {
+                      const obj = typeof v === 'string' ? JSON.parse(v) : (typeof v === 'object' ? v : {})
+                      isAnswered = typeof obj === 'object' && obj !== null && Object.keys(obj).length > 0
+                    } catch { isAnswered = false }
+                  } else if (qType === 'essai') {
+                    isAnswered = typeof v === 'string' && v.trim().length > 0
+                  }
                   const isCurrent = i === currentIdx
-                  const isEssay = q.questionType === 'essai'
+                  // Warna navigator per tipe soal
+                  const typeColor = qType === 'essai' ? 'amber'
+                    : qType === 'pilihan_ganda_kompleks' ? 'sky'
+                    : qType === 'isian_singkat' ? 'emerald'
+                    : qType === 'mencocokkan' ? 'purple'
+                    : 'teal'  // pilihan_ganda
+                  const typeIcon = qType === 'essai' ? '✎'
+                    : qType === 'pilihan_ganda_kompleks' ? '☑'
+                    : qType === 'isian_singkat' ? '✎'
+                    : qType === 'mencocokkan' ? '⇄'
+                    : ''  // pilihan_ganda (no icon)
+                  const colorMap: Record<string, { answered: string; unanswered: string }> = {
+                    amber: { answered: 'bg-amber-100 text-amber-700 hover:bg-amber-200', unanswered: 'bg-amber-50 text-amber-500 hover:bg-amber-100 border border-amber-200' },
+                    sky: { answered: 'bg-sky-100 text-sky-700 hover:bg-sky-200', unanswered: 'bg-sky-50 text-sky-500 hover:bg-sky-100 border border-sky-200' },
+                    emerald: { answered: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200', unanswered: 'bg-emerald-50 text-emerald-500 hover:bg-emerald-100 border border-emerald-200' },
+                    purple: { answered: 'bg-purple-100 text-purple-700 hover:bg-purple-200', unanswered: 'bg-purple-50 text-purple-500 hover:bg-purple-100 border border-purple-200' },
+                    teal: { answered: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200', unanswered: 'bg-slate-100 text-slate-500 hover:bg-slate-200' },
+                  }
                   return (
                     <button
                       key={q.id}
@@ -661,12 +970,12 @@ export function QuizStage() {
                         isCurrent
                           ? 'bg-teal-600 text-white ring-2 ring-teal-300 ring-offset-1'
                           : isAnswered
-                          ? (isEssay ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200')
-                          : (isEssay ? 'bg-amber-50 text-amber-500 hover:bg-amber-100 border border-amber-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200')
+                          ? colorMap[typeColor].answered
+                          : colorMap[typeColor].unanswered
                       }`}
-                      title={isEssay ? `Soal ${i + 1} (Essai)` : `Soal ${i + 1}`}
+                      title={`Soal ${i + 1} (${qType === 'pilihan_ganda' ? 'PG' : qType === 'pilihan_ganda_kompleks' ? 'PG Kompleks' : qType === 'isian_singkat' ? 'Isian' : qType === 'mencocokkan' ? 'Mencocokkan' : 'Essai'})`}
                     >
-                      {i + 1}{isEssay ? '✎' : ''}
+                      {i + 1}{typeIcon}
                     </button>
                   )
                 })}
@@ -680,8 +989,22 @@ export function QuizStage() {
                   <div className="w-3 h-3 rounded bg-slate-100" /> Belum
                   dijawab ({QUESTIONS.length - answeredCount})
                 </div>
+                <div className="border-t border-slate-200 my-2" />
+                <p className="font-semibold text-slate-700">Tipe soal:</p>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded bg-amber-100" /> Soal essai (✎)
+                  <div className="w-3 h-3 rounded bg-teal-50 border border-teal-200" /> PG (pilihan ganda)
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded bg-sky-100" /> PG Kompleks (☑ checkbox)
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded bg-emerald-100" /> Isian Singkat (✎)
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded bg-purple-100" /> Mencocokkan (⇄)
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded bg-amber-100" /> Essai (✎)
                 </div>
               </div>
 

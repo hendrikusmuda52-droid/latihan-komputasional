@@ -164,10 +164,10 @@ export function QuestionBank() {
         <CardHeader className="bg-slate-50 pb-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle className="text-base">Bank Soal HOTS</CardTitle>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {/* ── FIX: Subject filter dropdown ── */}
               <Select value={filterSubject} onValueChange={setFilterSubject}>
-                <SelectTrigger className="w-40 h-8 text-xs">
+                <SelectTrigger className="w-full sm:w-40 h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -177,7 +177,7 @@ export function QuestionBank() {
                 </SelectContent>
               </Select>
               <Select value={filterGrade} onValueChange={setFilterGrade}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-full sm:w-32">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

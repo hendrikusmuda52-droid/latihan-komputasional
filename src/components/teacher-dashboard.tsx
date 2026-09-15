@@ -825,7 +825,7 @@ export function TeacherDashboard() {
           {activeMenu === 'results' && (
         <>
         {/* Statistik Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
@@ -1038,7 +1038,7 @@ export function TeacherDashboard() {
         <Card className="border-slate-200 mb-6">
           <CardContent className="pt-4">
             {/* ── NEW: Layout 4 kolom untuk search + kelas + tugas + sekolah ── */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
               <div className="space-y-2">
                 <Label htmlFor="search" className="text-xs">
                   <Search className="w-3 h-3 inline mr-1" />
@@ -1148,22 +1148,21 @@ export function TeacherDashboard() {
                 <p className="text-xs mt-1">Data akan muncul setelah siswa menyelesaikan latihan</p>
               </div>
             ) : (
-              <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-                <Table>
+              <div className="overflow-x-auto max-h-[600px] overflow-y-auto -mx-3 md:mx-0">
+                <Table className="min-w-[1100px]">
                   <TableHeader className="sticky top-0 bg-slate-50 z-10">
                     <TableRow>
                       <TableHead className="w-12">No</TableHead>
-                      <TableHead>Identitas Siswa</TableHead>
-                      <TableHead>Kelas</TableHead>
-                      {/* ── NEW: Kolom Tugas — tampilkan judul tugas untuk identifikasi cepat ── */}
+                      <TableHead className="min-w-[180px]">Identitas Siswa</TableHead>
+                      <TableHead className="min-w-[70px]">Kelas</TableHead>
                       <TableHead className="min-w-[180px]">Tugas</TableHead>
-                      <TableHead>Sekolah</TableHead>
-                      <TableHead className="text-center">{isITSubject ? 'Mengetik' : 'Harian'}</TableHead>
-                      <TableHead className="text-center">Quiz</TableHead>
-                      <TableHead className="text-center">Nilai Akhir</TableHead>
-                      <TableHead className="text-center">Status Rilis</TableHead>
-                      <TableHead>Waktu Selesai</TableHead>
-                      <TableHead className="text-center">Aksi</TableHead>
+                      <TableHead className="min-w-[140px]">Sekolah</TableHead>
+                      <TableHead className="text-center min-w-[100px]">{isITSubject ? 'Mengetik' : 'Harian'}</TableHead>
+                      <TableHead className="text-center min-w-[100px]">Quiz</TableHead>
+                      <TableHead className="text-center min-w-[100px]">Nilai Akhir</TableHead>
+                      <TableHead className="text-center min-w-[120px]">Status Rilis</TableHead>
+                      <TableHead className="min-w-[150px] whitespace-nowrap">Waktu Selesai</TableHead>
+                      <TableHead className="text-center min-w-[220px]">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1238,7 +1237,7 @@ export function TeacherDashboard() {
                           })}
                         </TableCell>
                         <TableCell className="text-center">
-                          <div className="flex justify-center gap-1">
+                          <div className="flex flex-wrap justify-center gap-1 max-w-[220px]">
                             {/* ── NEW: Tombol Lihat Jawaban (PG + Essai) ── */}
                             <Button
                               variant="ghost"
@@ -1248,7 +1247,7 @@ export function TeacherDashboard() {
                               title={`Lihat jawaban ${r.namaLengkap}`}
                             >
                               <Eye className="w-4 h-4" />
-                              <span className="text-xs ml-1">Jawaban</span>
+                              <span className="text-xs ml-1 hidden sm:inline">Jawaban</span>
                             </Button>
                             {/* ── NEW: Tombol Lihat Foto Catatan ── */}
                             {r.assignmentId && (
@@ -1269,12 +1268,12 @@ export function TeacherDashboard() {
                               {r.isReleased ? (
                                 <>
                                   <Lock className="w-3 h-3 mr-1" />
-                                  <span className="text-xs">Batal</span>
+                                  <span className="text-xs hidden sm:inline">Batal</span>
                                 </>
                               ) : (
                                 <>
                                   <Send className="w-3 h-3 mr-1" />
-                                  <span className="text-xs">Rilis</span>
+                                  <span className="text-xs hidden sm:inline">Rilis</span>
                                 </>
                               )}
                             </Button>
@@ -1387,7 +1386,7 @@ export function TeacherDashboard() {
       {/* Tampil saat guru klik tombol "Jawaban" di baris hasil siswa */}
       {/* Menampilkan: info siswa + tugas + skor, lalu list semua soal dengan jawaban siswa */}
       <Dialog open={!!reviewResultId} onOpenChange={(open) => { if (!open) closeReview() }}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col w-[95vw] sm:w-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Eye className="w-5 h-5 text-violet-600" />
@@ -1411,7 +1410,7 @@ export function TeacherDashboard() {
             <>
               {/* ── Info Siswa + Tugas + Skor ── */}
               <div className="border-b border-slate-200 pb-4 mb-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
                   <div>
                     <p className="text-xs text-slate-500">Siswa</p>
                     <p className="font-semibold text-slate-900">{reviewData.result.student?.namaLengkap || '-'}</p>
@@ -1448,7 +1447,7 @@ export function TeacherDashboard() {
 
                 {/* Stats ringkasan */}
                 {reviewData.stats && (
-                  <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs">
                     <div className="p-2 bg-slate-50 rounded">
                       <p className="text-slate-500">Total Soal</p>
                       <p className="font-bold text-slate-900">{reviewData.stats.totalQuestions}</p>
@@ -1481,7 +1480,7 @@ export function TeacherDashboard() {
                 {/* ── NEW: Preview skor dengan rumus 60/40 ── */}
                 {reviewData.result.hasEssay && (
                   <div className="mt-3 p-3 bg-gradient-to-r from-violet-50 to-amber-50 border border-violet-200 rounded-lg">
-                    <div className="grid grid-cols-3 gap-4 text-center text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 text-center text-xs">
                       <div>
                         <p className="text-slate-500 mb-1">PG (60%)</p>
                         <p className="text-lg font-bold text-emerald-600">
@@ -1878,7 +1877,7 @@ function GlobalDashboard({
         <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
           <BarChart3 className="w-4 h-4 text-indigo-500" /> Ringkasan Statistik
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {/* Avg NH */}
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-200">
             <CardContent className="p-4">
@@ -2081,7 +2080,7 @@ function RekapPengerjaan() {
         </div>
         {/* ── NEW: Info tanggal pemberian + deadline ── */}
         {selectedAssignment && (
-          <div className="flex items-center gap-4 mt-2 text-xs">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs">
             <span className="text-slate-500">
               📅 Diberikan: <b className="text-slate-700">{new Date(selectedAssignment.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</b>
             </span>
@@ -2130,7 +2129,7 @@ function RekapPengerjaan() {
 
             {/* Tabel Rekap */}
             <div className="overflow-x-auto max-h-[500px] overflow-y-auto border border-slate-200 rounded-lg">
-              <Table>
+              <Table className="min-w-[800px]">
                 <TableHeader className="sticky top-0 bg-slate-100 z-10">
                   <TableRow>
                     <TableHead className="w-8">#</TableHead>

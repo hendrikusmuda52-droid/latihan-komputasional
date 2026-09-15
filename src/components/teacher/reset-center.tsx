@@ -169,17 +169,17 @@ export function ResetCenter() {
   return (
     <div className="space-y-4">
       {/* ── Tab Switcher ── */}
-      <div className="flex gap-1 border-b border-slate-200 pb-2">
+      <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
         <button
           onClick={() => setActiveTab('individual')}
-          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
+          className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 flex-1 sm:flex-none justify-center ${
             activeTab === 'individual'
               ? 'bg-emerald-600 text-white shadow-sm'
               : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
           }`}
         >
           <Users className="w-4 h-4" />
-          Reset Perorangan
+          <span className="truncate">Reset Perorangan</span>
           {requests.length > 0 && (
             <Badge
               variant="secondary"
@@ -195,14 +195,14 @@ export function ResetCenter() {
         </button>
         <button
           onClick={() => setActiveTab('bulk')}
-          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
+          className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 flex-1 sm:flex-none justify-center ${
             activeTab === 'bulk'
               ? 'bg-red-600 text-white shadow-sm'
               : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
           }`}
         >
           <RotateCcw className="w-4 h-4" />
-          Reset Massal
+          <span className="truncate">Reset Massal</span>
         </button>
       </div>
 
@@ -259,17 +259,17 @@ export function ResetCenter() {
                 <p className="text-xs mt-1">Semua permintaan sudah diproses</p>
               </div>
             ) : (
-              <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                <Table>
+              <div className="overflow-x-auto max-h-[500px] overflow-y-auto -mx-3 md:mx-0">
+                <Table className="min-w-[800px]">
                   <TableHeader className="sticky top-0 bg-slate-50 z-10">
                     <TableRow>
-                      <TableHead>Nama Siswa</TableHead>
-                      <TableHead>NISN</TableHead>
-                      <TableHead>Kelas</TableHead>
-                      <TableHead>Subject</TableHead>
-                      <TableHead>Alasan</TableHead>
-                      <TableHead>Tanggal</TableHead>
-                      <TableHead className="text-center">Aksi</TableHead>
+                      <TableHead className="min-w-[150px]">Nama Siswa</TableHead>
+                      <TableHead className="min-w-[100px] whitespace-nowrap">NISN</TableHead>
+                      <TableHead className="min-w-[70px]">Kelas</TableHead>
+                      <TableHead className="min-w-[120px]">Subject</TableHead>
+                      <TableHead className="min-w-[200px]">Alasan</TableHead>
+                      <TableHead className="min-w-[100px] whitespace-nowrap">Tanggal</TableHead>
+                      <TableHead className="text-center min-w-[180px]">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -304,14 +304,14 @@ export function ResetCenter() {
                             : '-'}
                         </TableCell>
                         <TableCell className="text-center">
-                          <div className="flex justify-center gap-1">
+                          <div className="flex flex-wrap justify-center gap-1">
                             <Button
                               size="sm"
                               className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white"
                               onClick={() => handleApprove(r.id)}
                             >
-                              <Check className="w-3.5 h-3.5 mr-1" />
-                              Approve
+                              <Check className="w-3.5 h-3.5" />
+                              <span className="ml-1 hidden sm:inline">Approve</span>
                             </Button>
                             <Button
                               size="sm"
@@ -319,8 +319,8 @@ export function ResetCenter() {
                               className="h-8 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
                               onClick={() => handleReject(r.id)}
                             >
-                              <X className="w-3.5 h-3.5 mr-1" />
-                              Reject
+                              <X className="w-3.5 h-3.5" />
+                              <span className="ml-1 hidden sm:inline">Reject</span>
                             </Button>
                           </div>
                         </TableCell>

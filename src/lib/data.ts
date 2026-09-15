@@ -33,10 +33,12 @@ export interface Question {
   questionType?: string
   // essayAnswer: rubric / model answer untuk soal essai (dari DB)
   essayAnswer?: string
-  // correctAnswers: JSON array untuk multi-answer (checkbox)
+  // correctAnswers: JSON array untuk multi-answer (checkbox) — [0,2] artinya opsi A dan C benar
   correctAnswers?: string
-  // shortAnswer: pipe-separated accepted answers untuk isian singkat
+  // shortAnswer: pipe-separated accepted answers untuk isian singkat — "jakarta|Jakarta|JAKARTA"
   shortAnswer?: string
+  // matchPairs: JSON array of {key, value} for mencocokkan — [{key:"A", value:"Apel"}, ...]
+  matchPairs?: string
 }
 
 // =====================================================
