@@ -1533,13 +1533,20 @@ export function TeacherDashboard() {
                   </div>
                 ) : (
                   reviewData.questions.map((q: any) => {
-                    const isEssay = q.questionType === 'essai'
+                    const qType = q.questionType || 'pilihan_ganda'
+                    const isEssay = qType === 'essai'
+                    const isPGKompleks = qType === 'pilihan_ganda_kompleks'
+                    const isIsian = qType === 'isian_singkat'
+                    const isMencocokkan = qType === 'mencocokkan'
+                    const isPartial = q.isPartial  // for isian
                     return (
                       <div
                         key={q.id}
                         className={`p-4 rounded-lg border ${
-                          isEssay
+                          isEssay || isMencocokkan
                             ? 'border-amber-200 bg-amber-50/30'
+                            : isIsian && isPartial
+                            ? 'border-amber-300 bg-amber-50/30'
                             : q.isCorrect
                             ? 'border-emerald-200 bg-emerald-50/30'
                             : q.isAnswered
@@ -1550,7 +1557,10 @@ export function TeacherDashboard() {
                         {/* Header soal */}
                         <div className="flex items-start gap-2 mb-2">
                           <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold flex-shrink-0 ${
-                            isEssay ? 'bg-amber-500 text-white' : q.isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-300 text-slate-700'
+                            isEssay || isMencocokkan ? 'bg-amber-500 text-white'
+                            : isIsian && isPartial ? 'bg-amber-400 text-white'
+                            : q.isCorrect ? 'bg-emerald-500 text-white'
+                            : 'bg-slate-300 text-slate-700'
                           }`}>
                             {q.no}
                           </span>
@@ -1562,9 +1572,37 @@ export function TeacherDashboard() {
                                   {q.levelKognitif}
                                 </Badge>
                               )}
-                              {isEssay ? (
+                              {/* Badge tipe soal */}
+                              {isEssay && (
                                 <Badge variant="outline" className="text-xs bg-amber-100 text-amber-800 border-amber-300">
                                   Essai
+                                </Badge>
+                              )}
+                              {isMencocokkan && (
+                                <Badge variant="outline" className="text-xs bg-purple-100 text-purple-800 border-purple-300">
+                                  Mencocokkan
+                                </Badge>
+                              )}
+                              {isPGKompleks && (
+                                <Badge variant="outline" className="text-xs bg-sky-100 text-sky-800 border-sky-300">
+                                  PG Kompleks
+                                </Badge>
+                              )}
+                              {isIsian && (
+                                <Badge variant="outline" className="text-xs bg-emerald-100 text-emerald-800 border-emerald-300">
+                                  Isian
+                                </Badge>
+                              )}
+                              {/* Status jawaban */}
+                              {isEssay || isMencocokkan ? (
+                                q.isAnswered ? null : (
+                                  <Badge variant="outline" className="text-xs text-slate-500">
+                                    Tidak dijawab
+                                  </Badge>
+                                )
+                              ) : isIsian && isPartial ? (
+                                <Badge className="text-xs bg-amber-100 text-amber-700">
+                                  Benar parsial (50%)
                                 </Badge>
                               ) : q.isCorrect ? (
                                 <Badge className="text-xs bg-emerald-100 text-emerald-700">

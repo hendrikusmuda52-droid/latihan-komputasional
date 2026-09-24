@@ -119,6 +119,10 @@ export async function GET(
         category: true,
         questionType: true,
         essayAnswer: true,
+        // ── NEW: fields untuk PG Kompleks dan Isian ──
+        correctAnswers: true,
+        matchPairs: true,
+        shortAnswer: true,
         levelKognitif: true,
         pembahasanBenar: true,
         cpId: true, tpId: true,
@@ -145,6 +149,10 @@ export async function GET(
           category: true,
           questionType: true,
           essayAnswer: true,
+          // ── NEW: fields untuk PG Kompleks dan Isian ──
+          correctAnswers: true,
+          matchPairs: true,
+          shortAnswer: true,
           levelKognitif: true,
           pembahasanBenar: true,
           cpId: true, tpId: true,
@@ -154,17 +162,58 @@ export async function GET(
 
     // ── 6. Format output: gabungkan soal dengan jawaban siswa ──
     // Untuk PG: tampilkan opsi, correctAnswer, jawaban siswa (number), benar/salah.
+    // Untuk PG Kompleks: tampilkan opsi, correctAnswers (array), jawaban siswa (array)
+    // Untuk Isian: tampilkan shortAnswer (accepted), jawaban siswa (string), skor (BEST/partial)
     // Untuk essai: tampilkan jawaban siswa (string), essayAnswer (rubric), levelKognitif.
     const formattedQuestions = finalQuestions.map((q, idx) => {
       const studentAnswer = parsedAnswers[q.id]
-      const isEssay = q.questionType === 'essai'
-      const isAnswered = isEssay
-        ? (typeof studentAnswer === 'string' && studentAnswer.trim().length > 0)
-        : (typeof studentAnswer === 'number')
+      const qType = q.questionType || 'pilihan_ganda'
+      const isEssay = qType === 'essai'
+      const isPGKompleks = qType === 'pilihan_ganda_kompleks'
+      const isIsian = qType === 'isian_singkat'
+      const isMencocokkan = qType === 'mencocokkan'
 
+      // ── Determine isAnswered & isCorrect per type ──
+      let isAnswered = false
       let isCorrect = false
-      if (!isEssay && typeof studentAnswer === 'number') {
-        isCorrect = studentAnswer === q.correctAnswer
+      let isPartial = false  // for isian: benar parsial (50%)
+      let isianScore = 0  // 0, 1 (partial), 2 (best)
+
+      if (isEssay || isMencocokkan) {
+        isAnswered = typeof studentAnswer === 'string' && studentAnswer.trim().length > 0
+      } else if (isPGKompleks) {
+        let studentArr: number[] = []
+        if (typeof studentAnswer === 'string') {
+          try { studentArr = JSON.parse(studentAnswer) } catch {}
+        } else if (Array.isArray(studentAnswer)) {
+          studentArr = studentAnswer as unknown as number[]
+        }
+        isAnswered = studentArr.length > 0
+        try {
+          const correctArr: number[] = JSON.parse(q.correctAnswers || '[]')
+          isCorrect = correctArr.length === studentArr.length && correctArr.every(v => studentArr.includes(v))
+        } catch {}
+      } else if (isIsian) {
+        const accepted = (q.shortAnswer || '').split('|').map(s => s.trim().toLowerCase()).filter(Boolean)
+        const best = accepted.length > 0 ? accepted[accepted.length - 1] : ''
+        const rightPartial = accepted.length > 1 ? accepted.slice(0, -1) : []
+        const student = typeof studentAnswer === 'string' ? studentAnswer.trim().toLowerCase() : ''
+        isAnswered = student !== ''
+        if (isAnswered) {
+          if (student === best) {
+            isCorrect = true
+            isianScore = 2
+          } else if (rightPartial.includes(student)) {
+            isPartial = true
+            isianScore = 1
+          }
+        }
+      } else {
+        // PG biasa
+        isAnswered = typeof studentAnswer === 'number'
+        if (isAnswered && typeof studentAnswer === 'number') {
+          isCorrect = studentAnswer === q.correctAnswer
+        }
       }
 
       // ── NEW: Ambil essayGrade yang sudah di-input guru untuk soal essai ini (jika ada) ──
@@ -183,11 +232,16 @@ export async function GET(
         pembahasanBenar: q.pembahasanBenar,
         questionType: q.questionType || 'pilihan_ganda',
         essayAnswer: q.essayAnswer || '',
+        // ── NEW: tambahan fields untuk PG Kompleks dan Isian ──
+        correctAnswers: q.correctAnswers || '[]',  // JSON array untuk PG Kompleks
+        shortAnswer: q.shortAnswer || '',  // pipe-separated accepted answers untuk Isian
         cpId: q.cpId, tpId: q.tpId,
         // ── Student answer ──
         studentAnswer,
         isAnswered,
         isCorrect,
+        isPartial,  // for isian: benar parsial
+        isianScore, // 0, 1 (partial), 2 (best)
         // ── NEW: essayGrade (nilai guru) — null jika belum dinilai ──
         essayGrade,
       }

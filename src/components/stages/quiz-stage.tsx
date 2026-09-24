@@ -125,6 +125,94 @@ export function QuizStage() {
     }
   }, [])
 
+  // ── ANTI COPY-PASTE + ANTI SCREENSHOT ──
+  // Disable: right-click, text selection, copy/cut/paste, screenshot shortcuts (PrintScreen, Ctrl+P, Ctrl+S)
+  // Reason: keamanan ujian — siswa tidak bisa copy soal atau paste jawaban dari luar
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault()
+      toast.warning('Right-click dinonaktifkan saat ujian', { duration: 1500 })
+    }
+    const handleCopy = (e: ClipboardEvent) => {
+      e.preventDefault()
+      toast.warning('Copy dinonaktifkan saat ujian', { duration: 1500 })
+    }
+    const handleCut = (e: ClipboardEvent) => {
+      e.preventDefault()
+      toast.warning('Cut dinonaktifkan saat ujian', { duration: 1500 })
+    }
+    const handlePaste = (e: ClipboardEvent) => {
+      // Hanya block paste di input/textarea (jawaban), tidak di seluruh halaman
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        e.preventDefault()
+        toast.warning('Paste dinonaktifkan. Jawaban harus diketik manual.', { duration: 2000 })
+      }
+    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block screenshot shortcuts
+      if (e.key === 'PrintScreen') {
+        e.preventDefault()
+        toast.warning('Screenshot dinonaktifkan saat ujian', { duration: 1500 })
+        // Clear clipboard sebagai fallback (PrintScreen masih bisa capture, tapi clipboard dikosongkan)
+        try {
+          navigator.clipboard.writeText('')
+        } catch {}
+        return false
+      }
+      // Ctrl+P (print), Ctrl+S (save page), Ctrl+Shift+S, Ctrl+Shift+I (devtools)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 's' || e.key === 'P' || e.key === 'S')) {
+        e.preventDefault()
+        toast.warning('Print/Save dinonaktifkan saat ujian', { duration: 1500 })
+        return false
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'i' || e.key === 'I' || e.key === 's' || e.key === 'S')) {
+        e.preventDefault()
+        toast.warning('DevTools dinonaktifkan saat ujian', { duration: 1500 })
+        return false
+      }
+      // Ctrl+U (view source)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
+        e.preventDefault()
+        return false
+      }
+    }
+    // Disable text selection via CSS + JS
+    const handleSelectStart = (e: Event) => {
+      // Allow selection di input/textarea (untuk typing)
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        return // allow
+      }
+      e.preventDefault()
+    }
+
+    document.addEventListener('contextmenu', handleContextMenu)
+    document.addEventListener('copy', handleCopy)
+    document.addEventListener('cut', handleCut)
+    document.addEventListener('paste', handlePaste)
+    document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('selectstart', handleSelectStart)
+    // Block drag (image drag bisa reveal soal)
+    document.addEventListener('dragstart', (e) => e.preventDefault())
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        // User switch tab — mungkin screenshot di app lain
+        toast.warning('Jangan tinggalkan halaman ujian!', { duration: 2000 })
+      }
+    })
+
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu)
+      document.removeEventListener('copy', handleCopy)
+      document.removeEventListener('cut', handleCut)
+      document.removeEventListener('paste', handlePaste)
+      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('selectstart', handleSelectStart)
+    }
+  }, [])
+
   useEffect(() => {
     const interval = setInterval(() => {
       if (isMounted.current) setNow(Date.now())
@@ -235,62 +323,154 @@ export function QuizStage() {
   }
 
   const computeResult = (): QuizResult => {
-    // Pisahkan berdasarkan tipe soal untuk scoring.
-    // ── Rationale ──
-    // - pilihan_ganda: auto-grade (number === correctAnswer)
-    // - pilihan_ganda_kompleks: auto-grade (array sama dengan correctAnswers, urutan bebas)
-    // - isian_singkat: auto-grade (string cocok salah satu di shortAnswer, case-insensitive)
-    // - mencocokkan: TIDAK di-auto-grade (butuh validasi kompleks) → dianggap essay-like
-    // - essai: TIDAK di-auto-grade (perlu rubric guru)
-    // Jawaban essai + mencocokkan disimpan di quizAnswers (JSON) untuk review guru.
-    const autoGradeTypes = ['pilihan_ganda', 'pilihan_ganda_kompleks', 'isian_singkat']
-    const gradeableQuestions = QUESTIONS.filter((q) => !q.questionType || autoGradeTypes.includes(q.questionType))
-    let correct = 0
-    for (const q of gradeableQuestions) {
-      const studentAnswer = answers[q.id]
-      const qType = q.questionType || 'pilihan_ganda'
+    // ── Scoring dengan bobot berbeda per tipe soal ──
+    // Default weights (urutan: PG, PG Kompleks, Isian):
+    //   - PG: 50% total (1.43 poin per soal untuk 35 soal)
+    //   - PG Kompleks: 30% total (3 poin per soal untuk 10 soal)
+    //   - Isian: 20% total (2 poin per soal untuk 10 soal)
+    //   - Essai/Mencocokkan: tidak di-auto-grade (dinilai manual)
+    //
+    // Isian Singkat scoring:
+    //   - BEST (paling benar, last in shortAnswer): 100% poin (2 poin)
+    //   - RIGHT (benar parsial): 50% poin (1 poin)
+    //   - Salah/kosong: 0 poin
+    //
+    // Jika ada essai di tugas, totalScore akan di-recalculate saat guru input nilai essai
+    // (lihat API /api/result/[id]/essay-grade — rumus 60% PG + 40% essai)
+    // Untuk tugas tanpa essai (mis: Tugas Bab 2 11DKV), totalScore = quizScore langsung
+    const pgQuestions = QUESTIONS.filter((q) => !q.questionType || q.questionType === 'pilihan_ganda')
+    const pgkQuestions = QUESTIONS.filter((q) => q.questionType === 'pilihan_ganda_kompleks')
+    const isianQuestions = QUESTIONS.filter((q) => q.questionType === 'isian_singkat')
 
-      if (qType === 'pilihan_ganda') {
-        if (typeof studentAnswer === 'number' && studentAnswer === q.correctAnswer) correct++
-      } else if (qType === 'pilihan_ganda_kompleks') {
-        // Parse correctAnswers dari JSON string — format: [0, 2] artinya opsi A dan C benar
-        try {
-          const correctArr: number[] = JSON.parse(q.correctAnswers || '[]')
-          // Student answer untuk PG Kompleks disimpan sebagai JSON string "[0,2]"
-          let studentArr: number[] = []
-          if (typeof studentAnswer === 'string') {
-            studentArr = JSON.parse(studentAnswer || '[]')
-          } else if (Array.isArray(studentAnswer)) {
-            studentArr = studentAnswer as unknown as number[]
-          }
-          // Bandingkan sebagai set (urutan bebas)
-          const sameSet = correctArr.length === studentArr.length &&
-            correctArr.every((v) => studentArr.includes(v))
-          if (sameSet) correct++
-        } catch (e) {
-          // JSON parse failed — skip
-        }
-      } else if (qType === 'isian_singkat') {
-        // Parse shortAnswer pipe-separated — "jakarta|Jakarta|JAKARTA"
-        const accepted = (q.shortAnswer || '').split('|').map(s => s.trim().toLowerCase()).filter(Boolean)
-        const student = typeof studentAnswer === 'string' ? studentAnswer.trim().toLowerCase() : ''
-        if (student && accepted.includes(student)) correct++
+    // ── Hitung correct per tipe ──
+    let pgCorrect = 0
+    for (const q of pgQuestions) {
+      const a = answers[q.id]
+      if (typeof a === 'number' && a === q.correctAnswer) pgCorrect++
+    }
+
+    let pgkCorrect = 0
+    for (const q of pgkQuestions) {
+      try {
+        const correctArr: number[] = JSON.parse(q.correctAnswers || '[]')
+        let studentArr: number[] = []
+        const a = answers[q.id]
+        if (typeof a === 'string') studentArr = JSON.parse(a || '[]')
+        else if (Array.isArray(a)) studentArr = a as unknown as number[]
+        const sameSet = correctArr.length === studentArr.length &&
+          correctArr.every((v) => studentArr.includes(v))
+        if (sameSet) pgkCorrect++
+      } catch {}
+    }
+
+    // ── Isian: hitung poin dengan BEST=2, RIGHT=1, salah/kosong=0 ──
+    let isianPoints = 0
+    let isianCorrectBest = 0  // count BEST answer
+    let isianCorrectPartial = 0  // count partial-correct
+    for (const q of isianQuestions) {
+      const accepted = (q.shortAnswer || '').split('|').map(s => s.trim().toLowerCase()).filter(Boolean)
+      if (accepted.length === 0) continue
+      const best = accepted[accepted.length - 1]  // last = BEST
+      const rightPartial = accepted.slice(0, -1)  // all except last
+      const a = answers[q.id]
+      const student = typeof a === 'string' ? a.trim().toLowerCase() : ''
+      if (!student) continue  // kosong = 0 poin
+      if (student === best) {
+        isianPoints += 2  // BEST = full poin
+        isianCorrectBest++
+      } else if (rightPartial.includes(student)) {
+        isianPoints += 1  // partial = 50% poin
+        isianCorrectPartial++
+      }
+      // else: salah = 0 poin
+    }
+
+    // ── Hitung total skor dengan bobot ──
+    // Default: PG 50%, PG Kompleks 30%, Isian 20%
+    // Jika salah satu tipe tidak ada (count=0), redistribute bobot proporsional
+    let totalScore = 0
+    const hasPG = pgQuestions.length > 0
+    const hasPGK = pgkQuestions.length > 0
+    const hasIsian = isianQuestions.length > 0
+    const totalGradeableTypes = (hasPG ? 1 : 0) + (hasPGK ? 1 : 0) + (hasIsian ? 1 : 0)
+
+    if (totalGradeableTypes > 0) {
+      // ── Hitung skor per tipe (0-100) ──
+      const pgScore = hasPG ? (pgCorrect / pgQuestions.length) * 100 : 0
+      const pgkScore = hasPGK ? (pgkCorrect / pgkQuestions.length) * 100 : 0
+      // Isian: skor = (isianPoints / maxPossiblePoints) × 100
+      // maxPossiblePoints = isianQuestions.length × 2 (karena BEST=2 poin)
+      const isianMaxPoints = isianQuestions.length * 2
+      const isianScore = hasIsian ? (isianPoints / isianMaxPoints) * 100 : 0
+
+      // ── Apply bobot ──
+      // Jika semua 3 tipe ada: PG 50% + PGK 30% + Isian 20%
+      // Jika hanya 2 tipe: redistribute (mis: PG+PGK = 62.5%+37.5% proporsional dari 50:30)
+      // Jika hanya 1 tipe: 100% dari tipe itu
+      if (hasPG && hasPGK && hasIsian) {
+        totalScore = pgScore * 0.5 + pgkScore * 0.3 + isianScore * 0.2
+      } else if (hasPG && hasPGK) {
+        // PG:PGK = 50:30 = 62.5%:37.5%
+        totalScore = pgScore * 0.625 + pgkScore * 0.375
+      } else if (hasPG && hasIsian) {
+        // PG:Isian = 50:20 = 71.4%:28.6%
+        totalScore = pgScore * (50/70) + isianScore * (20/70)
+      } else if (hasPGK && hasIsian) {
+        // PGK:Isian = 30:20 = 60%:40%
+        totalScore = pgkScore * 0.6 + isianScore * 0.4
+      } else if (hasPG) {
+        totalScore = pgScore
+      } else if (hasPGK) {
+        totalScore = pgkScore
+      } else if (hasIsian) {
+        totalScore = isianScore
       }
     }
-    const totalGradeable = gradeableQuestions.length || QUESTIONS.length
-    const score = Math.round((correct / totalGradeable) * 100)
+    totalScore = Math.round(totalScore)
+
+    // Total benar (untuk display) = PG benar + PGK benar + isian (BEST atau partial dihitung 1)
+    const totalCorrect = pgCorrect + pgkCorrect + isianCorrectBest + isianCorrectPartial
+    const totalGradeable = pgQuestions.length + pgkQuestions.length + isianQuestions.length
+
     return {
       answers,
-      quizCorrect: correct,
-      // quizTotal = total auto-gradable. Essai + mencocokkan tidak masuk hitungan benar/salah.
-      quizTotal: gradeableQuestions.length,
-      quizScore: score,
+      quizCorrect: totalCorrect,
+      quizTotal: totalGradeable,
+      quizScore: totalScore,
       quizDuration: elapsedSec,
     }
   }
 
   const handleSubmit = async () => {
     if (saving) return
+
+    // ── VALIDATION: cek isian singkat — jika ada jawaban di luar accepted, tolak submit ──
+    // Siswa boleh kosongkan isian, tapi jika diisi harus sesuai accepted answers
+    const invalidIsianQuestions = QUESTIONS.filter((q) => {
+      if (q.questionType !== 'isian_singkat') return false
+      const accepted = (q.shortAnswer || '').split('|').map(s => s.trim().toLowerCase()).filter(Boolean)
+      if (accepted.length === 0) return false
+      const a = answers[q.id]
+      const student = typeof a === 'string' ? a.trim().toLowerCase() : ''
+      if (student === '') return false  // kosong = OK
+      return !accepted.includes(student)  // invalid jika tidak match
+    })
+
+    if (invalidIsianQuestions.length > 0) {
+      // Tolak submit — ada isian dengan jawaban tidak valid
+      toast.error(
+        `Ada ${invalidIsianQuestions.length} soal isian dengan jawaban di luar opsi yang disediakan. ` +
+        `Mohon perbaiki atau kosongkan jawaban isian tersebut sebelum submit.`,
+        { duration: 5000 }
+      )
+      // Navigate ke soal isian pertama yang invalid
+      const firstInvalidIdx = QUESTIONS.findIndex((q) => q.id === invalidIsianQuestions[0].id)
+      if (firstInvalidIdx >= 0) {
+        setCurrentIdx(firstInvalidIdx)
+      }
+      return
+    }
+
     setSaving(true)
     const result = computeResult()
     setQuizResult(result)
@@ -701,36 +881,106 @@ export function QuizStage() {
               )}
 
               {/* ──────────────────────────────────────────────────────── */}
-              {/* 3. ISIAN SINGKAT — Input text single line */}
+              {/* 3. ISIAN SINGKAT — Input text single line dengan validasi */}
               {/* ──────────────────────────────────────────────────────── */}
-              {currentQ.questionType === 'isian_singkat' && (
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
-                      Isi jawaban singkat (kata atau frasa)
+              {currentQ.questionType === 'isian_singkat' && (() => {
+                // Parse shortAnswer: "right1|right2|best" (3 accepted, last = BEST)
+                // Format: 4 wrong + 2 right + 1 best (we only store accepted 3)
+                const acceptedAnswers = (currentQ.shortAnswer || '')
+                  .split('|')
+                  .map(s => s.trim().toLowerCase())
+                  .filter(Boolean)
+                const bestAnswer = acceptedAnswers.length > 0 ? acceptedAnswers[acceptedAnswers.length - 1] : ''
+                const rightPartial = acceptedAnswers.length > 1 ? acceptedAnswers.slice(0, -1) : []
+
+                const currentValue = typeof answers[currentQ.id] === 'string' ? (answers[currentQ.id] as string) : ''
+                const lowerValue = currentValue.trim().toLowerCase()
+                const isBest = lowerValue === bestAnswer
+                const isPartial = rightPartial.includes(lowerValue)
+                const isAccepted = isBest || isPartial
+                const isEmpty = lowerValue === ''
+
+                // Validation: hanya accepted answers bisa disimpan
+                // Jika siswa ketik di luar accepted, tampilkan warning + jawaban tidak akan disimpan
+                return (
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
+                        Isi jawaban singkat (harus sesuai opsi yang disediakan)
+                      </p>
+                      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
+                        Isian Singkat
+                      </Badge>
+                    </div>
+                    <Input
+                      type="text"
+                      value={currentValue}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        // Validation: cek apakah val cocok dengan salah satu accepted
+                        const lowerVal = val.trim().toLowerCase()
+                        const isMatch = acceptedAnswers.includes(lowerVal) || lowerVal === ''
+                        // Jika val tidak match DAN tidak kosong, TIDAK disimpan (reject input)
+                        // Tapi kita tetap izinkan typing partial (mis: siswa ketik 'thi' untuk 'thirds')
+                        // Jadi kita simpan val ke state, tapi tandai sebagai invalid
+                        setAnswers({
+                          ...answers,
+                          [currentQ.id]: val,
+                        })
+                      }}
+                      onPaste={(e) => {
+                        // ANTI COPY-PASTE: siswa dilarang paste jawaban
+                        e.preventDefault()
+                        toast.warning('Paste dinonaktifkan. Jawaban harus diketik manual.', { duration: 2000 })
+                      }}
+                      onCopy={(e) => e.preventDefault()}
+                      onCut={(e) => e.preventDefault()}
+                      onContextMenu={(e) => e.preventDefault()}
+                      placeholder="Ketik jawaban Anda (harus sesuai opsi yang disediakan)..."
+                      className={`text-base font-medium ${
+                        isEmpty ? '' : isBest ? 'border-emerald-500 bg-emerald-50' : isPartial ? 'border-amber-400 bg-amber-50' : 'border-red-400 bg-red-50'
+                      }`}
+                      autoComplete="off"
+                      spellCheck={false}
+                    />
+
+                    {/* Validation feedback real-time */}
+                    {isEmpty ? (
+                      <p className="text-xs text-slate-500">
+                        💡 Jawaban boleh dikosongkan (tidak diisi). Jika diisi, harus sesuai opsi yang disediakan.
+                      </p>
+                    ) : isBest ? (
+                      <p className="text-xs text-emerald-700 font-medium">
+                        ✓ Jawaban paling tepat! (skor penuh)
+                      </p>
+                    ) : isPartial ? (
+                      <p className="text-xs text-amber-700 font-medium">
+                        ✓ Jawaban benar (skor parsial 50%)
+                      </p>
+                    ) : (
+                      <p className="text-xs text-red-600 font-medium">
+                        ⚠️ Jawaban tidak ada di opsi yang disediakan. Ubah ke salah satu opsi yang valid.
+                      </p>
+                    )}
+
+                    {/* Info: jumlah opsi yang diterima (tanpa reveal jawaban) */}
+                    <div className="mt-2 p-2 bg-slate-50 rounded text-xs text-slate-600">
+                      <p className="font-medium">Info penilaian:</p>
+                      <ul className="ml-4 list-disc space-y-0.5">
+                        <li>Ada <strong>{acceptedAnswers.length} opsi jawaban</strong> yang diterima (2 benar + 1 paling benar)</li>
+                        <li>Jawaban <strong>paling benar</strong>: skor 100% (2 poin)</li>
+                        <li>Jawaban <strong>benar</strong>: skor 50% (1 poin)</li>
+                        <li>Jawaban di luar opsi: <strong>tidak dapat disimpan</strong></li>
+                        <li>Jawaban boleh <strong>kosong</strong> (0 poin)</li>
+                      </ul>
+                    </div>
+
+                    <p className="text-xs text-red-600 italic">
+                      🔒 Anti copy-paste aktif. Jawaban harus diketik manual.
                     </p>
-                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
-                      Isian Singkat
-                    </Badge>
                   </div>
-                  <Input
-                    type="text"
-                    value={typeof answers[currentQ.id] === 'string' ? answers[currentQ.id] as string : ''}
-                    onChange={(e) =>
-                      setAnswers({
-                        ...answers,
-                        [currentQ.id]: e.target.value,
-                      })
-                    }
-                    placeholder="Ketik jawaban Anda di sini..."
-                    className="text-base"
-                    autoComplete="off"
-                  />
-                  <p className="text-xs text-slate-500">
-                    💡 Jawaban akan dicek otomatis. Pastikan ejaan benar.
-                  </p>
-                </div>
-              )}
+                )
+              })()}
 
               {/* ──────────────────────────────────────────────────────── */}
               {/* 4. MENCOCOKKAN / JODOHKAN — dropdown per item */}

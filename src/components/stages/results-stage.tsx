@@ -291,30 +291,82 @@ export function ResultsStage() {
             <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
               {QUESTIONS.map((q, idx) => {
                 const userAnswer = quizResult.answers[q.id]
-                // ── Essai: jawaban tidak bisa di-auto-grade. Tampilkan sebagai info. ──
-                const isEssay = q.questionType === 'essai'
-                const isCorrect = !isEssay && userAnswer === q.correctAnswer
-                const isUnanswered = userAnswer === undefined || (typeof userAnswer === 'string' && userAnswer.trim() === '')
+                // ── Identifikasi tipe soal ──
+                const qType = q.questionType || 'pilihan_ganda'
+                const isEssay = qType === 'essai'
+                const isPGKompleks = qType === 'pilihan_ganda_kompleks'
+                const isIsian = qType === 'isian_singkat'
+                const isMencocokkan = qType === 'mencocokkan'
+
+                // ── Validasi jawaban untuk masing-masing tipe ──
+                let isCorrect = false
+                let isPartial = false  // untuk isian: benar parsial
+                let isUnanswered = false
+
+                if (isEssay || isMencocokkan) {
+                  // Tidak di-auto-grade — tampilkan sebagai info
+                  isUnanswered = userAnswer === undefined || (typeof userAnswer === 'string' && userAnswer.trim() === '')
+                } else if (isPGKompleks) {
+                  // PG Kompleks: bandingkan array
+                  try {
+                    const correctArr: number[] = JSON.parse(q.correctAnswers || '[]')
+                    let studentArr: number[] = []
+                    if (typeof userAnswer === 'string') studentArr = JSON.parse(userAnswer || '[]')
+                    else if (Array.isArray(userAnswer)) studentArr = userAnswer as unknown as number[]
+                    isUnanswered = studentArr.length === 0
+                    isCorrect = correctArr.length === studentArr.length && correctArr.every(v => studentArr.includes(v))
+                  } catch {
+                    isUnanswered = true
+                  }
+                } else if (isIsian) {
+                  // Isian: BEST (full poin) vs RIGHT (partial) vs salah/kosong
+                  const accepted = (q.shortAnswer || '').split('|').map(s => s.trim().toLowerCase()).filter(Boolean)
+                  const best = accepted.length > 0 ? accepted[accepted.length - 1] : ''
+                  const rightPartial = accepted.length > 1 ? accepted.slice(0, -1) : []
+                  const student = typeof userAnswer === 'string' ? userAnswer.trim().toLowerCase() : ''
+                  isUnanswered = student === ''
+                  if (!isUnanswered) {
+                    if (student === best) isCorrect = true
+                    else if (rightPartial.includes(student)) isPartial = true
+                  }
+                } else {
+                  // PG biasa
+                  isCorrect = !isEssay && userAnswer === q.correctAnswer
+                  isUnanswered = userAnswer === undefined
+                }
+
                 return (
                   <div
                     key={q.id}
                     className={`p-4 rounded-lg border ${
-                      isEssay
+                      isEssay || isMencocokkan
                         ? 'border-amber-200 bg-amber-50/50'
                         : isCorrect
                         ? 'border-emerald-200 bg-emerald-50/50'
+                        : isPartial
+                        ? 'border-amber-300 bg-amber-50/50'
                         : isUnanswered
                         ? 'border-slate-200 bg-slate-50/50'
                         : 'border-red-200 bg-red-50/50'
                     }`}
                   >
                     <div className="flex items-start gap-2 mb-2">
-                      {isEssay ? (
+                      {isEssay || isMencocokkan ? (
                         <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 text-xs">
-                          Essai
+                          {isEssay ? 'Essai' : 'Mencocokkan'}
+                        </Badge>
+                      ) : isPGKompleks ? (
+                        <Badge variant="outline" className="bg-sky-100 text-sky-800 border-sky-300 text-xs">
+                          PG Kompleks
+                        </Badge>
+                      ) : isIsian ? (
+                        <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300 text-xs">
+                          Isian
                         </Badge>
                       ) : isCorrect ? (
                         <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      ) : isPartial ? (
+                        <div className="w-5 h-5 rounded-full bg-amber-400 text-white text-xs flex items-center justify-center flex-shrink-0 mt-0.5">★</div>
                       ) : (
                         <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                       )}
@@ -326,9 +378,19 @@ export function ResultsStage() {
                           <Badge variant="outline" className="text-xs">
                             {q.category}
                           </Badge>
-                          {isUnanswered && !isEssay && (
+                          {isUnanswered && !isEssay && !isMencocokkan && (
                             <Badge variant="outline" className="text-xs text-slate-500">
                               Tidak dijawab
+                            </Badge>
+                          )}
+                          {isPartial && (
+                            <Badge variant="outline" className="text-xs bg-amber-100 text-amber-700">
+                              Benar parsial (50%)
+                            </Badge>
+                          )}
+                          {isCorrect && !isEssay && !isMencocokkan && (
+                            <Badge variant="outline" className="text-xs bg-emerald-100 text-emerald-700">
+                              ✓ Benar
                             </Badge>
                           )}
                         </div>
@@ -338,8 +400,8 @@ export function ResultsStage() {
                             <img src={q.imageUrl} alt="Gambar soal" className="max-w-full max-h-48 rounded-lg border border-slate-200" />
                           </div>
                         )}
-                        {isEssay ? (
-                          // ── Render jawaban essai sebagai teks ──
+                        {isEssay || isMencocokkan ? (
+                          // ── Render jawaban essai/mencocokkan sebagai teks ──
                           <div className="space-y-2 text-xs">
                             {!isUnanswered ? (
                               <div className="p-3 bg-amber-50 rounded border border-amber-200">
@@ -352,10 +414,10 @@ export function ResultsStage() {
                               </div>
                             ) : (
                               <div className="p-2 bg-slate-50 rounded text-slate-500">
-                                Essai tidak dijawab.
+                                {isEssay ? 'Essai' : 'Mencocokkan'} tidak dijawab.
                               </div>
                             )}
-                            {q.essayAnswer && (
+                            {isEssay && q.essayAnswer && (
                               <div className="p-3 bg-sky-50 rounded border border-sky-200">
                                 <span className="font-semibold text-sky-800 block mb-1">
                                   Jawaban contoh / rubric:
@@ -366,10 +428,100 @@ export function ResultsStage() {
                               </div>
                             )}
                             <div className="text-amber-700 italic">
-                              Soal essai akan dinilai oleh guru secara manual.
+                              Soal {isEssay ? 'essai' : 'mencocokkan'} akan dinilai oleh guru secara manual.
+                            </div>
+                          </div>
+                        ) : isPGKompleks ? (
+                          // ── PG Kompleks: tampilkan opsi yang dipilih + opsi benar ──
+                          <div className="space-y-1 text-xs">
+                            {(() => {
+                              const correctArr: number[] = (() => {
+                                try { return JSON.parse(q.correctAnswers || '[]') } catch { return [] }
+                              })()
+                              let studentArr: number[] = []
+                              if (typeof userAnswer === 'string') {
+                                try { studentArr = JSON.parse(userAnswer || '[]') } catch {}
+                              } else if (Array.isArray(userAnswer)) {
+                                studentArr = userAnswer as unknown as number[]
+                              }
+                              return (
+                                <>
+                                  {!isUnanswered && studentArr.length > 0 && (
+                                    <div className={`p-2 rounded ${isCorrect ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                                      <span className="font-semibold">Jawabanmu: </span>
+                                      <span>{studentArr.map(i => String.fromCharCode(65 + i)).join(', ')}</span>
+                                      <span className="ml-2">({studentArr.length} dipilih)</span>
+                                    </div>
+                                  )}
+                                  <div className="p-2 rounded bg-emerald-50 text-emerald-700">
+                                    <span className="font-semibold">Jawaban benar: </span>
+                                    <span>{correctArr.map(i => String.fromCharCode(65 + i)).join(', ')}</span>
+                                    <span className="ml-2">({correctArr.length} jawaban)</span>
+                                  </div>
+                                  {/* Tampilkan semua opsi dengan highlight */}
+                                  <div className="mt-2 space-y-1">
+                                    {q.options.map((opt, i) => {
+                                      const isStudentChoice = studentArr.includes(i)
+                                      const isCorrectChoice = correctArr.includes(i)
+                                      return (
+                                        <div key={i} className={`flex items-start gap-2 p-2 rounded ${
+                                          isCorrectChoice ? 'bg-emerald-100' : isStudentChoice ? 'bg-red-100' : 'bg-white'
+                                        }`}>
+                                          <span className="font-bold">{String.fromCharCode(65 + i)}.</span>
+                                          <span className="flex-1">{opt}</span>
+                                          {isCorrectChoice && <CheckCircle2 className="w-3 h-3 text-emerald-600" />}
+                                          {isStudentChoice && !isCorrectChoice && <XCircle className="w-3 h-3 text-red-600" />}
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
+                                </>
+                              )
+                            })()}
+                          </div>
+                        ) : isIsian ? (
+                          // ── Isian Singkat: tampilkan jawaban + accepted answers ──
+                          <div className="space-y-2 text-xs">
+                            {!isUnanswered ? (
+                              <div className={`p-2 rounded ${
+                                isCorrect ? 'bg-emerald-50 text-emerald-700' : isPartial ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
+                              }`}>
+                                <span className="font-semibold">Jawabanmu: </span>
+                                <span className="font-mono">{typeof userAnswer === 'string' ? userAnswer : ''}</span>
+                                {isCorrect && <span className="ml-2">✓ (paling tepat, 100% poin)</span>}
+                                {isPartial && <span className="ml-2">★ (benar parsial, 50% poin)</span>}
+                              </div>
+                            ) : (
+                              <div className="p-2 bg-slate-50 rounded text-slate-500">
+                                Isian tidak dijawab (0 poin)
+                              </div>
+                            )}
+                            {/* Tampilkan jawaban yang diterima (accepted answers) */}
+                            <div className="p-2 bg-sky-50 rounded border border-sky-200">
+                              <span className="font-semibold text-sky-800 block mb-1">Jawaban yang diterima:</span>
+                              <div className="flex flex-wrap gap-1">
+                                {(() => {
+                                  const accepted = (q.shortAnswer || '').split('|').filter(Boolean)
+                                  const best = accepted[accepted.length - 1]
+                                  const partial = accepted.slice(0, -1)
+                                  return (
+                                    <>
+                                      {partial.map((a, i) => (
+                                        <span key={i} className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded text-xs">
+                                          {a} (benar, 50%)
+                                        </span>
+                                      ))}
+                                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-xs font-bold">
+                                        {best} (paling benar, 100%)
+                                      </span>
+                                    </>
+                                  )
+                                })()}
+                              </div>
                             </div>
                           </div>
                         ) : (
+                          // ── PG biasa ──
                           <div className="space-y-1 text-xs">
                             {!isUnanswered && typeof userAnswer === 'number' && (
                               <div
