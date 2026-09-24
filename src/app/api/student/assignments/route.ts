@@ -193,41 +193,53 @@ export async function GET(req: NextRequest) {
     })
     const resultMap = new Map(studentResults.map(r => [r.assignmentId, r.totalScore]))
 
+    // ── Format semua assignments dengan info lengkap ──
+    const allFormatted = assignments.map((a) => {
+      const hasCompletedThisAssignment = completedAssignmentIds.has(a.id)
+      const isExpired = !a.dueDate ? false : new Date(a.dueDate) < now && hasCompletedThisAssignment && expiredAssignments.includes(a.id)
+      const isPunishment = (a as Record<string, unknown>).isPunishment === true
+
+      const score = resultMap.get(a.id)
+      const isPassed = hasCompletedThisAssignment && score !== undefined && score >= kkm
+      const isFailed = hasCompletedThisAssignment && score !== undefined && score < kkm
+
+      // canRetake: persiapan (always), atau belum dikerjakan, atau tidak lulus (remedial)
+      // Tugas hukuman: selalu bisa dikerjakan (tidak ada deadline)
+      const canRetake = isPunishment || a.exerciseType === 'persiapan' || !hasCompletedThisAssignment || isFailed
+
+      return {
+        id: a.id, title: a.title, description: a.description,
+        dueDate: a.dueDate, createdAt: a.createdAt,
+        exerciseType: a.exerciseType, questionCount: a.questionCount,
+        taskType: a.taskType,
+        duration: a.duration || 0,
+        cpId: a.cpId || null,
+        tpId: a.tpId || null,
+        canRetake,
+        hasCompleted: hasCompletedThisAssignment,
+        isExpired,
+        isPunishment,
+        isPassed,
+        isFailed,
+        score: score !== undefined ? Number(score) : null,
+      }
+    })
+
+    // ── FIX: Pisahkan tugas aktif (belum selesai) vs sudah selesai ──
+    // Tugas yang sudah selesai TIDAK muncul di list utama (hidden dari dashboard)
+    // Tapi tetap dikirim sebagai completedAssignments untuk section "Riwayat"
+    const activeAssignments = allFormatted.filter(a => !a.hasCompleted || a.isPunishment || a.canRetake)
+    const completedAssignments = allFormatted.filter(a => a.hasCompleted && !a.isPunishment && !a.canRetake)
+
     return NextResponse.json({
       success: true,
       student: { id: session.studentId, namaLengkap: session.namaLengkap, nisn: session.nisn, kelas: session.kelas },
       subject,
-      kkm, // ── NEW: kirim KKM ke frontend untuk cek lulus/tidak
-      assignments: assignments.map((a) => {
-        const hasCompletedThisAssignment = completedAssignmentIds.has(a.id)
-        const isExpired = !a.dueDate ? false : new Date(a.dueDate) < now && hasCompletedThisAssignment && expiredAssignments.includes(a.id)
-        const isPunishment = (a as Record<string, unknown>).isPunishment === true
-
-        // ── NEW: Cek status lulus/tidak berdasarkan KKM ──
-        const score = resultMap.get(a.id)
-        const isPassed = hasCompletedThisAssignment && score !== undefined && score >= kkm
-        const isFailed = hasCompletedThisAssignment && score !== undefined && score < kkm
-
-        // canRetake: persiapan (always), atau belum dikerjakan, atau tidak lulus (remedial)
-        const canRetake = a.exerciseType === 'persiapan' || !hasCompletedThisAssignment || isFailed
-
-        return {
-          id: a.id, title: a.title, description: a.description,
-          dueDate: a.dueDate, createdAt: a.createdAt,
-          exerciseType: a.exerciseType, questionCount: a.questionCount,
-          taskType: a.taskType,
-          duration: a.duration || 0,
-          cpId: a.cpId || null,
-          tpId: a.tpId || null,
-          canRetake,
-          hasCompleted: hasCompletedThisAssignment,
-          isExpired,
-          isPunishment, // ── NEW: flag tugas hukuman
-          isPassed,     // ── NEW: lulus (≥ KKM)
-          isFailed,     // ── NEW: tidak lulus (< KKM)
-          score: score !== undefined ? Number(score) : null, // ── NEW: nilai siswa
-        }
-      }),
+      kkm,
+      // Tugas yang belum selesai atau bisa dikerjakan ulang (remedial/hukuman)
+      assignments: activeAssignments,
+      // Tugas yang sudah selesai (untuk riwayat, tidak tampil di list utama)
+      completedAssignments,
       results: results.map((r) => ({
         id: r.id, typingScore: r.typingScore, quizScore: r.quizScore, totalScore: r.totalScore,
         typingSpeedWPM: r.typingSpeedWPM, typingAccuracy: r.typingAccuracy,

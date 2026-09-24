@@ -142,18 +142,17 @@ export function QuizStage() {
     localStorage.setItem(STORAGE_KEY_STARTTIME, String(startTime))
   }, [startTime, STORAGE_KEY_STARTTIME])
 
+  // ── PERSISTENCE: localStorage key untuk simpan urutan soal ──
+  // Supaya saat refresh, urutan soal tidak berubah (API shuffle random tiap fetch)
+  const [STORAGE_KEY_QUESTION_ORDER] = useState(() => {
+    if (typeof window === 'undefined') return 'quiz_qorder_temp'
+    const aid = localStorage.getItem('currentAssignmentId') || 'temp'
+    return `quiz_qorder_${aid}`
+  })
+
   useEffect(() => {
     const grade = (student?.kelas as GradeLevel) ?? '8A'
-    // ── FIX Bug A: Pakai getGradeTier() bukan grade.charAt(0) ──
-    // Sebelumnya: "11DKV".charAt(0) = '1' → API filter gradeLevel='1' → 0 hasil
-    // → fallback ke soal SMP kelas 7 (SALAH subjek).
-    // Sekarang: getGradeTier("11DKV") = '11DKV' → API filter gradeLevel='11DKV'
-    // → benar mengembalikan soal SMK.
     const tier = getGradeTier(grade) as '7' | '8' | '9' | '11DKV' | '12DKV'
-    // ── FIX #1: Pass cpId/tpId/limit for STRICT CP/TP isolation ──
-    // These are stored in localStorage by student-dashboard when student
-    // starts an assignment. If cpId is set, only questions matching that
-    // CP will be returned — no global fallback.
     const cpId = typeof window !== 'undefined' ? localStorage.getItem('currentAssignmentCpId') : null
     const tpId = typeof window !== 'undefined' ? localStorage.getItem('currentAssignmentTpId') : null
     const questionCount = typeof window !== 'undefined' ? localStorage.getItem('currentAssignmentQuestionCount') : null
@@ -168,7 +167,38 @@ export function QuizStage() {
       .then((r) => r.json())
       .then((data) => {
         if (data.success && data.questions?.length > 0) {
-          setQuestions(data.questions)
+          let questions = data.questions as Question[]
+          
+          // ── FIX: Restore urutan soal dari localStorage supaya tidak acak saat refresh ──
+          // API shuffle random tiap fetch → urutan beda setiap refresh
+          // Simpan urutan pertama kali, lalu restore urutan yang sama di fetch berikutnya
+          if (typeof window !== 'undefined') {
+            const savedOrder = localStorage.getItem(STORAGE_KEY_QUESTION_ORDER)
+            if (savedOrder) {
+              try {
+                const orderIds: number[] = JSON.parse(savedOrder)
+                // Reorder questions berdasarkan saved order (by dbId)
+                const questionMap = new Map(questions.map(q => [q.dbId || q.id, q]))
+                const reordered: Question[] = []
+                for (const id of orderIds) {
+                  const q = questionMap.get(id)
+                  if (q) {
+                    reordered.push(q)
+                    questionMap.delete(id)
+                  }
+                }
+                // Tambahkan soal baru yang belum ada di saved order (mis: soal baru ditambah guru)
+                reordered.push(...questionMap.values())
+                questions = reordered
+              } catch {}
+            } else {
+              // First load: simpan urutan soal ke localStorage
+              const orderIds = questions.map(q => q.dbId || q.id)
+              localStorage.setItem(STORAGE_KEY_QUESTION_ORDER, JSON.stringify(orderIds))
+            }
+          }
+          
+          setQuestions(questions)
         } else {
           // Fallback ke data statis jika API gagal
           // CATATAN: getQuestionsFallback akan return [] untuk SMK (11DKV/12DKV)
@@ -614,6 +644,7 @@ export function QuizStage() {
       if (typeof window !== 'undefined') {
         localStorage.removeItem(STORAGE_KEY_ANSWERS)
         localStorage.removeItem(STORAGE_KEY_STARTTIME)
+        localStorage.removeItem(STORAGE_KEY_QUESTION_ORDER)
       }
       setSaving(false)
       setStage('completed')
@@ -675,32 +706,60 @@ export function QuizStage() {
     return vals
   }, [currentMatchPairs, currentQ?.id])
 
-  // ── NEW: Untuk isian singkat — combine 3 accepted + 4 wrong, shuffle for display ──
+  // ── NEW: Untuk isian singkat — combine accepted + wrong, deduplicate, shuffle ──
   // Dipindah ke top-level supaya pakai useMemo legal (rules of hooks)
   const isianDisplayOptions = useMemo(() => {
     if (!currentQ || currentQ.questionType !== 'isian_singkat') return []
-    const accepted = (currentQ.shortAnswer || '')
+    
+    // Parse accepted answers: "right1|right2|best" (last = BEST)
+    const rawAccepted = (currentQ.shortAnswer || '')
       .split('|')
-      .map(s => s.trim().toLowerCase())
+      .map(s => s.trim())
       .filter(Boolean)
+    
+    // DEDUPLICATE: hapus yang sama (case-insensitive) — siswa tidak boleh lihat opsi kembar
+    const seen = new Set<string>()
+    const accepted: Array<{ text: string; type: 'right' | 'best' }> = []
+    for (let i = 0; i < rawAccepted.length; i++) {
+      const lower = rawAccepted[i].toLowerCase()
+      if (seen.has(lower)) continue // skip duplicate
+      seen.add(lower)
+      const isLast = (i === rawAccepted.length - 1)
+      // Jika ini elemen terakhir dari rawAccepted, tandai sebagai 'best'
+      // Tapi kalau terakhir di-skip karena duplicate, cari 'best' dari yang tersisa
+      accepted.push({
+        text: rawAccepted[i], // simpan original case untuk display
+        type: isLast ? 'best' as const : 'right' as const,
+      })
+    }
+    // Pastikan ada minimal 1 'best' — kalau semua di-skip kecuali 1, itu jadi best
+    if (accepted.length > 0 && !accepted.some(a => a.type === 'best')) {
+      accepted[accepted.length - 1].type = 'best'
+    }
+    
+    // Parse wrong options dari optionA-D
     const wrong = [
       currentQ.options[0] || '',
       currentQ.options[1] || '',
       currentQ.options[2] || '',
       currentQ.options[3] || '',
-    ].filter(Boolean)
+    ]
+      .map(s => s.trim())
+      .filter(Boolean)
+      // Deduplicate wrong vs accepted (jangan tampilkan wrong yang sama dengan accepted)
+      .filter(w => !seen.has(w.toLowerCase()))
+    
+    // Combine all: accepted + wrong
     const all = [
-      ...accepted.map((a, i) => ({
-        text: a,
-        type: i === accepted.length - 1 ? 'best' as const : 'right' as const,
-      })),
+      ...accepted,
       ...wrong.map(w => ({ text: w, type: 'wrong' as const })),
     ]
-    // Shuffle deterministic by question id
+    
+    // Shuffle deterministic by question id (supaya urutan konsisten per siswa per soal)
     const seedRaw = currentQ.id ?? 'default'
     const seed = typeof seedRaw === 'number' ? String(seedRaw) : seedRaw
     for (let i = all.length - 1; i > 0; i--) {
-      const j = (seed.charCodeAt(0) + i) % (i + 1)
+      const j = (seed.charCodeAt(0) + i * 7) % (i + 1) // *7 untuk lebih acak
       ;[all[i], all[j]] = [all[j], all[i]]
     }
     return all
