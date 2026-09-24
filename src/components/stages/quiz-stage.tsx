@@ -607,6 +607,37 @@ export function QuizStage() {
     return vals
   }, [currentMatchPairs, currentQ?.id])
 
+  // ── NEW: Untuk isian singkat — combine 3 accepted + 4 wrong, shuffle for display ──
+  // Dipindah ke top-level supaya pakai useMemo legal (rules of hooks)
+  const isianDisplayOptions = useMemo(() => {
+    if (!currentQ || currentQ.questionType !== 'isian_singkat') return []
+    const accepted = (currentQ.shortAnswer || '')
+      .split('|')
+      .map(s => s.trim().toLowerCase())
+      .filter(Boolean)
+    const wrong = [
+      currentQ.options[0] || '',
+      currentQ.options[1] || '',
+      currentQ.options[2] || '',
+      currentQ.options[3] || '',
+    ].filter(Boolean)
+    const all = [
+      ...accepted.map((a, i) => ({
+        text: a,
+        type: i === accepted.length - 1 ? 'best' as const : 'right' as const,
+      })),
+      ...wrong.map(w => ({ text: w, type: 'wrong' as const })),
+    ]
+    // Shuffle deterministic by question id
+    const seedRaw = currentQ.id ?? 'default'
+    const seed = typeof seedRaw === 'number' ? String(seedRaw) : seedRaw
+    for (let i = all.length - 1; i > 0; i--) {
+      const j = (seed.charCodeAt(0) + i) % (i + 1)
+      ;[all[i], all[j]] = [all[j], all[i]]
+    }
+    return all
+  }, [currentQ?.id, currentQ?.questionType, currentQ?.shortAnswer, currentQ?.options])
+
   // Subject aktif siswa (untuk ForceStop overlay); default Informatika
   const subject = typeof window !== 'undefined' ? localStorage.getItem('currentSubject') || 'Informatika' : 'Informatika'
 
@@ -890,17 +921,19 @@ export function QuizStage() {
               )}
 
               {/* ──────────────────────────────────────────────────────── */}
-              {/* 3. ISIAN SINGKAT — Input text single line dengan validasi */}
+              {/* 3. ISIAN SINGKAT — Input text + opsi clickable chips */}
               {/* ──────────────────────────────────────────────────────── */}
               {currentQ.questionType === 'isian_singkat' && (() => {
                 // Parse shortAnswer: "right1|right2|best" (3 accepted, last = BEST)
-                // Format: 4 wrong + 2 right + 1 best (we only store accepted 3)
                 const acceptedAnswers = (currentQ.shortAnswer || '')
                   .split('|')
                   .map(s => s.trim().toLowerCase())
                   .filter(Boolean)
                 const bestAnswer = acceptedAnswers.length > 0 ? acceptedAnswers[acceptedAnswers.length - 1] : ''
                 const rightPartial = acceptedAnswers.length > 1 ? acceptedAnswers.slice(0, -1) : []
+
+                // allDisplayOptions sudah di-compute di top-level (isianDisplayOptions)
+                const allDisplayOptions = isianDisplayOptions
 
                 const currentValue = typeof answers[currentQ.id] === 'string' ? (answers[currentQ.id] as string) : ''
                 const lowerValue = currentValue.trim().toLowerCase()
@@ -909,83 +942,118 @@ export function QuizStage() {
                 const isAccepted = isBest || isPartial
                 const isEmpty = lowerValue === ''
 
-                // Validation: hanya accepted answers bisa disimpan
-                // Jika siswa ketik di luar accepted, tampilkan warning + jawaban tidak akan disimpan
                 return (
-                  <div className="space-y-2.5">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
-                        Isi jawaban singkat (harus sesuai opsi yang disediakan)
+                        Pilih atau ketik jawaban dari opsi di bawah
                       </p>
                       <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
                         Isian Singkat
                       </Badge>
                     </div>
+
+                    {/* Input text — siswa bisa ketik manual */}
                     <Input
                       type="text"
                       value={currentValue}
                       onChange={(e) => {
                         const val = e.target.value
-                        // Validation: cek apakah val cocok dengan salah satu accepted
-                        const lowerVal = val.trim().toLowerCase()
-                        const isMatch = acceptedAnswers.includes(lowerVal) || lowerVal === ''
-                        // Jika val tidak match DAN tidak kosong, TIDAK disimpan (reject input)
-                        // Tapi kita tetap izinkan typing partial (mis: siswa ketik 'thi' untuk 'thirds')
-                        // Jadi kita simpan val ke state, tapi tandai sebagai invalid
                         setAnswers({
                           ...answers,
                           [currentQ.id]: val,
                         })
                       }}
                       onPaste={(e) => {
-                        // ANTI COPY-PASTE: siswa dilarang paste jawaban
                         e.preventDefault()
-                        toast.warning('Paste dinonaktifkan. Jawaban harus diketik manual.', { duration: 2000 })
+                        toast.warning('Paste dinonaktifkan. Jawaban harus diketik manual atau pilih dari opsi.', { duration: 2000 })
                       }}
                       onCopy={(e) => e.preventDefault()}
                       onCut={(e) => e.preventDefault()}
                       onContextMenu={(e) => e.preventDefault()}
-                      placeholder="Ketik jawaban Anda (harus sesuai opsi yang disediakan)..."
+                      placeholder="Ketik jawaban atau klik opsi di bawah..."
                       className={`text-base font-medium ${
-                        isEmpty ? '' : isBest ? 'border-emerald-500 bg-emerald-50' : isPartial ? 'border-amber-400 bg-amber-50' : 'border-red-400 bg-red-50'
+                        isEmpty ? '' : isBest ? 'border-emerald-500 bg-emerald-50' : isPartial ? 'border-amber-400 bg-amber-50' : isAccepted ? 'border-emerald-400 bg-emerald-50' : 'border-red-400 bg-red-50'
                       }`}
                       autoComplete="off"
                       spellCheck={false}
                     />
 
+                    {/* Opsi jawaban sebagai chip yang bisa diklik */}
+                    <div className="space-y-2">
+                      <p className="text-xs text-slate-600 font-medium">
+                        📋 Opsi jawaban (klik untuk memilih, atau ketik manual di atas):
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {allDisplayOptions.map((opt, idx) => {
+                          const isSelected = lowerValue === opt.text.toLowerCase()
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => {
+                                // Klik opsi → auto-fill ke input
+                                setAnswers({
+                                  ...answers,
+                                  [currentQ.id]: opt.text,
+                                })
+                              }}
+                              onPaste={(e) => e.preventDefault()}
+                              onContextMenu={(e) => e.preventDefault()}
+                              className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-all ${
+                                isSelected
+                                  ? 'border-emerald-500 bg-emerald-100 text-emerald-800 shadow-sm'
+                                  : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:bg-emerald-50'
+                              }`}
+                              title={`Opsi ${idx + 1}`}
+                            >
+                              {opt.text}
+                              {isSelected && <span className="ml-1">✓</span>}
+                            </button>
+                          )
+                        })}
+                      </div>
+                      <p className="text-xs text-slate-500 italic">
+                        💡 Ada <strong>{allDisplayOptions.length} opsi</strong>: 3 jawaban yang diterima (2 benar + 1 paling benar) + 4 jawaban salah. Pilih dengan bijak!
+                      </p>
+                    </div>
+
                     {/* Validation feedback real-time */}
                     {isEmpty ? (
                       <p className="text-xs text-slate-500">
-                        💡 Jawaban boleh dikosongkan (tidak diisi). Jika diisi, harus sesuai opsi yang disediakan.
+                        💡 Jawaban boleh dikosongkan (tidak diisi). Jika diisi, harus dari opsi yang disediakan.
                       </p>
                     ) : isBest ? (
                       <p className="text-xs text-emerald-700 font-medium">
-                        ✓ Jawaban paling tepat! (skor penuh)
+                        ✓ Jawaban paling tepat! (skor penuh 100%)
                       </p>
                     ) : isPartial ? (
                       <p className="text-xs text-amber-700 font-medium">
-                        ✓ Jawaban benar (skor parsial 50%)
+                        ★ Jawaban benar (skor parsial 50%)
+                      </p>
+                    ) : isAccepted ? (
+                      <p className="text-xs text-emerald-700 font-medium">
+                        ✓ Jawaban diterima
                       </p>
                     ) : (
                       <p className="text-xs text-red-600 font-medium">
-                        ⚠️ Jawaban tidak ada di opsi yang disediakan. Ubah ke salah satu opsi yang valid.
+                        ⚠️ Jawaban tidak ada di opsi. Pilih salah satu opsi di atas.
                       </p>
                     )}
 
-                    {/* Info: jumlah opsi yang diterima (tanpa reveal jawaban) */}
-                    <div className="mt-2 p-2 bg-slate-50 rounded text-xs text-slate-600">
+                    {/* Info penilaian */}
+                    <div className="p-2 bg-slate-50 rounded text-xs text-slate-600">
                       <p className="font-medium">Info penilaian:</p>
                       <ul className="ml-4 list-disc space-y-0.5">
-                        <li>Ada <strong>{acceptedAnswers.length} opsi jawaban</strong> yang diterima (2 benar + 1 paling benar)</li>
                         <li>Jawaban <strong>paling benar</strong>: skor 100% (2 poin)</li>
                         <li>Jawaban <strong>benar</strong>: skor 50% (1 poin)</li>
-                        <li>Jawaban di luar opsi: <strong>tidak dapat disimpan</strong></li>
+                        <li>Jawaban <strong>salah</strong>: 0 poin</li>
                         <li>Jawaban boleh <strong>kosong</strong> (0 poin)</li>
                       </ul>
                     </div>
 
                     <p className="text-xs text-red-600 italic">
-                      🔒 Anti copy-paste aktif. Jawaban harus diketik manual.
+                      🔒 Anti copy-paste aktif. Jawaban harus diketik manual atau pilih dari opsi.
                     </p>
                   </div>
                 )

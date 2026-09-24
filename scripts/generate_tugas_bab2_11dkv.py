@@ -393,60 +393,70 @@ ISIAN_QUESTIONS = [
         "level": "C3", "category": "Komposisi & Estetika",
         "question": "Aturan komposisi yang membagi frame menjadi 3 bagian horizontal dan 3 vertikal (9 kotak, 4 titik temu) disebut Rule of...",
         "shortAnswer": "third|thirds|thirds",
+        "wrongOptions": ["half", "quarter", "fifth", "tenth"],
         "explanation": "Rule of Thirds — bagi frame jadi 9 kotak, 4 power points. 'Thirds' (jamak) paling tepat, 'Third' (tunggal) accepted."
     },
     {
         "level": "C3", "category": "Komposisi & Estetika",
         "question": "Pengaturan aperture yang BESAR (misalnya f/1.4, f/1.8, f/2.8) menghasilkan depth of field yang... (gunakan istilah: dangkal/dalam)",
         "shortAnswer": "dangkal|shallow|dangkal",
+        "wrongOptions": ["lebar", "tegas", "runcing", "keras"],
         "explanation": "Aperture besar = DOF dangkal (shallow). Background kabur. 'Dangkal' paling tepat (istilah Indonesia)."
     },
     {
         "level": "C3", "category": "Komposisi & Estetika",
         "question": "Warna komplementer warna MERAH adalah... (sebut nama warna)",
         "shortAnswer": "hijau|green|hijau",
+        "wrongOptions": ["biru", "kuning", "ungu", "oranye"],
         "explanation": "Merah-hijau = komplementer (berseberangan color wheel). 'Hijau' (Indonesia) paling tepat."
     },
     {
         "level": "C3", "category": "Komposisi & Estetika",
         "question": "Garis yang memandu mata pengamat ke subjek disebut... (istilah Inggris: leading...)",
         "shortAnswer": "lines|garis|lines",
+        "wrongOptions": ["curves", "dots", "shapes", "colors"],
         "explanation": "Leading Lines — garis yang memandu mata. 'Lines' (English, full term 'leading lines') paling tepat."
     },
     {
         "level": "C3", "category": "Komposisi & Estetika",
         "question": "Jarak fokus yang menghasilkan background kabur (bokeh) disebut depth of...",
         "shortAnswer": "field|dof|field",
+        "wrongOptions": ["view", "focus", "lens", "blur"],
         "explanation": "Depth of Field (DOF). DOF dangkal = background kabur. 'Field' (full term 'depth of field') paling tepat."
     },
     {
         "level": "C4", "category": "Komposisi & Estetika",
         "question": "Komposisi yang menggunakan elemen sekitar (jendela, daun, pintu) sebagai bingkai alami subjek disebut...",
         "shortAnswer": "framing|bingkai|framing",
+        "wrongOptions": ["crop", "zoom", "filter", "border"],
         "explanation": "Framing — menggunakan elemen sekitar sebagai bingkai alami. 'Framing' (istilah fotografi) paling tepat."
     },
     {
         "level": "C4", "category": "Komposisi & Estetika",
         "question": "Foto pantulan cermin di danau menghasilkan komposisi yang disebut...",
         "shortAnswer": "symmetry|simetri|symmetry",
+        "wrongOptions": ["chaos", "random", "asymmetry", "distortion"],
         "explanation": "Symmetry (simetri) — pantulan menciptakan simetri refleksi. 'Symmetry' (English) paling tepat."
     },
     {
         "level": "C3", "category": "Komposisi & Estetika",
         "question": "Pengaturan aperture yang KECIL (f/16, f/22) menghasilkan depth of field yang... (istilah: dalam)",
         "shortAnswer": "dalam|deep|dalam",
+        "wrongOptions": ["sempit", "tipis", "rendah", "cepat"],
         "explanation": "Aperture kecil = DOF dalam (deep). Semua tajam. 'Dalam' (istilah Indonesia) paling tepat."
     },
     {
         "level": "C3", "category": "Komposisi & Estetika",
         "question": "Pola berulang dari benda-benda identik (misal: susunan kacamata di etalase) disebut komposisi...",
         "shortAnswer": "pattern|pola|pattern",
+        "wrongOptions": ["chaos", "noise", "glitch", "scatter"],
         "explanation": "Pattern (pola) — benda berulang membentuk komposisi menarik. 'Pattern' (English) paling tepat."
     },
     {
         "level": "C3", "category": "Komposisi & Estetika",
         "question": "Ruang kosong di sekitar subjek yang menonjolkan subjek disebut... space (istilah Inggris)",
         "shortAnswer": "negative|negatif|negative",
+        "wrongOptions": ["positive", "blank", "empty", "void"],
         "explanation": "Negative Space — ruang kosong yang menonjolkan subjek. 'Negative' (full term 'negative space') paling tepat."
     },
 ]
@@ -484,9 +494,15 @@ def make_isian_sql(q_id, q_data):
     """
     short_answer = q_data["shortAnswer"]  # format: "right1|right2|best"
     # correctAnswer = 2 (index BEST di shortAnswer) — untuk backward compat
-    correct_answer_idx = short_answer.split('|').length - 1 if False else 2  # last index
     parts = short_answer.split('|')
     correct_answer_idx = len(parts) - 1  # last is BEST
+
+    # 4 wrong options dari q_data, fallback ke empty string jika kurang
+    wrong_opts = q_data.get("wrongOptions", [])
+    option_a = wrong_opts[0] if len(wrong_opts) > 0 else ""
+    option_b = wrong_opts[1] if len(wrong_opts) > 1 else ""
+    option_c = wrong_opts[2] if len(wrong_opts) > 2 else ""
+    option_d = wrong_opts[3] if len(wrong_opts) > 3 else ""
 
     # Store scoring rubric in analisisDistraktor sebagai JSON
     # Format: {"right_partial": ["right1","right2"], "best": "best", "score_partial": 50, "score_best": 100}
@@ -498,7 +514,7 @@ def make_isian_sql(q_id, q_data):
         rubric = q_data["explanation"]
 
     sql = f"""INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-({sql_str(q_id)}, {sql_str(GRADE)}, {sql_str(SUBJECT)}, {sql_str(q_data["question"])}, '', '', '', '', {correct_answer_idx}, {sql_str(q_data["explanation"])}, {sql_str(q_data["category"])}, true, 'isian_singkat', '[]', '[]', {sql_str(short_answer)}, '', {sql_str(q_data["level"])}, {sql_str('Jawaban: ' + short_answer + '. ' + q_data['explanation'])}, {sql_str(rubric)}, {sql_str(CP_ID)}, {sql_str(TP_ID)}, NOW(), NOW())
+({sql_str(q_id)}, {sql_str(GRADE)}, {sql_str(SUBJECT)}, {sql_str(q_data["question"])}, {sql_str(option_a)}, {sql_str(option_b)}, {sql_str(option_c)}, {sql_str(option_d)}, {correct_answer_idx}, {sql_str(q_data["explanation"])}, {sql_str(q_data["category"])}, true, 'isian_singkat', '[]', '[]', {sql_str(short_answer)}, '', {sql_str(q_data["level"])}, {sql_str('Jawaban: ' + short_answer + '. ' + q_data['explanation'])}, {sql_str(rubric)}, {sql_str(CP_ID)}, {sql_str(TP_ID)}, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;"""
     return sql
 
