@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
 // GET: ambil soal aktif untuk jenjang + subject tertentu
-// ?grade=8&subject=Informatika&cpId=xxx&tpId=yyy&limit=10
+// ?grade=8&subject=Informatika&cpId=xxx&tpId=yyy&limit=10&questionType=pilihan_ganda
 //
 // ── FIX #1: STRICT CP/TP ISOLATION ──
 // Jika cpId diberikan, HANYA soal dengan cpId tersebut yang dikembalikan.
 // TIDAK ADA fallback ke soal global — soal dari CP lain tidak akan muncul.
 // Ini mencegah kebocoran 70 soal global yang terjadi sebelumnya.
+//
+// ── NEW: Filter by questionType ──
+// Jika questionType diberikan, HANYA soal dengan tipe tersebut yang dikembalikan.
+// Contoh: ?questionType=isian_singkat → hanya soal isian
 export async function GET(req: NextRequest) {
   try {
     const grade = req.nextUrl.searchParams.get('grade')
@@ -15,27 +19,29 @@ export async function GET(req: NextRequest) {
     const cpId = req.nextUrl.searchParams.get('cpId')
     const tpId = req.nextUrl.searchParams.get('tpId')
     const limit = parseInt(req.nextUrl.searchParams.get('limit') || '0')
+    const questionType = req.nextUrl.searchParams.get('questionType')
 
     if (!grade) {
       return NextResponse.json({ error: 'Grade wajib diisi' }, { status: 400 })
     }
 
     // ── Build STRICT where clause ──
-    // If cpId is provided, it becomes a HARD filter — no fallback.
     const where: Record<string, unknown> = {
       gradeLevel: grade,
       isActive: true,
       subject,
     }
 
-    // STRICT CP filter: if cpId provided, ONLY return questions with this cpId
     if (cpId && cpId !== 'null' && cpId !== '__none__') {
       where.cpId = cpId
     }
-
-    // STRICT TP filter: if tpId provided, ONLY return questions with this tpId
     if (tpId && tpId !== 'null' && tpId !== '__none__') {
       where.tpId = tpId
+    }
+
+    // ── NEW: Filter by questionType ──
+    if (questionType && questionType !== 'null' && questionType !== '__none__') {
+      where.questionType = questionType
     }
 
     let questions = await db.question.findMany({
@@ -44,9 +50,7 @@ export async function GET(req: NextRequest) {
     })
 
     // If limit > 0, randomly shuffle and slice to requested count
-    // This ensures we don't return ALL questions, only the requested amount
     if (limit > 0 && questions.length > limit) {
-      // Fisher-Yates shuffle for random selection
       const shuffled = [...questions]
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1))
@@ -64,7 +68,6 @@ export async function GET(req: NextRequest) {
       explanation: q.explanation,
       category: q.category,
       imageUrl: q.imageUrl || null,
-      // v3 multi-type fields
       questionType: q.questionType || 'pilihan_ganda',
       correctAnswers: q.correctAnswers || '[]',
       matchPairs: q.matchPairs || '[]',

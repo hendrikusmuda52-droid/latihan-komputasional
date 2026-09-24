@@ -142,12 +142,13 @@ export function QuizStage() {
     localStorage.setItem(STORAGE_KEY_STARTTIME, String(startTime))
   }, [startTime, STORAGE_KEY_STARTTIME])
 
-  // ── PERSISTENCE: localStorage key untuk simpan urutan soal ──
-  // Supaya saat refresh, urutan soal tidak berubah (API shuffle random tiap fetch)
-  const [STORAGE_KEY_QUESTION_ORDER] = useState(() => {
-    if (typeof window === 'undefined') return 'quiz_qorder_temp'
+  // ── PERSISTENCE: localStorage key untuk simpan paket soal lengkap ──
+  // Supaya saat refresh, paket soal TIDAK berubah (soal + urutan tetap sama)
+  // Simpan seluruh data soal (bukan hanya id) supaya tidak perlu re-fetch saat refresh
+  const [STORAGE_KEY_QUESTION_PACKAGE] = useState(() => {
+    if (typeof window === 'undefined') return 'quiz_qpackage_temp'
     const aid = localStorage.getItem('currentAssignmentId') || 'temp'
-    return `quiz_qorder_${aid}`
+    return `quiz_qpackage_${aid}`
   })
 
   useEffect(() => {
@@ -158,58 +159,71 @@ export function QuizStage() {
     const questionCount = typeof window !== 'undefined' ? localStorage.getItem('currentAssignmentQuestionCount') : null
     const subject = typeof window !== 'undefined' ? localStorage.getItem('currentSubject') || 'Informatika' : 'Informatika'
 
-    const params = new URLSearchParams({ grade: tier, subject })
-    if (cpId && cpId !== 'null' && cpId !== '__none__') params.set('cpId', cpId)
-    if (tpId && tpId !== 'null' && tpId !== '__none__') params.set('tpId', tpId)
-    if (questionCount && parseInt(questionCount) > 0) params.set('limit', questionCount)
-
-    fetch(`/api/content/questions?${params.toString()}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success && data.questions?.length > 0) {
-          let questions = data.questions as Question[]
-          
-          // ── FIX: Restore urutan soal dari localStorage supaya tidak acak saat refresh ──
-          // API shuffle random tiap fetch → urutan beda setiap refresh
-          // Simpan urutan pertama kali, lalu restore urutan yang sama di fetch berikutnya
-          if (typeof window !== 'undefined') {
-            const savedOrder = localStorage.getItem(STORAGE_KEY_QUESTION_ORDER)
-            if (savedOrder) {
-              try {
-                const orderIds: number[] = JSON.parse(savedOrder)
-                // Reorder questions berdasarkan saved order (by dbId)
-                const questionMap = new Map(questions.map(q => [q.dbId || q.id, q]))
-                const reordered: Question[] = []
-                for (const id of orderIds) {
-                  const q = questionMap.get(id)
-                  if (q) {
-                    reordered.push(q)
-                    questionMap.delete(id)
-                  }
-                }
-                // Tambahkan soal baru yang belum ada di saved order (mis: soal baru ditambah guru)
-                reordered.push(...questionMap.values())
-                questions = reordered
-              } catch {}
-            } else {
-              // First load: simpan urutan soal ke localStorage
-              const orderIds = questions.map(q => q.dbId || q.id)
-              localStorage.setItem(STORAGE_KEY_QUESTION_ORDER, JSON.stringify(orderIds))
-            }
+    // ── STEP 1: Coba restore paket soal dari localStorage (instant, tanpa network) ──
+    // Kalau ada, langsung pakai — TIDAK perlu fetch API → soal tidak berubah saat refresh
+    if (typeof window !== 'undefined') {
+      const savedPackage = localStorage.getItem(STORAGE_KEY_QUESTION_PACKAGE)
+      if (savedPackage) {
+        try {
+          const parsed = JSON.parse(savedPackage) as Question[]
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setQuestions(parsed)
+            return // ← EARLY RETURN: pakai paket tersimpan, tidak fetch API
           }
-          
-          setQuestions(questions)
+        } catch {}
+      }
+    }
+
+    // ── STEP 2: Kalau localStorage kosong (first load), fetch dari API ──
+    // Fetch soal per-type secara terpisah supaya distribusi konsisten:
+    // 35 PG di awal + 10 PGK di tengah + 10 Isian di akhir
+    const buildParams = (qType: string, limit: number) => {
+      const params = new URLSearchParams({ grade: tier, subject, questionType: qType, limit: String(limit) })
+      if (cpId && cpId !== 'null' && cpId !== '__none__') params.set('cpId', cpId)
+      if (tpId && tpId !== 'null' && tpId !== '__none__') params.set('tpId', tpId)
+      return params
+    }
+
+    // Tentukan jumlah per tipe berdasarkan questionCount atau default 55 (35+10+10)
+    const totalCount = questionCount ? parseInt(questionCount) : 55
+    // Distribusi: ~64% PG, ~18% PGK, ~18% Isian (35:10:10 untuk 55 soal)
+    const pgCount = Math.max(1, Math.round(totalCount * 0.64))
+    const pgkCount = Math.max(1, Math.round(totalCount * 0.18))
+    const isianCount = Math.max(1, Math.round(totalCount * 0.18))
+
+    // Fetch 3 type secara paralel
+    Promise.all([
+      fetch(`/api/content/questions?${buildParams('pilihan_ganda', pgCount).toString()}`).then(r => r.json()),
+      fetch(`/api/content/questions?${buildParams('pilihan_ganda_kompleks', pgkCount).toString()}`).then(r => r.json()),
+      fetch(`/api/content/questions?${buildParams('isian_singkat', isianCount).toString()}`).then(r => r.json()),
+    ])
+      .then(([pgData, pgkData, isianData]) => {
+        const pgQuestions = (pgData.success && pgData.questions ? pgData.questions : []) as Question[]
+        const pgkQuestions = (pgkData.success && pgkData.questions ? pgkData.questions : []) as Question[]
+        const isianQuestions = (isianData.success && isianData.questions ? isianData.questions : []) as Question[]
+
+        // Re-assign id sequential (1, 2, 3, ...) supaya navigator soal konsisten
+        let idCounter = 1
+        const allQuestions: Question[] = []
+        for (const q of pgQuestions) { allQuestions.push({ ...q, id: idCounter++ }) }
+        for (const q of pgkQuestions) { allQuestions.push({ ...q, id: idCounter++ }) }
+        for (const q of isianQuestions) { allQuestions.push({ ...q, id: idCounter++ }) }
+
+        if (allQuestions.length > 0) {
+          // ── Save paket soal lengkap ke localStorage ──
+          // Supaya saat refresh, paket tidak berubah (tidak perlu re-fetch API)
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(STORAGE_KEY_QUESTION_PACKAGE, JSON.stringify(allQuestions))
+          }
+          setQuestions(allQuestions)
         } else {
-          // Fallback ke data statis jika API gagal
-          // CATATAN: getQuestionsFallback akan return [] untuk SMK (11DKV/12DKV)
-          // agar tidak salah mengembalikan soal SMP.
           setQuestions(getQuestionsFallback(grade))
         }
       })
       .catch(() => {
         setQuestions(getQuestionsFallback(grade))
       })
-  }, [student?.kelas])
+  }, [student?.kelas, STORAGE_KEY_QUESTION_PACKAGE])
 
   useEffect(() => {
     isMounted.current = true
@@ -644,7 +658,7 @@ export function QuizStage() {
       if (typeof window !== 'undefined') {
         localStorage.removeItem(STORAGE_KEY_ANSWERS)
         localStorage.removeItem(STORAGE_KEY_STARTTIME)
-        localStorage.removeItem(STORAGE_KEY_QUESTION_ORDER)
+        localStorage.removeItem(STORAGE_KEY_QUESTION_PACKAGE)
       }
       setSaving(false)
       setStage('completed')
