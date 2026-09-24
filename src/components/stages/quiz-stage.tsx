@@ -611,7 +611,7 @@ export function QuizStage() {
   // Loading state saat soal belum ter-load dari DB
   if (QUESTIONS.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col bg-slate-50">
+      <div className="min-h-screen flex flex-col bg-slate-50" style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>
         <header className="sticky top-0 z-40 bg-white border-b shadow-sm">
           <div className="container max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-teal-600 flex items-center justify-center">
@@ -636,7 +636,7 @@ export function QuizStage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-slate-50" style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>
       {/* Header sticky dengan timer */}
       <header className="sticky top-0 z-40 bg-white border-b shadow-sm">
         <div className="container max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
@@ -708,21 +708,33 @@ export function QuizStage() {
                   </span>
                   <span className="text-slate-700">dari {QUESTIONS.length}</span>
                 </CardTitle>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {/* ── BADGE TIPE SOAL (utama, paling kiri) — user request: label jelas ── */}
+                  {(() => {
+                    const qt = currentQ.questionType || 'pilihan_ganda'
+                    const config: Record<string, { label: string; className: string }> = {
+                      pilihan_ganda: { label: '📌 Pilihan Ganda', className: 'bg-teal-100 text-teal-800 border-teal-300' },
+                      pilihan_ganda_kompleks: { label: '☑️ PG Kompleks (pilih beberapa)', className: 'bg-sky-100 text-sky-800 border-sky-300' },
+                      isian_singkat: { label: '✏️ Isian Singkat', className: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+                      mencocokkan: { label: '🔄 Mencocokkan', className: 'bg-purple-100 text-purple-800 border-purple-300' },
+                      essai: { label: '📝 Essai', className: 'bg-amber-100 text-amber-800 border-amber-300' },
+                    }
+                    const c = config[qt] || config.pilihan_ganda
+                    return (
+                      <Badge variant="outline" className={`text-xs font-semibold ${c.className}`}>
+                        {c.label}
+                      </Badge>
+                    )
+                  })()}
                   {currentQ.levelKognitif && (
                     <Badge variant="outline" className="bg-violet-50 text-violet-700 border-violet-200 text-xs">
                       {currentQ.levelKognitif}
                     </Badge>
                   )}
-                  <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200 text-xs">
+                  <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 text-xs">
                     {currentQ.category}
                   </Badge>
-                  {currentQ.questionType === 'essai' && (
-                    <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 text-xs">
-                      Essai
-                    </Badge>
-                  )}
-                  {currentQ.cpId && currentQ.questionType !== 'essai' && (
+                  {currentQ.cpId && (
                     <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200 text-xs">
                       CP
                     </Badge>
@@ -842,33 +854,28 @@ export function QuizStage() {
                         {currentQ.options.map((opt, i) => {
                           const checked = currentArr.includes(i)
                           return (
-                            <div
+                            <label
                               key={i}
                               className={`flex items-start gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
                                 checked
                                   ? 'border-sky-500 bg-sky-50 shadow-sm'
                                   : 'border-slate-200 hover:border-sky-300 hover:bg-slate-50'
                               }`}
-                              onClick={() => toggle(i)}
                             >
                               <Checkbox
                                 checked={checked}
                                 onCheckedChange={() => toggle(i)}
-                                id={`q${currentQ.id}-chk${i}`}
                                 className="mt-1"
                               />
-                              <Label
-                                htmlFor={`q${currentQ.id}-chk${i}`}
-                                className="cursor-pointer flex-1 text-sm leading-relaxed text-slate-700"
-                              >
+                              <span className="cursor-pointer flex-1 text-sm leading-relaxed text-slate-700">
                                 <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md text-xs font-bold mr-2.5 ${
                                   checked ? 'bg-sky-600 text-white' : 'bg-slate-200 text-slate-600'
                                 }`}>
                                   {String.fromCharCode(65 + i)}
                                 </span>
                                 {opt}
-                              </Label>
-                            </div>
+                              </span>
+                            </label>
                           )
                         })}
                         <p className="text-xs text-slate-500 mt-2">
