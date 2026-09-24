@@ -597,7 +597,9 @@ export function QuizStage() {
   const shuffledMatchValues = useMemo(() => {
     if (currentMatchPairs.length === 0) return []
     const vals = currentMatchPairs.map((p) => p.value)
-    const seed = currentQ?.id || 'default'
+    // ── FIX: currentQ.id bisa number (dari API reassign) atau string — konversi ke string dulu
+    const seedRaw = currentQ?.id ?? 'default'
+    const seed = typeof seedRaw === 'number' ? String(seedRaw) : seedRaw
     for (let i = vals.length - 1; i > 0; i--) {
       const j = (seed.charCodeAt(0) + i) % (i + 1)
       ;[vals[i], vals[j]] = [vals[j], vals[i]]
