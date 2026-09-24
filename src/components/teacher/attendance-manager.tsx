@@ -105,10 +105,7 @@ export function AttendanceManager() {
 
   // ── Build attendanceMap from students + existing attendance records ──
   useEffect(() => {
-    if (students.length === 0) {
-      setAttendanceMap({})
-      return
-    }
+    if (students.length === 0) return
     const map: Record<string, AttendanceRecord> = {}
     // Default all students to 'H'
     students.forEach((s) => {
@@ -125,11 +122,15 @@ export function AttendanceManager() {
           }
         }
       })
-      if (attendanceData.records.length > 0) {
-        toast.success(`Memuat ${attendanceData.records.length} catatan absensi tersimpan`)
-      }
     }
-    setAttendanceMap(map)
+    // Only update if map actually changed (avoid cascading renders)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAttendanceMap(prev => {
+      const prevJson = JSON.stringify(prev)
+      const newJson = JSON.stringify(map)
+      if (prevJson === newJson) return prev
+      return map
+    })
   }, [students, attendanceData])
 
   // Auto-load stats when kelas changes (students + attendance auto-loaded by hook)

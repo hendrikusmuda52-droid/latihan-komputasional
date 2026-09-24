@@ -551,16 +551,23 @@ export function QuizStage() {
   const handleSubmit = async () => {
     if (saving) return
 
-    // ── VALIDATION: cek isian singkat — jika ada jawaban di luar accepted, tolak submit ──
-    // Siswa boleh kosongkan isian, tapi jika diisi harus sesuai accepted answers
+    // ── VALIDATION: cek isian singkat — jika ada jawaban di luar opsi, tolak submit ──
+    // Siswa boleh kosongkan isian, tapi jika diisi HARUS ada di opsi manapun
+    // (baik opsi benar, parsial, atau salah) — semua opsi valid untuk submit
+    // Hanya jawaban di LUAR opsi yang ditolak
     const invalidIsianQuestions = QUESTIONS.filter((q) => {
       if (q.questionType !== 'isian_singkat') return false
       const accepted = (q.shortAnswer || '').split('|').map(s => s.trim().toLowerCase()).filter(Boolean)
       if (accepted.length === 0) return false
       const a = answers[q.id]
       const student = typeof a === 'string' ? a.trim().toLowerCase() : ''
-      if (student === '') return false  // kosong = OK
-      return !accepted.includes(student)  // invalid jika tidak match
+      if (student === '') return false  // kosong = OK (boleh submit)
+      // Cek apakah jawaban ada di opsi manapun (accepted + wrong options dari optionA-D)
+      const wrongOptions = [
+        q.options[0] || '', q.options[1] || '', q.options[2] || '', q.options[3] || '',
+      ].map(s => s.trim().toLowerCase()).filter(Boolean)
+      const allOptions = [...accepted, ...wrongOptions]
+      return !allOptions.includes(student)  // invalid jika TIDAK ada di opsi manapun
     })
 
     if (invalidIsianQuestions.length > 0) {
@@ -1080,8 +1087,16 @@ export function QuizStage() {
                 const lowerValue = currentValue.trim().toLowerCase()
                 const isBest = lowerValue === bestAnswer
                 const isPartial = rightPartial.includes(lowerValue)
-                const isAccepted = isBest || isPartial
+                const isAccepted = isBest || isPartial  // benar (BEST atau parsial)
+
+                // ── FIX: cek apakah jawaban ada di opsi manapun (termasuk wrong options) ──
+                // Siswa boleh ketik opsi yang salah — itu valid (ada di opsi), hanya dapat skor 0
+                // Notif "tidak ada di opsi" HANYA muncul jika jawaban BENAR-BENAR tidak ada di opsi manapun
+                const allOptionTexts = allDisplayOptions.map(o => o.text.toLowerCase())
+                const isInOptions = allOptionTexts.includes(lowerValue)
                 const isEmpty = lowerValue === ''
+                // isValid = kosong ATAU ada di opsi manapun (baik benar, parsial, atau salah)
+                const isValid = isEmpty || isInOptions
 
                 return (
                   <div className="space-y-3">
@@ -1114,7 +1129,7 @@ export function QuizStage() {
                       onContextMenu={(e) => e.preventDefault()}
                       placeholder="KETIK jawaban di sini berdasarkan opsi di bawah..."
                       className={`text-base font-medium ${
-                        isEmpty ? '' : isBest ? 'border-emerald-500 bg-emerald-50' : isPartial ? 'border-amber-400 bg-amber-50' : isAccepted ? 'border-emerald-400 bg-emerald-50' : 'border-red-400 bg-red-50'
+                        isEmpty ? '' : isBest ? 'border-emerald-500 bg-emerald-50' : isPartial ? 'border-amber-400 bg-amber-50' : isInOptions ? 'border-slate-300 bg-slate-50' : 'border-red-400 bg-red-50'
                       }`}
                       autoComplete="off"
                       spellCheck={false}
@@ -1165,9 +1180,9 @@ export function QuizStage() {
                       <p className="text-xs text-amber-700 font-medium">
                         ★ Jawaban benar (skor parsial 50%)
                       </p>
-                    ) : isAccepted ? (
-                      <p className="text-xs text-emerald-700 font-medium">
-                        ✓ Jawaban diterima
+                    ) : isInOptions ? (
+                      <p className="text-xs text-slate-600 font-medium">
+                        📝 Jawaban ada di opsi (skor 0 — opsi yang Anda pilih salah)
                       </p>
                     ) : (
                       <p className="text-xs text-red-600 font-medium">
