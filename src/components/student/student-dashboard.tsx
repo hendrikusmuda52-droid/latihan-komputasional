@@ -28,7 +28,7 @@ interface Material { id: string; title: string; content: string; category: strin
 interface DashboardData { student: StudentInfo; assignments: Assignment[]; results: ResultItem[]; pendingResultsCount: number; hasActiveProgress: boolean; activeProgressStage: string | null; hasCompletedAnyExercise: boolean; kkm?: number }
 
 export function StudentDashboard({ student, onLogout }: { student: StudentInfo; onLogout: () => void }) {
-  const { setStudent, setStage, setProgress } = useAppStore()
+  const { setStudent, setStage, setProgress, stage } = useAppStore()
   const router = useRouter()
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null)
   const [data, setData] = useState<DashboardData | null>(null)
@@ -42,6 +42,21 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
 
   const jenjang = getJenjang(student.kelas)
   const subjects = getSubjectsByJenjang(jenjang)
+
+  // ── FIX: Auto-refresh data saat kembali dari quiz (stage berubah dari 'quiz' ke 'welcome') ──
+  // Setelah siswa submit quiz → stage='completed' → klik "Kembali" → stage='welcome'
+  // Saat stage kembali ke 'welcome', re-fetch data supaya tugas yang sudah selesai hilang
+  const prevStageRef = useRef<string>('')
+  useEffect(() => {
+    const currentStage = String(stage)
+    if (prevStageRef.current && prevStageRef.current !== 'welcome' && currentStage === 'welcome') {
+      // Kembali dari quiz ke dashboard → refresh data
+      if (selectedSubject) {
+        fetchData(selectedSubject)
+      }
+    }
+    prevStageRef.current = currentStage
+  }, [stage, selectedSubject])
 
   const fetchData = async (subject: string) => {
     setLoading(true)
