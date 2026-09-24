@@ -28,6 +28,7 @@ model Student {
   attendances  Attendance[]
   catatanSikap CatatanSikap[]
   resetRequests ResetRequest[]
+  dailyAttendances DailyAttendance[]
 }
 
 model Teacher {
@@ -407,4 +408,55 @@ model ForceStop {
 
   @@index([subject, expiresAt]) // query utama: WHERE subject = ? AND expiresAt > NOW()
   @@index([teacherId, triggeredAt])
+}
+
+// ── v5: Pengumuman dari guru ke siswa ──
+model Announcement {
+  id          String   @id @default(cuid())
+  teacherId   String?
+  teacherName String   @default("")  // nama guru yang buat pengumuman
+  subject     String   @default("Informatika") // mapel guru
+  title       String
+  content     String
+  targetKelas String   @default("ALL") // "ALL" atau "7A,7B,7C" dll
+  targetJenjang String @default("ALL") // "ALL", "SMP", "SMK"
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  reads       AnnouncementRead[]
+
+  @@index([subject, isActive, createdAt])
+  @@index([targetKelas])
+}
+
+model AnnouncementRead {
+  id            String   @id @default(cuid())
+  announcementId String
+  announcement  Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  studentId     String
+  readAt        DateTime @default(now())
+
+  @@unique([announcementId, studentId])
+  @@index([studentId])
+}
+
+// ── v5: Presensi harian siswa dengan GPS ──
+model DailyAttendance {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject     String   @default("Umum")
+  kelas       String
+  tanggal     DateTime // tanggal presensi (tanggal saja, jam di createdAt)
+  status      String   @default("H") // "H" (Hadir), "S" (Sakit), "I" (Izin), "A" (Alpa)
+  latitude    Float?   // GPS latitude saat presensi
+  longitude   Float?   // GPS longitude saat presensi
+  accuracy    Float?   // GPS accuracy dalam meter
+  deviceInfo  String   @default("") // info browser/device siswa
+  createdAt   DateTime @default(now()) // timestamp presensi (jam presensi)
+
+  @@unique([studentId, tanggal])
+  @@index([kelas, tanggal])
+  @@index([studentId, tanggal])
 }

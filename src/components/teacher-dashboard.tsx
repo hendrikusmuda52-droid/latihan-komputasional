@@ -82,6 +82,7 @@ import {
   Eye,
   XCircle,
   Save,
+  Megaphone,
 } from 'lucide-react'
 import {
   BarChart,
@@ -113,6 +114,7 @@ import { AttendanceManager } from './teacher/attendance-manager'
 import { JurnalGuruManager } from './teacher/jurnal-manager'
 import { CatatanSikapManager } from './teacher/sikap-manager'
 import { ResetCenter } from './teacher/reset-center'
+import { AnnouncementManager } from './teacher/announcement-manager'
 import { AnalyticsManager } from './teacher/analytics-manager'
 import { hasTypingFeature } from '@/lib/constants'
 import { TaskPhotoViewer } from '@/components/teacher/task-photo-viewer'
@@ -614,6 +616,7 @@ export function TeacherDashboard() {
     { id: 'cptp', label: 'CP & TP', icon: Target },
     ...(isITSubject ? [{ id: 'texts', label: 'Teks Bacaan', icon: FileText }] : []),
     { id: 'attendance', label: 'Daftar Hadir', icon: CalendarCheck },
+    { id: 'announcements', label: 'Pengumuman', icon: Megaphone },
     { id: 'jurnal', label: 'Jurnal Mengajar', icon: BookOpenCheck },
     { id: 'sikap', label: 'Catatan Sikap', icon: HeartPulse },
     { id: 'reset', label: 'Reset & Remedial', icon: RotateCcw },
@@ -1384,6 +1387,7 @@ export function TeacherDashboard() {
       {activeMenu === 'cptp' && <CPTPManager />}
       {activeMenu === 'texts' && <TextManager />}
       {activeMenu === 'attendance' && <AttendanceManager />}
+      {activeMenu === 'announcements' && <AnnouncementManager teacherName={teacher?.name || teacher?.username || ''} teacherSubject={teacher?.subject || 'Informatika'} />}
       {activeMenu === 'jurnal' && <JurnalGuruManager />}
       {activeMenu === 'sikap' && <CatatanSikapManager />}
       {activeMenu === 'reset' && <ResetCenter />}

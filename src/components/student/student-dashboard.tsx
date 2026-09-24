@@ -7,11 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog'
+import {
   GraduationCap, LogOut, Play, History, Clock, CheckCircle2,
   Trophy, Type, Brain, Target, FileText, Calendar, RefreshCw,
   Lock, Hourglass, BookOpen, TrendingUp, Award, Zap, ChevronRight,
   ChevronLeft, Layers, Maximize2, X, Image as ImageIcon, Video, Presentation,
-  AlertCircle, KeyRound,
+  AlertCircle, KeyRound, Bell, MapPin, Megaphone,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
@@ -39,6 +42,12 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null)
   const [reviewResultId, setReviewResultId] = useState<string | null>(null)
+  // ── NEW: Pengumuman + Presensi ──
+  const [unreadAnnouncements, setUnreadAnnouncements] = useState<any[]>([])
+  const [showAnnouncementPopup, setShowAnnouncementPopup] = useState(false)
+  const [currentAnnouncementIdx, setCurrentAnnouncementIdx] = useState(0)
+  const [hasPresensiToday, setHasPresensiToday] = useState(false)
+  const [presensiLoading, setPresensiLoading] = useState(false)
 
   const jenjang = getJenjang(student.kelas)
   const subjects = getSubjectsByJenjang(jenjang)
@@ -86,6 +95,106 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
       }
     }
   }, [selectedSubject])
+
+  // ── NEW: Fetch unread announcements saat subject dipilih ──
+  useEffect(() => {
+    if (!selectedSubject) return
+    fetch(`/api/announcements?subject=${encodeURIComponent(selectedSubject)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.unread && data.unread.length > 0) {
+          setUnreadAnnouncements(data.unread)
+          setCurrentAnnouncementIdx(0)
+          setShowAnnouncementPopup(true)
+        }
+      })
+      .catch(() => {})
+  }, [selectedSubject])
+
+  // ── NEW: Cek status presensi hari ini ──
+  useEffect(() => {
+    fetch('/api/daily-attendance?studentCheck=true')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          setHasPresensiToday(data.hasPresensiToday)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  // ── NEW: Handle presensi dengan GPS ──
+  const handlePresensi = async () => {
+    setPresensiLoading(true)
+    try {
+      let latitude: number | null = null
+      let longitude: number | null = null
+      let accuracy: number | null = null
+
+      // Coba ambil GPS lokasi
+      if (navigator.geolocation) {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          })
+        }).catch(() => null)
+
+        if (position) {
+          latitude = position.coords.latitude
+          longitude = position.coords.longitude
+          accuracy = position.coords.accuracy
+        }
+      }
+
+      const deviceInfo = navigator.userAgent.substring(0, 200)
+
+      const res = await fetch('/api/daily-attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ latitude, longitude, accuracy, deviceInfo }),
+      })
+      const data = await res.json()
+
+      if (data.success) {
+        toast.success('Presensi berhasil! Anda tercatat hadir hari ini.')
+        setHasPresensiToday(true)
+      } else {
+        if (data.record) {
+          toast.info('Anda sudah presensi hari ini')
+          setHasPresensiToday(true)
+        } else {
+          toast.error(data.error || 'Gagal presensi')
+        }
+      }
+    } catch (err) {
+      toast.error('Gagal presensi. Coba lagi.')
+    } finally {
+      setPresensiLoading(false)
+    }
+  }
+
+  // ── NEW: Tandai pengumuman sebagai sudah dibaca ──
+  const markAnnouncementRead = async (announcementId: string) => {
+    try {
+      await fetch(`/api/announcements/${announcementId}/read`, { method: 'POST' })
+    } catch {}
+  }
+
+  // ── NEW: Handle next announcement atau tutup popup ──
+  const handleNextAnnouncement = () => {
+    const current = unreadAnnouncements[currentAnnouncementIdx]
+    if (current) {
+      markAnnouncementRead(current.id)
+    }
+    if (currentAnnouncementIdx < unreadAnnouncements.length - 1) {
+      setCurrentAnnouncementIdx(prev => prev + 1)
+    } else {
+      setShowAnnouncementPopup(false)
+      setUnreadAnnouncements([])
+    }
+  }
 
   const handleStartAssignment = (a: Assignment) => {
     // ── BUG A FIX: Check per-assignment completion, not global subject completion ──
@@ -380,6 +489,40 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
         <ReviewModal resultId={reviewResultId} onClose={() => setReviewResultId(null)} />
       )}
 
+      {/* ── NEW: Tombol Presensi Harian ── */}
+      {selectedSubject && (
+        <div className="container max-w-5xl mx-auto px-4 mb-4">
+          <Card className={`border-2 ${hasPresensiToday ? 'border-emerald-200 bg-emerald-50/50' : 'border-amber-200 bg-amber-50/50'}`}>
+            <CardContent className="py-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${hasPresensiToday ? 'bg-emerald-100' : 'bg-amber-100'}`}>
+                  {hasPresensiToday ? <CheckCircle2 className="w-5 h-5 text-emerald-600" /> : <MapPin className="w-5 h-5 text-amber-600" />}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">
+                    {hasPresensiToday ? 'Presensi Selesai' : 'Presensi Harian'}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {hasPresensiToday ? 'Anda sudah tercatat hadir hari ini' : 'Klik untuk presensi (GPS akan dicatat)'}
+                  </p>
+                </div>
+              </div>
+              {!hasPresensiToday && (
+                <Button
+                  size="sm"
+                  onClick={handlePresensi}
+                  disabled={presensiLoading}
+                  className="bg-amber-600 hover:bg-amber-700"
+                >
+                  {presensiLoading ? <RefreshCw className="w-4 h-4 mr-1 animate-spin" /> : <MapPin className="w-4 h-4 mr-1" />}
+                  {presensiLoading ? 'Memproses...' : 'Presensi Sekarang'}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <footer className="bg-slate-900 text-slate-400 py-4 mt-8"><div className="container max-w-5xl mx-auto px-4 text-center text-xs">SAKOLA — SMP Santo Augustinus</div></footer>
 
       {/* ── NEW: Dialog ubah password siswa ── */}
@@ -388,6 +531,57 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
           onClose={() => setShowChangePassword(false)}
         />
       )}
+
+      {/* ── NEW: Popup Pengumuman (wajib dibaca siswa) ── */}
+      <Dialog open={showAnnouncementPopup} onOpenChange={(open) => { if (!open) { /* tidak bisa ditutup sebelum dibaca */ } }}>
+        <DialogContent className="max-w-lg" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          {unreadAnnouncements.length > 0 && unreadAnnouncements[currentAnnouncementIdx] && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-lg">
+                  <Megaphone className="w-5 h-5 text-amber-600" />
+                  Pengumuman
+                </DialogTitle>
+                <DialogDescription className="sr-only">Pengumuman dari guru</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3">
+                {/* Info guru + mapel */}
+                <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+                  <Badge className="bg-violet-100 text-violet-700 text-xs">
+                    {unreadAnnouncements[currentAnnouncementIdx].subject}
+                  </Badge>
+                  <span className="text-xs text-slate-600">
+                    dari: <strong>{unreadAnnouncements[currentAnnouncementIdx].teacherName}</strong>
+                  </span>
+                  <span className="text-xs text-slate-400 ml-auto">
+                    {new Date(unreadAnnouncements[currentAnnouncementIdx].createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                {/* Judul */}
+                <h3 className="text-base font-bold text-slate-900">
+                  {unreadAnnouncements[currentAnnouncementIdx].title}
+                </h3>
+                {/* Isi */}
+                <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 text-sm text-slate-800 whitespace-pre-wrap max-h-[300px] overflow-y-auto">
+                  {unreadAnnouncements[currentAnnouncementIdx].content}
+                </div>
+                {/* Counter + tombol */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-500">
+                    Pengumuman {currentAnnouncementIdx + 1} dari {unreadAnnouncements.length}
+                  </span>
+                  <Button
+                    onClick={handleNextAnnouncement}
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    {currentAnnouncementIdx < unreadAnnouncements.length - 1 ? 'Saya sudah baca — Lanjut' : 'Saya sudah baca — Tutup'}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
