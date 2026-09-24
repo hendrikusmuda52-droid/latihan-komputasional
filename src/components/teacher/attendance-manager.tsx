@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -103,15 +103,14 @@ export function AttendanceManager() {
 
   const stats = statsData?.stats ?? []
 
-  // ── Build attendanceMap from students + existing attendance records ──
-  useEffect(() => {
-    if (students.length === 0) return
+  // ── Compute base attendance map from students + existing records ──
+  // Use useMemo for the base computation (pure, no side effects)
+  const baseAttendanceMap = useMemo(() => {
+    if (students.length === 0) return {}
     const map: Record<string, AttendanceRecord> = {}
-    // Default all students to 'H'
     students.forEach((s) => {
       map[s.id] = { studentId: s.id, status: 'H', keterangan: '' }
     })
-    // Overlay existing records
     if (attendanceData?.records && Array.isArray(attendanceData.records)) {
       attendanceData.records.forEach((rec) => {
         if (rec.studentId) {
@@ -123,15 +122,21 @@ export function AttendanceManager() {
         }
       })
     }
-    // Only update if map actually changed (avoid cascading renders)
+    return map
+  }, [students, attendanceData])
+
+  // ── Sync attendanceMap state with base map ──
+  // Use STRINGIFIED deps to avoid infinite loop (object reference changes each render
+  // but JSON string only changes when data actually changes)
+  const baseJson = useMemo(() => JSON.stringify(baseAttendanceMap), [baseAttendanceMap])
+  useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAttendanceMap(prev => {
       const prevJson = JSON.stringify(prev)
-      const newJson = JSON.stringify(map)
-      if (prevJson === newJson) return prev
-      return map
+      if (prevJson === baseJson) return prev  // no change → skip update
+      return baseAttendanceMap
     })
-  }, [students, attendanceData])
+  }, [baseJson, baseAttendanceMap])
 
   // Auto-load stats when kelas changes (students + attendance auto-loaded by hook)
   // Stats refetch is handled by deps: [kelas] in useResilientFetch above
