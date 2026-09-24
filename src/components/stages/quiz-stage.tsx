@@ -64,20 +64,83 @@ export function QuizStage() {
   // Pilih set soal sesuai kelas siswa (kelas 8 = dasar, kelas 9 = advanced)
   const [QUESTIONS, setQuestions] = useState<Question[]>([])
 
-  // Resume: load progress quiz dari DB
+  // ── PERSISTENCE: localStorage keys untuk simpan jawaban + waktu mulai ──
+  // Supaya saat refresh / switch tab / tutup browser, waktu dan jawaban tetap tersimpan
+  // Key per-assignment supaya tidak konflik antar tugas
+  const [STORAGE_KEY_ANSWERS] = useState(() => {
+    if (typeof window === 'undefined') return 'quiz_answers_temp'
+    const aid = localStorage.getItem('currentAssignmentId') || 'temp'
+    return `quiz_answers_${aid}`
+  })
+  const [STORAGE_KEY_STARTTIME] = useState(() => {
+    if (typeof window === 'undefined') return 'quiz_startTime_temp'
+    const aid = localStorage.getItem('currentAssignmentId') || 'temp'
+    return `quiz_startTime_${aid}`
+  })
+
+  // Resume: load progress quiz dari localStorage (primary) + DB (backup)
   useEffect(() => {
-    if (progress && progress.quizAnswers && Object.keys(progress.quizAnswers).length > 0) {
-      setAnswers(progress.quizAnswers)
-      toast.info(`Progress quiz dimuat: ${Object.keys(progress.quizAnswers).length} soal sudah dijawab`)
+    // 1. Coba restore startTime dari localStorage (instant, tidak perlu tunggu DB)
+    const storedStart = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY_STARTTIME) : null
+    if (storedStart) {
+      const startMs = parseInt(storedStart, 10)
+      if (!isNaN(startMs) && startMs > 0) {
+        setStartTime(startMs)
+      }
     }
-    if (progress && progress.quizStartTime) {
+
+    // 2. Coba restore jawaban dari localStorage (instant)
+    const storedAnswers = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY_ANSWERS) : null
+    if (storedAnswers) {
+      try {
+        const parsed = JSON.parse(storedAnswers)
+        if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+          setAnswers(parsed)
+          toast.info(`Progress quiz dimuat: ${Object.keys(parsed).length} soal sudah dijawab`)
+        }
+      } catch {}
+    }
+
+    // 3. Fallback: kalau localStorage kosong, coba dari DB progress
+    if (progress && progress.quizStartTime && !storedStart) {
       const savedStart = new Date(progress.quizStartTime).getTime()
       const adjustedStart = savedStart - (progress.quizDuration * 1000)
       setStartTime(adjustedStart)
-    } else {
-      setStartTime(Date.now())
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY_STARTTIME, String(adjustedStart))
+      }
     }
-  }, [progress])
+
+    if (progress && progress.quizAnswers && Object.keys(progress.quizAnswers).length > 0 && !storedAnswers) {
+      setAnswers(progress.quizAnswers)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY_ANSWERS, JSON.stringify(progress.quizAnswers))
+      }
+      toast.info(`Progress quiz dimuat dari server: ${Object.keys(progress.quizAnswers).length} soal sudah dijawab`)
+    }
+
+    // 4. Kalau tidak ada di mana-mana, init baru
+    if (!storedStart && !progress?.quizStartTime) {
+      const now = Date.now()
+      setStartTime(now)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY_STARTTIME, String(now))
+      }
+    }
+  }, [progress, STORAGE_KEY_ANSWERS, STORAGE_KEY_STARTTIME])
+
+  // Auto-save jawaban ke localStorage setiap jawaban berubah (instant, tanpa network)
+  useEffect(() => {
+    if (Object.keys(answers).length === 0) return
+    if (typeof window === 'undefined') return
+    localStorage.setItem(STORAGE_KEY_ANSWERS, JSON.stringify(answers))
+  }, [answers, STORAGE_KEY_ANSWERS])
+
+  // Auto-save startTime ke localStorage (saat mulai, supaya waktu tidak reset saat refresh)
+  useEffect(() => {
+    if (!startTime || typeof window === 'undefined') return
+    localStorage.setItem(STORAGE_KEY_STARTTIME, String(startTime))
+  }, [startTime, STORAGE_KEY_STARTTIME])
 
   useEffect(() => {
     const grade = (student?.kelas as GradeLevel) ?? '8A'
@@ -547,6 +610,11 @@ export function QuizStage() {
       toast.error('Gagal menyimpan hasil ke database, namun hasil tetap ditampilkan.')
       useAppStore.getState().setTotalScore(totalScore)
     } finally {
+      // ── CLEAR localStorage: hapus jawaban + startTime supaya next ujian mulai fresh ──
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(STORAGE_KEY_ANSWERS)
+        localStorage.removeItem(STORAGE_KEY_STARTTIME)
+      }
       setSaving(false)
       setStage('completed')
     }
