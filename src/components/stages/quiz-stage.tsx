@@ -946,14 +946,14 @@ export function QuizStage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
-                        Pilih atau ketik jawaban dari opsi di bawah
+                        Ketik jawaban berdasarkan opsi di bawah (WAJIB mengetik)
                       </p>
                       <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
                         Isian Singkat
                       </Badge>
                     </div>
 
-                    {/* Input text — siswa bisa ketik manual */}
+                    {/* Input text — siswa WAJIB mengetik manual (tidak bisa klik opsi) */}
                     <Input
                       type="text"
                       value={currentValue}
@@ -966,62 +966,55 @@ export function QuizStage() {
                       }}
                       onPaste={(e) => {
                         e.preventDefault()
-                        toast.warning('Paste dinonaktifkan. Jawaban harus diketik manual atau pilih dari opsi.', { duration: 2000 })
+                        toast.warning('Paste dinonaktifkan. Jawaban harus diketik manual.', { duration: 2000 })
                       }}
                       onCopy={(e) => e.preventDefault()}
                       onCut={(e) => e.preventDefault()}
                       onContextMenu={(e) => e.preventDefault()}
-                      placeholder="Ketik jawaban atau klik opsi di bawah..."
+                      placeholder="KETIK jawaban di sini berdasarkan opsi di bawah..."
                       className={`text-base font-medium ${
                         isEmpty ? '' : isBest ? 'border-emerald-500 bg-emerald-50' : isPartial ? 'border-amber-400 bg-amber-50' : isAccepted ? 'border-emerald-400 bg-emerald-50' : 'border-red-400 bg-red-50'
                       }`}
                       autoComplete="off"
                       spellCheck={false}
+                      autoFocus
                     />
 
-                    {/* Opsi jawaban sebagai chip yang bisa diklik */}
+                    {/* Opsi jawaban — DISPLAY ONLY (tidak bisa diklik, siswa wajib ketik) */}
                     <div className="space-y-2">
                       <p className="text-xs text-slate-600 font-medium">
-                        📋 Opsi jawaban (klik untuk memilih, atau ketik manual di atas):
+                        📋 Opsi jawaban (lihat, lalu KETIK jawaban yang menurut Anda benar di atas):
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {allDisplayOptions.map((opt, idx) => {
                           const isSelected = lowerValue === opt.text.toLowerCase()
                           return (
-                            <button
+                            <span
                               key={idx}
-                              type="button"
-                              onClick={() => {
-                                // Klik opsi → auto-fill ke input
-                                setAnswers({
-                                  ...answers,
-                                  [currentQ.id]: opt.text,
-                                })
-                              }}
-                              onPaste={(e) => e.preventDefault()}
-                              onContextMenu={(e) => e.preventDefault()}
-                              className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-all ${
+                              className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium cursor-not-allowed select-none ${
                                 isSelected
                                   ? 'border-emerald-500 bg-emerald-100 text-emerald-800 shadow-sm'
-                                  : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:bg-emerald-50'
+                                  : 'border-slate-200 bg-slate-50 text-slate-600'
                               }`}
-                              title={`Opsi ${idx + 1}`}
+                              title="Opsi (tidak bisa diklik — ketik manual di atas)"
+                              onCopy={(e) => e.preventDefault()}
+                              onCut={(e) => e.preventDefault()}
                             >
                               {opt.text}
                               {isSelected && <span className="ml-1">✓</span>}
-                            </button>
+                            </span>
                           )
                         })}
                       </div>
                       <p className="text-xs text-slate-500 italic">
-                        💡 Ada <strong>{allDisplayOptions.length} opsi</strong>: 3 jawaban yang diterima (2 benar + 1 paling benar) + 4 jawaban salah. Pilih dengan bijak!
+                        💡 Ada <strong>{allDisplayOptions.length} opsi</strong>: 3 jawaban yang diterima (2 benar + 1 paling benar) + 4 jawaban salah. <strong>Anda wajib MENGETIK jawaban di input atas — opsi tidak bisa diklik.</strong>
                       </p>
                     </div>
 
                     {/* Validation feedback real-time */}
                     {isEmpty ? (
                       <p className="text-xs text-slate-500">
-                        💡 Jawaban boleh dikosongkan (tidak diisi). Jika diisi, harus dari opsi yang disediakan.
+                        💡 Jawaban boleh dikosongkan (tidak diisi). Jika diisi, harus diketik dari opsi yang disediakan.
                       </p>
                     ) : isBest ? (
                       <p className="text-xs text-emerald-700 font-medium">
@@ -1037,7 +1030,7 @@ export function QuizStage() {
                       </p>
                     ) : (
                       <p className="text-xs text-red-600 font-medium">
-                        ⚠️ Jawaban tidak ada di opsi. Pilih salah satu opsi di atas.
+                        ⚠️ Jawaban tidak ada di opsi. Ketik salah satu opsi yang tersedia di atas.
                       </p>
                     )}
 
@@ -1053,7 +1046,7 @@ export function QuizStage() {
                     </div>
 
                     <p className="text-xs text-red-600 italic">
-                      🔒 Anti copy-paste aktif. Jawaban harus diketik manual atau pilih dari opsi.
+                      🔒 Anti copy-paste aktif. Jawaban WAJIB diketik manual.
                     </p>
                   </div>
                 )
@@ -1146,7 +1139,7 @@ export function QuizStage() {
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
-                      Soal Essai (dikerjakan di sini, dinilai guru)
+                      Soal Essai — WAJIB mengetik (dinilai guru)
                     </p>
                     <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs">
                       Essai
@@ -1160,12 +1153,23 @@ export function QuizStage() {
                         [currentQ.id]: e.target.value,
                       })
                     }
-                    placeholder="Tulis jawaban essai Anda di sini. Jelaskan dengan lengkap dan jelas."
+                    onPaste={(e) => {
+                      e.preventDefault()
+                      toast.warning('Paste dinonaktifkan. Jawaban essai harus diketik manual.', { duration: 2000 })
+                    }}
+                    onCopy={(e) => e.preventDefault()}
+                    onCut={(e) => e.preventDefault()}
+                    onContextMenu={(e) => e.preventDefault()}
+                    placeholder="KETIK jawaban essai Anda di sini. Jelaskan dengan lengkap dan jelas."
                     className="min-h-[200px] text-sm leading-relaxed resize-y"
+                    autoFocus
                   />
                   <p className="text-xs text-slate-500">
                     Jawaban essai akan disimpan dan dinilai oleh guru secara manual.
                     Skor otomatis saat ini hanya dihitung dari soal yang bisa di-auto-grade.
+                  </p>
+                  <p className="text-xs text-red-600 italic">
+                    🔒 Anti copy-paste aktif. Jawaban WAJIB diketik manual.
                   </p>
                 </div>
               )}
