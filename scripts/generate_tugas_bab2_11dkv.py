@@ -393,71 +393,71 @@ ISIAN_QUESTIONS = [
         "level": "C3", "category": "Komposisi & Estetika",
         "question": "Aturan komposisi yang membagi frame menjadi 3 bagian horizontal dan 3 vertikal (9 kotak, 4 titik temu) disebut Rule of...",
         "shortAnswer": "third|thirds|thirds",
-        "wrongOptions": ["half", "quarter", "fifth", "tenth"],
+        "wrongOptions": ["setengah", "seperempat", "seperlima", "sepersepuluh"],
         "explanation": "Rule of Thirds — bagi frame jadi 9 kotak, 4 power points. 'Thirds' (jamak) paling tepat, 'Third' (tunggal) accepted."
     },
     {
         "level": "C3", "category": "Komposisi & Estetika",
         "question": "Pengaturan aperture yang BESAR (misalnya f/1.4, f/1.8, f/2.8) menghasilkan depth of field yang... (gunakan istilah: dangkal/dalam)",
-        "shortAnswer": "dangkal|shallow|dangkal",
+        "shortAnswer": "dangkal|tipis|dangkal",
         "wrongOptions": ["lebar", "tegas", "runcing", "keras"],
-        "explanation": "Aperture besar = DOF dangkal (shallow). Background kabur. 'Dangkal' paling tepat (istilah Indonesia)."
+        "explanation": "Aperture besar = DOF dangkal. Background kabur. 'Dangkal' paling tepat (istilah Indonesia), 'Tipis' accepted (sinonim)."
     },
     {
         "level": "C3", "category": "Komposisi & Estetika",
         "question": "Warna komplementer warna MERAH adalah... (sebut nama warna)",
-        "shortAnswer": "hijau|green|hijau",
+        "shortAnswer": "hijau|hijau daun|hijau",
         "wrongOptions": ["biru", "kuning", "ungu", "oranye"],
-        "explanation": "Merah-hijau = komplementer (berseberangan color wheel). 'Hijau' (Indonesia) paling tepat."
+        "explanation": "Merah-hijau = komplementer (berseberangan color wheel). 'Hijau' paling tepat (istilah Indonesia)."
     },
     {
         "level": "C3", "category": "Komposisi & Estetika",
-        "question": "Garis yang memandu mata pengamat ke subjek disebut... (istilah Inggris: leading...)",
-        "shortAnswer": "lines|garis|lines",
-        "wrongOptions": ["curves", "dots", "shapes", "colors"],
-        "explanation": "Leading Lines — garis yang memandu mata. 'Lines' (English, full term 'leading lines') paling tepat."
+        "question": "Garis yang memandu mata pengamat ke subjek disebut garis...",
+        "shortAnswer": "pandu|pemandu|pandu",
+        "wrongOptions": ["kurva", "titik", "bentuk", "warna"],
+        "explanation": "Garis pandu (leading lines) — garis yang memandu mata. 'Pandu' paling tepat (Indonesia), 'Pemandu' accepted (sinonim)."
     },
     {
         "level": "C3", "category": "Komposisi & Estetika",
-        "question": "Jarak fokus yang menghasilkan background kabur (bokeh) disebut depth of...",
-        "shortAnswer": "field|dof|field",
-        "wrongOptions": ["view", "focus", "lens", "blur"],
-        "explanation": "Depth of Field (DOF). DOF dangkal = background kabur. 'Field' (full term 'depth of field') paling tepat."
+        "question": "Jarak fokus yang menghasilkan background kabur (bokeh) disebut kedalaman...",
+        "shortAnswer": "ruang|bidang|ruang",
+        "wrongOptions": ["pandangan", "fokus", "lensa", "kabur"],
+        "explanation": "Kedalaman ruang (depth of field). DOF dangkal = background kabur. 'Ruang' paling tepat (Indonesia), 'Bidang' accepted (sinonim)."
     },
     {
         "level": "C4", "category": "Komposisi & Estetika",
         "question": "Komposisi yang menggunakan elemen sekitar (jendela, daun, pintu) sebagai bingkai alami subjek disebut...",
-        "shortAnswer": "framing|bingkai|framing",
-        "wrongOptions": ["crop", "zoom", "filter", "border"],
-        "explanation": "Framing — menggunakan elemen sekitar sebagai bingkai alami. 'Framing' (istilah fotografi) paling tepat."
+        "shortAnswer": "bingkai|bingkai alami|bingkai",
+        "wrongOptions": ["pangkas", "perbesar", "filter", "tepi"],
+        "explanation": "Bingkai (framing) — menggunakan elemen sekitar sebagai bingkai alami. 'Bingkai' paling tepat (Indonesia)."
     },
     {
         "level": "C4", "category": "Komposisi & Estetika",
         "question": "Foto pantulan cermin di danau menghasilkan komposisi yang disebut...",
-        "shortAnswer": "symmetry|simetri|symmetry",
-        "wrongOptions": ["chaos", "random", "asymmetry", "distortion"],
-        "explanation": "Symmetry (simetri) — pantulan menciptakan simetri refleksi. 'Symmetry' (English) paling tepat."
+        "shortAnswer": "simetri|seimbang|simetri",
+        "wrongOptions": ["kacau", "acak", "asimetri", "distorsi"],
+        "explanation": "Simetri — pantulan menciptakan simetri refleksi. 'Simetri' paling tepat (Indonesia), 'Seimbang' accepted (sinonim)."
     },
     {
         "level": "C3", "category": "Komposisi & Estetika",
         "question": "Pengaturan aperture yang KECIL (f/16, f/22) menghasilkan depth of field yang... (istilah: dalam)",
-        "shortAnswer": "dalam|deep|dalam",
+        "shortAnswer": "dalam|mendalam|dalam",
         "wrongOptions": ["sempit", "tipis", "rendah", "cepat"],
-        "explanation": "Aperture kecil = DOF dalam (deep). Semua tajam. 'Dalam' (istilah Indonesia) paling tepat."
+        "explanation": "Aperture kecil = DOF dalam. Semua tajam. 'Dalam' paling tepat (istilah Indonesia), 'Mendalam' accepted (sinonim)."
     },
     {
         "level": "C3", "category": "Komposisi & Estetika",
         "question": "Pola berulang dari benda-benda identik (misal: susunan kacamata di etalase) disebut komposisi...",
-        "shortAnswer": "pattern|pola|pattern",
-        "wrongOptions": ["chaos", "noise", "glitch", "scatter"],
-        "explanation": "Pattern (pola) — benda berulang membentuk komposisi menarik. 'Pattern' (English) paling tepat."
+        "shortAnswer": "pola|pola berulang|pola",
+        "wrongOptions": ["kacau", "gangguan", "rusak", "berserakan"],
+        "explanation": "Pola (pattern) — benda berulang membentuk komposisi menarik. 'Pola' paling tepat (Indonesia)."
     },
     {
         "level": "C3", "category": "Komposisi & Estetika",
-        "question": "Ruang kosong di sekitar subjek yang menonjolkan subjek disebut... space (istilah Inggris)",
-        "shortAnswer": "negative|negatif|negative",
-        "wrongOptions": ["positive", "blank", "empty", "void"],
-        "explanation": "Negative Space — ruang kosong yang menonjolkan subjek. 'Negative' (full term 'negative space') paling tepat."
+        "question": "Ruang kosong di sekitar subjek yang menonjolkan subjek disebut ruang...",
+        "shortAnswer": "negatif|kosong|negatif",
+        "wrongOptions": ["positif", "hampa", "penuh", "ramai"],
+        "explanation": "Ruang negatif (negative space) — ruang kosong yang menonjolkan subjek. 'Negatif' paling tepat (Indonesia), 'Kosong' accepted (sinonim)."
     },
 ]
 
