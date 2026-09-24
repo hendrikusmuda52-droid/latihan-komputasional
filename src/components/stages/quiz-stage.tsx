@@ -1167,24 +1167,8 @@ export function QuizStage() {
                       </p>
                     </div>
 
-                    {/* Validation feedback real-time */}
-                    {isEmpty ? (
-                      <p className="text-xs text-slate-500">
-                        💡 Jawaban boleh dikosongkan (tidak diisi). Jika diisi, harus diketik dari opsi yang disediakan.
-                      </p>
-                    ) : isBest ? (
-                      <p className="text-xs text-emerald-700 font-medium">
-                        ✓ Jawaban paling tepat! (skor penuh 100%)
-                      </p>
-                    ) : isPartial ? (
-                      <p className="text-xs text-amber-700 font-medium">
-                        ★ Jawaban benar (skor parsial 50%)
-                      </p>
-                    ) : isInOptions ? (
-                      <p className="text-xs text-slate-600 font-medium">
-                        📝 Jawaban ada di opsi (skor 0 — opsi yang Anda pilih salah)
-                      </p>
-                    ) : (
+                    {/* Validation feedback — HANYA muncul jika jawaban tidak ada di opsi */}
+                    {!isEmpty && !isInOptions && (
                       <p className="text-xs text-red-600 font-medium">
                         ⚠️ Jawaban tidak ada di opsi. Ketik salah satu opsi yang tersedia di atas.
                       </p>
