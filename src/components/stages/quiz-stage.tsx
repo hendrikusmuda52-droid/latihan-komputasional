@@ -1129,7 +1129,7 @@ export function QuizStage() {
                       onContextMenu={(e) => e.preventDefault()}
                       placeholder="KETIK jawaban di sini berdasarkan opsi di bawah..."
                       className={`text-base font-medium ${
-                        isEmpty ? '' : isBest ? 'border-emerald-500 bg-emerald-50' : isPartial ? 'border-amber-400 bg-amber-50' : isInOptions ? 'border-slate-300 bg-slate-50' : 'border-red-400 bg-red-50'
+                        isEmpty || isInOptions ? '' : 'border-red-400 bg-red-50'
                       }`}
                       autoComplete="off"
                       spellCheck={false}
@@ -1143,27 +1143,21 @@ export function QuizStage() {
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {allDisplayOptions.map((opt, idx) => {
-                          const isSelected = lowerValue === opt.text.toLowerCase()
                           return (
                             <span
                               key={idx}
-                              className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium cursor-not-allowed select-none ${
-                                isSelected
-                                  ? 'border-emerald-500 bg-emerald-100 text-emerald-800 shadow-sm'
-                                  : 'border-slate-200 bg-slate-50 text-slate-600'
-                              }`}
+                              className="px-3 py-1.5 rounded-lg border-2 border-slate-200 bg-slate-50 text-slate-600 text-sm font-medium cursor-not-allowed select-none"
                               title="Opsi (tidak bisa diklik — ketik manual di atas)"
                               onCopy={(e) => e.preventDefault()}
                               onCut={(e) => e.preventDefault()}
                             >
                               {opt.text}
-                              {isSelected && <span className="ml-1">✓</span>}
                             </span>
                           )
                         })}
                       </div>
                       <p className="text-xs text-slate-500 italic">
-                        💡 Ada <strong>{allDisplayOptions.length} opsi</strong>: 3 jawaban yang diterima (2 benar + 1 paling benar) + 4 jawaban salah. <strong>Anda wajib MENGETIK jawaban di input atas — opsi tidak bisa diklik.</strong>
+                        💡 Ketik salah satu opsi di atas. Jawaban di luar opsi tidak dapat dikumpulkan.
                       </p>
                     </div>
 
@@ -1173,17 +1167,6 @@ export function QuizStage() {
                         ⚠️ Jawaban tidak ada di opsi. Ketik salah satu opsi yang tersedia di atas.
                       </p>
                     )}
-
-                    {/* Info penilaian */}
-                    <div className="p-2 bg-slate-50 rounded text-xs text-slate-600">
-                      <p className="font-medium">Info penilaian:</p>
-                      <ul className="ml-4 list-disc space-y-0.5">
-                        <li>Jawaban <strong>paling benar</strong>: skor 100% (2 poin)</li>
-                        <li>Jawaban <strong>benar</strong>: skor 50% (1 poin)</li>
-                        <li>Jawaban <strong>salah</strong>: 0 poin</li>
-                        <li>Jawaban boleh <strong>kosong</strong> (0 poin)</li>
-                      </ul>
-                    </div>
 
                     <p className="text-xs text-red-600 italic">
                       🔒 Anti copy-paste aktif. Jawaban WAJIB diketik manual.
