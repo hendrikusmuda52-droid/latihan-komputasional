@@ -175,43 +175,47 @@ export function QuizStage() {
     }
 
     // ── STEP 2: Kalau localStorage kosong (first load), fetch dari API ──
-    // Fetch soal per-type secara terpisah supaya distribusi konsisten:
-    // 35 PG di awal + 10 PGK di tengah + 10 Isian di akhir
-    const buildParams = (qType: string, limit: number) => {
-      const params = new URLSearchParams({ grade: tier, subject, questionType: qType, limit: String(limit) })
-      if (cpId && cpId !== 'null' && cpId !== '__none__') params.set('cpId', cpId)
-      if (tpId && tpId !== 'null' && tpId !== '__none__') params.set('tpId', tpId)
-      return params
-    }
+    // Strategi baru: fetch SEMUA soal untuk CP/TP (tanpa filter type, tanpa limit)
+    // lalu sort by type: PG di awal → PGK di tengah → Isian di akhir
+    // Jika questionCount di-set, slice ke jumlah tersebut
+    const params = new URLSearchParams({ grade: tier, subject })
+    if (cpId && cpId !== 'null' && cpId !== '__none__') params.set('cpId', cpId)
+    if (tpId && tpId !== 'null' && tpId !== '__none__') params.set('tpId', tpId)
+    // TIDAK set limit dan TIDAK set questionType → API return ALL soal untuk CP/TP
 
-    // Tentukan jumlah per tipe berdasarkan questionCount atau default 55 (35+10+10)
-    const totalCount = questionCount ? parseInt(questionCount) : 55
-    // Distribusi: ~64% PG, ~18% PGK, ~18% Isian (35:10:10 untuk 55 soal)
-    const pgCount = Math.max(1, Math.round(totalCount * 0.64))
-    const pgkCount = Math.max(1, Math.round(totalCount * 0.18))
-    const isianCount = Math.max(1, Math.round(totalCount * 0.18))
+    fetch(`/api/content/questions?${params.toString()}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.questions?.length > 0) {
+          let questions = data.questions as Question[]
 
-    // Fetch 3 type secara paralel
-    Promise.all([
-      fetch(`/api/content/questions?${buildParams('pilihan_ganda', pgCount).toString()}`).then(r => r.json()),
-      fetch(`/api/content/questions?${buildParams('pilihan_ganda_kompleks', pgkCount).toString()}`).then(r => r.json()),
-      fetch(`/api/content/questions?${buildParams('isian_singkat', isianCount).toString()}`).then(r => r.json()),
-    ])
-      .then(([pgData, pgkData, isianData]) => {
-        const pgQuestions = (pgData.success && pgData.questions ? pgData.questions : []) as Question[]
-        const pgkQuestions = (pgkData.success && pgkData.questions ? pgkData.questions : []) as Question[]
-        const isianQuestions = (isianData.success && isianData.questions ? isianData.questions : []) as Question[]
+          // ── Sort by type: PG → PGK → Isian → Essai → Mencocokkan ──
+          const typeOrder: Record<string, number> = {
+            'pilihan_ganda': 0,
+            'pilihan_ganda_kompleks': 1,
+            'isian_singkat': 2,
+            'mencocokkan': 3,
+            'essai': 4,
+          }
+          questions.sort((a, b) => {
+            const aOrder = typeOrder[a.questionType || 'pilihan_ganda'] ?? 99
+            const bOrder = typeOrder[b.questionType || 'pilihan_ganda'] ?? 99
+            if (aOrder !== bOrder) return aOrder - bOrder
+            // Same type: sort by dbId for consistency
+            return String(a.dbId || a.id).localeCompare(String(b.dbId || b.id))
+          })
 
-        // Re-assign id sequential (1, 2, 3, ...) supaya navigator soal konsisten
-        let idCounter = 1
-        const allQuestions: Question[] = []
-        for (const q of pgQuestions) { allQuestions.push({ ...q, id: idCounter++ }) }
-        for (const q of pgkQuestions) { allQuestions.push({ ...q, id: idCounter++ }) }
-        for (const q of isianQuestions) { allQuestions.push({ ...q, id: idCounter++ }) }
+          // ── Jika questionCount di-set, slice ke jumlah tersebut ──
+          const totalCount = questionCount ? parseInt(questionCount) : 0
+          if (totalCount > 0 && questions.length > totalCount) {
+            questions = questions.slice(0, totalCount)
+          }
 
-        if (allQuestions.length > 0) {
+          // Re-assign id sequential (1, 2, 3, ...) supaya navigator soal konsisten
+          let idCounter = 1
+          const allQuestions = questions.map(q => ({ ...q, id: idCounter++ }))
+
           // ── Save paket soal lengkap ke localStorage ──
-          // Supaya saat refresh, paket tidak berubah (tidak perlu re-fetch API)
           if (typeof window !== 'undefined') {
             localStorage.setItem(STORAGE_KEY_QUESTION_PACKAGE, JSON.stringify(allQuestions))
           }
