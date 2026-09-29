@@ -115,7 +115,7 @@ import { JurnalGuruManager } from './teacher/jurnal-manager'
 import { CatatanSikapManager } from './teacher/sikap-manager'
 import { ResetCenter } from './teacher/reset-center'
 import { AnnouncementManager } from './teacher/announcement-manager'
-import { ScheduleJurnal } from '@/components/schedule-jurnal'
+import { ScheduleJurnal, ScheduleJurnalWithSwitcher } from '@/components/schedule-jurnal'
 import { AnalyticsManager } from './teacher/analytics-manager'
 import { hasTypingFeature } from '@/lib/constants'
 import { TaskPhotoViewer } from '@/components/teacher/task-photo-viewer'
@@ -1391,9 +1391,11 @@ export function TeacherDashboard() {
       {activeMenu === 'attendance' && <AttendanceManager />}
       {activeMenu === 'announcements' && <AnnouncementManager teacherName={teacher?.name || teacher?.username || ''} teacherSubject={teacher?.subject || 'Informatika'} />}
       {activeMenu === 'schedule' && (
-        teacher?.role === 'admin'
-          ? <ScheduleJurnal mode="admin" />
-          : <ScheduleJurnal mode="teacher" teacherCode={teacher?.username || ''} teacherName={teacher?.name || teacher?.username || ''} />
+        <ScheduleJurnalWithSwitcher
+          mode={teacher?.role === 'admin' ? 'admin' : 'teacher'}
+          teacherCode={teacher?.username || ''}
+          teacherName={teacher?.name || teacher?.username || ''}
+        />
       )}
       {activeMenu === 'jurnal' && <JurnalGuruManager />}
       {activeMenu === 'sikap' && <CatatanSikapManager />}

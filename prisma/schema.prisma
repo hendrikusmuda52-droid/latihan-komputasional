@@ -342,6 +342,25 @@ model JurnalGuru {
   @@index([subject, tahunAjaran, semester])
 }
 
+// ── v6: Jadwal Pelajaran (Schedule) ──
+// Disimpan di DB supaya bisa di-edit oleh admin (tidak hardcode di frontend)
+// Format jam: "07.40-08.20" (string, bukan int)
+model Schedule {
+  id           String   @id @default(cuid())
+  hari         String   // "Senin" - "Jumat"
+  jamPelajaran String   // "07.40-08.20" (string untuk fleksibilitas)
+  kelas        String   // "7A", "7B", ..., "ALL" untuk istirahat/upacara
+  subjectCode  String   // "INFO", "BING", "ISTIRAHAT", dll
+  teacherCode  String?  // "HM", "MR", "-" untuk non-akademik
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([hari, jamPelajaran, kelas])
+  @@index([hari, kelas])
+  @@index([teacherCode, hari])
+}
+
 // ── Catatan Sikap Siswa (Jurnal Observasi Anekdot) ──
 model CatatanSikap {
   id            String   @id @default(cuid())

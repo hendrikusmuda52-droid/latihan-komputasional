@@ -7,12 +7,14 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog'
 import {
   Calendar, Clock, BookOpen, Save, RefreshCw, CheckCircle2, AlertCircle,
   Users, FileText, Download, Printer, Lock, ChevronRight, Megaphone,
+  UserCog, GraduationCap, Shield,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -28,6 +30,86 @@ const STATUS_OPTIONS = [
   { value: 'I', label: 'Izin', color: 'text-blue-600' },
   { value: 'A', label: 'Alfa', color: 'text-red-600' },
 ]
+
+// ── Dev simulation roles ──
+const DEV_ROLES = [
+  { value: 'teacher_HM', label: 'Guru HM (Informatika & Koding)', type: 'teacher', code: 'HM', name: 'HM' },
+  { value: 'teacher_MR', label: 'Guru MR (Inggris & Keterampilan)', type: 'teacher', code: 'MR', name: 'MR' },
+  { value: 'teacher_AA', label: 'Guru AA (B.Indonesia & PLH)', type: 'teacher', code: 'AA', name: 'AA' },
+  { value: 'student_7A', label: 'Siswa Kelas 7A', type: 'student', kelas: '7A', name: 'Siswa Demo 7A' },
+  { value: 'student_8C', label: 'Siswa Kelas 8C', type: 'student', kelas: '8C', name: 'Siswa Demo 8C' },
+  { value: 'student_9B', label: 'Siswa Kelas 9B', type: 'student', kelas: '9B', name: 'Siswa Demo 9B' },
+  { value: 'admin', label: 'Admin (Rekap Total)', type: 'admin' },
+]
+
+// ── Wrapper component with dev switcher ──
+export function ScheduleJurnalWithSwitcher(props: ScheduleJurnalProps) {
+  const [devRole, setDevRole] = useState<string>('')
+  const [simMode, setSimMode] = useState<'teacher' | 'student' | 'admin'>(props.mode)
+  const [simTeacherCode, setSimTeacherCode] = useState(props.teacherCode || '')
+  const [simTeacherName, setSimTeacherName] = useState(props.teacherName || '')
+  const [simStudentKelas, setSimStudentKelas] = useState(props.studentKelas || '')
+  const [simStudentName, setSimStudentName] = useState(props.studentName || '')
+
+  const handleDevRoleChange = (value: string) => {
+    setDevRole(value)
+    const role = DEV_ROLES.find(r => r.value === value)
+    if (!role) return
+    if (role.type === 'teacher') {
+      setSimMode('teacher')
+      setSimTeacherCode(role.code || '')
+      setSimTeacherName(role.name || '')
+    } else if (role.type === 'student') {
+      setSimMode('student')
+      setSimStudentKelas(role.kelas || '')
+      setSimStudentName(role.name || '')
+    } else {
+      setSimMode('admin')
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Dev Simulation Switcher — sticky top bar */}
+      <div className="sticky top-0 z-30 bg-amber-50 border-2 border-amber-200 rounded-lg p-2 flex items-center gap-2 shadow-sm">
+        <Badge className="bg-amber-500 text-white text-xs flex items-center gap-1 flex-shrink-0">
+          <UserCog className="w-3 h-3" /> DEV SIM
+        </Badge>
+        <Select value={devRole} onValueChange={handleDevRoleChange}>
+          <SelectTrigger className="h-8 text-xs flex-1 max-w-md bg-white">
+            <SelectValue placeholder="Pilih role simulasi (dev mode)..." />
+          </SelectTrigger>
+          <SelectContent>
+            {DEV_ROLES.map(r => (
+              <SelectItem key={r.value} value={r.value}>
+                <span className="flex items-center gap-2">
+                  {r.type === 'teacher' && <Shield className="w-3 h-3 text-violet-500" />}
+                  {r.type === 'student' && <GraduationCap className="w-3 h-3 text-blue-500" />}
+                  {r.type === 'admin' && <Shield className="w-3 h-3 text-amber-500" />}
+                  {r.label}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {devRole && (
+          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => { setDevRole(''); setSimMode(props.mode) }}>
+            Reset ke production
+          </Button>
+        )}
+      </div>
+
+      {/* Render component with simulated or production props */}
+      <ScheduleJurnal
+        mode={simMode}
+        teacherCode={simTeacherCode || props.teacherCode}
+        teacherName={simTeacherName || props.teacherName}
+        studentKelas={simStudentKelas || props.studentKelas}
+        studentName={simStudentName || props.studentName}
+      />
+    </div>
+  )
+}
 
 // ── Tipe untuk jurnal yang tersimpan ──
 interface JurnalEntry {
