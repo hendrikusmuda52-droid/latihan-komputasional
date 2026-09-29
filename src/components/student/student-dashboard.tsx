@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { useAppStore } from '@/lib/store'
 import { SMP_SUBJECTS, SMK_SUBJECTS, getSubjectsByJenjang, getJenjang } from '@/lib/constants'
+import { ScheduleJurnal } from '@/components/schedule-jurnal'
 import { SelfAssessment } from '@/components/student/self-assessment'
 import { MaterialMarkdownRenderer } from '@/components/student/material-markdown-renderer'
 import { UploadTaskPhoto } from '@/components/student/upload-task-photo'
@@ -37,7 +38,7 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
   const [data, setData] = useState<DashboardData | null>(null)
   const [materials, setMaterials] = useState<Material[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'tugas' | 'materi' | 'nilai' | 'capaian'>('tugas')
+  const [activeTab, setActiveTab] = useState<'tugas' | 'materi' | 'nilai' | 'capaian' | 'jadwal'>('tugas')
   // ── NEW: State untuk ubah password ──
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null)
@@ -311,10 +312,11 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
         {/* Tabs */}
         <div className="flex gap-2 p-1 bg-white rounded-xl shadow-sm border border-slate-200">
           {[
-            { id: 'tugas' as const, label: 'Tugas Latihan', icon: FileText },
-            { id: 'materi' as const, label: 'Materi Belajar', icon: BookOpen },
-            { id: 'nilai' as const, label: 'Nilai Saya', icon: Award },
-            { id: 'capaian' as const, label: 'Capaian & Rapor', icon: Target },
+            { id: 'tugas' as const, label: 'Tugas', icon: FileText },
+            { id: 'materi' as const, label: 'Materi', icon: BookOpen },
+            { id: 'nilai' as const, label: 'Nilai', icon: Award },
+            { id: 'jadwal' as const, label: 'Jadwal', icon: Calendar },
+            { id: 'capaian' as const, label: 'Capaian', icon: Target },
           ].map(tab => { const Icon = tab.icon; return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold transition-all ${activeTab === tab.id ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-50'}`}>
               <Icon className="w-4 h-4" />{tab.label}
@@ -475,6 +477,16 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
         )}
 
         {/* Tab: Capaian & Rapor Mandiri */}
+        {activeTab === 'jadwal' && (
+          <div className="container max-w-5xl mx-auto px-4 pb-6">
+            <ScheduleJurnal
+              mode="student"
+              studentKelas={student.kelas}
+              studentName={student.namaLengkap}
+            />
+          </div>
+        )}
+
         {activeTab === 'capaian' && (
           <SelfAssessment subject={selectedSubject || 'Informatika'} />
         )}
