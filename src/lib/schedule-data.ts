@@ -15,19 +15,19 @@ export const SUBJECTS: Record<string, string> = {
 export const NON_ACADEMIC_SLOTS = ['UPACARA', 'ISTIRAHAT', 'LITERASI', 'SENAM']
 
 export const TEACHERS: Record<string, { name: string; subjects: string[] }> = {
-  HM: { name: 'HM', subjects: ['INFO', 'KOD', 'TIK'] },
-  MR: { name: 'MR', subjects: ['BING', 'KET'] },
-  MS: { name: 'MS', subjects: ['IPA'] },
-  AA: { name: 'AA', subjects: ['BIN', 'PLH'] },
-  SY: { name: 'SY', subjects: ['MAN'] },
-  VN: { name: 'VN', subjects: ['KAI', 'PJOK'] },
-  TIK: { name: 'TIK', subjects: ['TIK'] },
-  RA: { name: 'RA', subjects: ['PKN', 'IPS', 'KET'] },
-  MC: { name: 'MC', subjects: ['PLH', 'KET', 'KR'] },
-  BP: { name: 'BP', subjects: ['MTK'] },
-  GV: { name: 'GV', subjects: ['SB', 'KET'] },
-  HN: { name: 'HN', subjects: ['AGM', 'BING', 'KAI', 'KR'] },
-  VIK: { name: 'VIK', subjects: ['KOD'] },
+  HM: { name: 'Hendrikus Frederik Lewo Muda', subjects: ['INFO', 'KOD', 'TIK'] },
+  MR: { name: 'Mardiana', subjects: ['BING', 'KET'] },
+  MS: { name: 'Hirim Marida Silaen', subjects: ['IPA'] },
+  AA: { name: 'Andreas Anastasius', subjects: ['BIN', 'PLH'] },
+  SY: { name: 'Susiyanti', subjects: ['MAN'] },
+  VN: { name: 'Veneranda', subjects: ['KAI', 'PJOK'] },
+  TIK: { name: 'Hendrikus Frederik Lewo Muda', subjects: ['TIK'] },
+  RA: { name: 'Ranika', subjects: ['PKN', 'IPS', 'KET'] },
+  MC: { name: 'Mikael Chip', subjects: ['PLH', 'KET', 'KR'] },
+  BP: { name: 'Epeni', subjects: ['MTK'] },
+  GV: { name: 'Giovani', subjects: ['SB', 'KET'] },
+  HN: { name: 'Herklana Haini', subjects: ['AGM', 'BING', 'KAI', 'KR'] },
+  VIK: { name: 'Viktorianus', subjects: ['KOD'] },
 }
 
 type ScheduleSlot = Record<string, [string, string]> // kelas → [mapel, guru]

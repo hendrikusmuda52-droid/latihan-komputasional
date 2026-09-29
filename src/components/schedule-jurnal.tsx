@@ -33,13 +33,13 @@ const STATUS_OPTIONS = [
 
 // ── Dev simulation roles ──
 const DEV_ROLES = [
-  { value: 'teacher_HM', label: 'Guru HM (Informatika & Koding)', type: 'teacher', code: 'HM', name: 'HM' },
-  { value: 'teacher_MR', label: 'Guru MR (Inggris & Keterampilan)', type: 'teacher', code: 'MR', name: 'MR' },
-  { value: 'teacher_AA', label: 'Guru AA (B.Indonesia & PLH)', type: 'teacher', code: 'AA', name: 'AA' },
+  { value: 'teacher_HM', label: 'Guru HM — Hendrikus (Informatika & Koding)', type: 'teacher', code: 'HM', name: 'Hendrikus Frederik Lewo Muda' },
+  { value: 'teacher_MR', label: 'Guru MR — Mardiana (Inggris & Keterampilan)', type: 'teacher', code: 'MR', name: 'Mardiana' },
+  { value: 'teacher_AA', label: 'Guru AA — Andreas (B.Indonesia & PLH)', type: 'teacher', code: 'AA', name: 'Andreas Anastasius' },
   { value: 'student_7A', label: 'Siswa Kelas 7A', type: 'student', kelas: '7A', name: 'Siswa Demo 7A' },
   { value: 'student_8C', label: 'Siswa Kelas 8C', type: 'student', kelas: '8C', name: 'Siswa Demo 8C' },
   { value: 'student_9B', label: 'Siswa Kelas 9B', type: 'student', kelas: '9B', name: 'Siswa Demo 9B' },
-  { value: 'admin', label: 'Admin (Rekap Total)', type: 'admin' },
+  { value: 'admin', label: 'Admin — Hendrikus (Rekap Total)', type: 'admin' },
 ]
 
 // ── Wrapper component with dev switcher ──
