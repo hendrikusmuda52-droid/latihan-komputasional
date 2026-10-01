@@ -9,7 +9,7 @@ Fokus: Image Editing & Image Manipulation
 import os
 
 OUTPUT_PATH = "/home/z/my-project/download/insert_cp_tp_materi_soal_12dkv_kejuruan.sql"
-DUE_DATE_ISO = "2026-10-15T23:59:00+07:00"
+DUE_DATE_ISO = "2026-10-13T23:59:00+07:00"
 GRADE = "12DKV"
 SUBJECT = "Mata Pelajaran Kejuruan"
 
@@ -300,12 +300,12 @@ VALUES ('{MAT_ID}', 'Image Editing & Image Manipulation', {sql_str(MATERI)}, '{S
 ON CONFLICT (id) DO NOTHING;
 """)
 
-    for i, q in enumerate(PG_QUESTIONS[:100], 1):
+    for i, q in enumerate(PG_QUESTIONS[:60], 1):
         q_id = f"q_kej_12_pg_{i:03d}"
         content.append(f"\n-- PG #{i:03d}")
         content.append(make_pg_sql(q_id, q))
 
-    for i, q in enumerate(ISIAN_QUESTIONS[:50], 1):
+    for i, q in enumerate(ISIAN_QUESTIONS[:15], 1):
         q_id = f"q_kej_12_isian_{i:03d}"
         content.append(f"\n-- Isian #{i:03d}")
         content.append(make_isian_sql(q_id, q))
@@ -313,19 +313,19 @@ ON CONFLICT (id) DO NOTHING;
     content.append(f"""
 -- Tugas
 INSERT INTO "Assignment" (id, title, description, subject, "targetKelas", "targetJenjang", "isActive", "dueDate", "exerciseType", "questionCount", "taskType", "teacherId", "cpId", "tpId", "taskCategory", "taskTypeName", "tahunAjaran", "semester", "duration", "createdAt", "updatedAt")
-VALUES ('{ASG_ID}', 'Tugas: Image Editing & Manipulation (100 PG + 50 Isian)', 'Tugas tentang image editing dan manipulation. Mencakup pencahayaan, komposisi, warna, kontras, noise-blur. 100 soal PG HOTS + 50 soal isian. Waktu 120 menit.', '{SUBJECT}', '12DKV', 'SMK', true, '{DUE_DATE_ISO}', 'wajib', 150, 'quiz_only', NULL, '{CP_ID}', '{TP_ID}', 'luring', '', '2026/2027', 'ganjil', 120, NOW(), NOW())
+VALUES ('{ASG_ID}', 'Tugas: Image Editing & Manipulation (60 PG + 15 Isian)', 'Tugas tentang image editing dan manipulation. Mencakup pencahayaan, komposisi, warna, kontras, noise-blur. 60 soal PG HOTS + 15 soal isian. Waktu 90 menit.', '{SUBJECT}', '12DKV', 'SMK', true, '{DUE_DATE_ISO}', 'wajib', 75, 'quiz_only', NULL, '{CP_ID}', '{TP_ID}', 'luring', '', '2026/2027', 'ganjil', 90, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- Verifikasi
 SELECT "questionType", COUNT(*) FROM "Question" WHERE id LIKE 'q_kej_12_%' GROUP BY "questionType";
--- Expected: pilihan_ganda 100, isian_singkat 50
+-- Expected: pilihan_ganda 60, isian_singkat 15
 """)
 
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         f.write("\n".join(content))
     size = os.path.getsize(OUTPUT_PATH) / 1024
     print(f"✅ {OUTPUT_PATH} ({size:.1f} KB)")
-    print(f"   100 PG + 50 Isian = 150 soal")
+    print(f"   60 PG + 15 Isian = 75 soal")
     # Verify CP/TP < 100 chars
     cp_desc = "Siswa mampu editing dan manipulasi gambar dengan teknik pencahayaan, warna, dan komposisi."
     tp_desc = "Siswa mampu menerapkan teknik editing: pencahayaan, komposisi, warna, kontras, noise-blur."
