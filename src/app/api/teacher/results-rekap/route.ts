@@ -20,7 +20,15 @@ export async function GET(req: NextRequest) {
     if (!teacher) return NextResponse.json({ error: 'Token invalid' }, { status: 401 })
 
     const teacherSubject = teacher.subject || 'Informatika'
+    const teacherRole = teacher.role || 'teacher'
     const kelasFilter = req.nextUrl.searchParams.get('kelas') || 'ALL'
+
+    // ── FIX: Admin should see ALL subjects, not just their own ──
+    // Bug: admin dengan subject='Informatika' tidak bisa lihat tugas 'Mata Pelajaran Pilihan'
+    // atau 'Mata Pelajaran Kejuruan' → hanya 1 tugas yang muncul
+    const subjectsToQuery = teacherRole === 'admin'
+      ? undefined // admin: no subject filter → return ALL subjects
+      : teacherSubject
 
     // 1. Fetch students (filtered by kelas)
     const studentWhere: Record<string, unknown> = { isActive: true }
@@ -35,12 +43,12 @@ export async function GET(req: NextRequest) {
       })
     )
 
-    // 2. Fetch assignments (filtered by kelas)
-    // ── FIX: Jangan tampilkan tugas hukuman di rekap ──
-    // Tugas hukuman (isPunishment=true) hanya untuk siswa yang belum mengerjakan.
-    // Di rekap guru, tugas hukuman membingungkan karena muncul untuk semua siswa.
-    // Filter: hanya tampilkan tugas NON-hukuman.
-    const assignmentWhere: Record<string, unknown> = { subject: teacherSubject, isActive: true }
+    // 2. Fetch assignments
+    // ── FIX: Admin sees ALL subjects; teacher sees only their subject ──
+    const assignmentWhere: Record<string, unknown> = { isActive: true }
+    if (subjectsToQuery) {
+      assignmentWhere.subject = subjectsToQuery
+    }
     if (kelasFilter !== 'ALL') {
       assignmentWhere.OR = [
         { targetKelas: 'ALL' },
@@ -63,11 +71,19 @@ export async function GET(req: NextRequest) {
     )
 
     // 3. Fetch all results for these students
+    // ── FIX: Admin sees results from ALL subjects; teacher only their subject ──
     const studentIds = (students || []).map(s => s.id)
+    const resultWhere: Record<string, unknown> = {}
+    if (studentIds.length > 0) {
+      resultWhere.studentId = { in: studentIds }
+    }
+    if (subjectsToQuery) {
+      resultWhere.subject = subjectsToQuery
+    }
     const results = studentIds.length > 0
       ? await safeQuery(() =>
           db.result.findMany({
-            where: { studentId: { in: studentIds }, subject: teacherSubject },
+            where: resultWhere,
             select: {
               studentId: true, assignmentId: true,
               totalScore: true, quizScore: true, typingScore: true,

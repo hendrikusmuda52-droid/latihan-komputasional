@@ -25,15 +25,22 @@ export async function GET(req: NextRequest) {
     if (!teacher) return NextResponse.json({ error: 'Token invalid' }, { status: 401 })
 
     const teacherSubject = teacher.subject || 'Informatika'
+    const teacherRole = teacher.role || 'teacher'
     const assignmentId = req.nextUrl.searchParams.get('assignmentId')
     const kelasFilter = req.nextUrl.searchParams.get('kelas')
     const tahunAjaran = req.nextUrl.searchParams.get('tahunAjaran') || '2026/2027'
     const semester = req.nextUrl.searchParams.get('semester') || 'ganjil'
 
+    // ── FIX: Admin should see ALL subjects, not just their own ──
+    const subjectsToQuery = teacherRole === 'admin'
+      ? undefined
+      : teacherSubject
+
     // ── Fetch all assignments untuk info header ──
-    // FIX: filter assignments berdasarkan kelas juga — sebelumnya semua assignment
-    // masuk, sehingga siswa kelas 8 dapat kolom "Tugas 1" yang ternyata hanya untuk kelas 7
-    const assignmentWhere: Record<string, unknown> = { subject: teacherSubject, isActive: true }
+    const assignmentWhere: Record<string, unknown> = { isActive: true }
+    if (subjectsToQuery) {
+      assignmentWhere.subject = subjectsToQuery
+    }
     if (kelasFilter && kelasFilter !== 'ALL') {
       // assignment.targetKelas bisa "ALL" atau "7A,7B,7C" — pakai contains
       assignmentWhere.OR = [
@@ -68,16 +75,17 @@ export async function GET(req: NextRequest) {
     )
 
     // ── Fetch all results ──
-    // FIX: Filter results berdasarkan studentIds yang sudah difilter per kelas
-    // Sebelumnya: results dari semua siswa masuk → bercampur dengan kelas lain
+    // ── FIX: Admin sees ALL subjects; teacher only their subject ──
     const studentIds = (students || []).map(s => s.id)
     const resultWhere: Record<string, unknown> = {
-      subject: teacherSubject,
       tahunAjaran,
       semester,
     }
     if (studentIds.length > 0) {
       resultWhere.studentId = { in: studentIds }
+    }
+    if (subjectsToQuery) {
+      resultWhere.subject = subjectsToQuery
     }
     if (assignmentId && assignmentId !== 'ALL') {
       resultWhere.assignmentId = assignmentId
