@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
       })
 
       // 2. Upsert attendance for each student
-      const attendanceResults = []
+      const attendanceResults: Array<{ studentId: string; status: string }> = []
       for (const att of attendance) {
         if (!att.studentId || !att.status) continue
 
