@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { MaterialMarkdownRenderer } from '@/components/student/material-markdown-renderer'
 import {
   Select,
   SelectContent,
@@ -378,8 +379,8 @@ function TextForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="plain">Teks Biasa (kelas 8)</SelectItem>
-                  <SelectItem value="structured">Markdown - Heading (kelas 9)</SelectItem>
+                  <SelectItem value="plain">Teks Biasa (paragraf panjang)</SelectItem>
+                  <SelectItem value="structured">Markdown - Heading (#, ##, ###, bullet, bold)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -395,25 +396,42 @@ function TextForm({
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs">
-              Isi Teks ({form.content.length.toLocaleString('id-ID')} karakter)
-              {form.isStructured && (
-                <span className="ml-2 text-indigo-600">
-                  • Gunakan # untuk judul, ## sub-judul, ### sub-sub-judul
-                </span>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">
+                Isi Teks ({form.content.length.toLocaleString('id-ID')} karakter)
+                {form.isStructured && (
+                  <span className="ml-2 text-indigo-600">
+                    • Gunakan # untuk judul, ## sub-judul, ### sub-sub-judul, **bold**, - bullet
+                  </span>
+                )}
+              </Label>
+              {form.isStructured && form.content.trim() && (
+                <span className="text-xs text-emerald-600">✓ Preview aktif di bawah</span>
               )}
-            </Label>
+            </div>
             <Textarea
               value={form.content}
               onChange={(e) => setForm({ ...form, content: e.target.value })}
               rows={16}
               className="font-mono text-sm"
               placeholder={form.isStructured
-                ? '# Judul Utama\n\n## Sub Judul\n\nIsi paragraf...\n\n### Sub-Sub Judul\n\nIsi paragraf...'
+                ? '# Judul Utama\n\n## Sub Judul\n\nIsi paragraf...\n\n### Sub-Sub Judul\n\n- Bullet point\n- **Bold text**\n\n1. Numbered list'
                 : 'Tulis teks bacaan di sini...'
               }
             />
           </div>
+
+          {/* ── NEW: Markdown preview (seperti di materials manager) ── */}
+          {form.isStructured && form.content.trim() && (
+            <div className="space-y-1">
+              <Label className="text-xs text-indigo-600">📖 Preview Markdown</Label>
+              <div className="border-2 border-indigo-200 rounded-lg p-4 bg-white max-h-[400px] overflow-y-auto">
+                <div className="prose prose-slate max-w-none text-sm">
+                  <MaterialMarkdownRenderer content={form.content} />
+                </div>
+              </div>
+            </div>
+          )}
 
           {!text && (
             <div className="flex items-center gap-2">
