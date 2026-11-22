@@ -11,6 +11,7 @@ import { ResultsStage } from '@/components/stages/results-stage'
 import { GameStage } from '@/components/stages/game-stage'
 import { DrawingStage } from '@/components/stages/drawing-stage'
 import { VideoAnalysisStage } from '@/components/stages/video-analysis-stage'
+import { PracticumStage } from '@/components/stages/practicum-stage'
 import { TeacherDashboard } from '@/components/teacher-dashboard'
 import { StudentLogin } from '@/components/student/student-login'
 import { StudentDashboard } from '@/components/student/student-dashboard'
@@ -161,6 +162,7 @@ function HomeContent() {
         {stage === 'game' && <GameStage />}
         {stage === 'drawing' && <DrawingStage />}
         {stage === 'video' && <VideoAnalysisStage />}
+        {stage === 'practicum' && <PracticumStage />}
       </>
     )
   }

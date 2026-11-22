@@ -222,6 +222,7 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
     else if (a.taskType === 'quiz_only') { toast.success(`Memulai: ${a.title}`); setStage('quiz') }
     else if (a.taskType === 'game') { toast.success(`Memulai game: ${a.title}`); setStage('game') }
     else if (a.taskType === 'drawing') { toast.success(`Memulai menggambar: ${a.title}`); setStage('drawing') }
+    else if (a.taskType === 'practicum_spreadsheet') { toast.success(`Memulai ujian praktek spreadsheet: ${a.title}`); setStage('practicum') }
     else { toast.success(`Memulai: ${a.title}`); setStage('typing') }
     router.push('/')
   }
@@ -347,7 +348,7 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          <Badge variant="outline" className="text-xs">{a.taskType === 'game' ? 'Game' : a.taskType === 'drawing' ? 'Menggambar' : a.taskType === 'quiz_only' ? 'Soal HOTS' : a.taskType === 'refleksi_video' ? 'Video' : 'Mengetik + Soal'}</Badge>
+                          <Badge variant="outline" className="text-xs">{a.taskType === 'game' ? 'Game' : a.taskType === 'drawing' ? 'Menggambar' : a.taskType === 'quiz_only' ? 'Soal HOTS' : a.taskType === 'refleksi_video' ? 'Video' : a.taskType === 'practicum_spreadsheet' ? 'Praktikum' : 'Mengetik + Soal'}</Badge>
                           <Badge className={`text-xs ${a.exerciseType === 'wajib' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{a.exerciseType === 'wajib' ? 'Wajib' : 'Persiapan'}</Badge>
                           {/* ── NEW: Badge status lulus/remedial/hukuman ── */}
                           {a.isPunishment && (

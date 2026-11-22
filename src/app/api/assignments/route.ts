@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
     //     match subject JWT mereka.
     //   - Frontend bisa kirim ?subject= untuk filter spesifik.
     const querySubject = req.nextUrl.searchParams.get('subject')
+    const queryTaskType = req.nextUrl.searchParams.get('taskType')
 
     let where: Record<string, unknown>
     if (teacher.role === 'admin') {
@@ -61,6 +62,11 @@ export async function GET(req: NextRequest) {
         orConditions.push({ subject: querySubject })
       }
       where = { OR: orConditions }
+    }
+
+    // Apply taskType filter if specified
+    if (queryTaskType) {
+      where = { ...where, taskType: queryTaskType }
     }
 
     const assignments = await safeQuery(() =>

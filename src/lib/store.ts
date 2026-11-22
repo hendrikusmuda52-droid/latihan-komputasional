@@ -11,6 +11,7 @@ export type AppStage =
   | 'game'
   | 'drawing'
   | 'video'
+  | 'practicum'
 
 export interface StudentInfo {
   id?: string

@@ -83,6 +83,7 @@ import {
   XCircle,
   Save,
   Megaphone,
+  Table2,
 } from 'lucide-react'
 import {
   BarChart,
@@ -117,6 +118,7 @@ import { ResetCenter } from './teacher/reset-center'
 import { AnnouncementManager } from './teacher/announcement-manager'
 import { ScheduleJurnal, ScheduleJurnalWithSwitcher } from '@/components/schedule-jurnal'
 import { AnalyticsManager } from './teacher/analytics-manager'
+import { PracticumSubmissionsPanel } from './teacher/practicum-submissions-panel'
 import { hasTypingFeature } from '@/lib/constants'
 import { TaskPhotoViewer } from '@/components/teacher/task-photo-viewer'
 
@@ -609,6 +611,7 @@ export function TeacherDashboard() {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'results', label: 'Hasil Latihan', icon: FileCheck },
+    { id: 'practicum', label: 'Ujian Praktek', icon: Table2 },
     { id: 'grades', label: 'Daftar Nilai', icon: ClipboardList },
     { id: 'students', label: 'Data Siswa', icon: Users },
     { id: 'assignments', label: 'Tugas', icon: FileText },
@@ -1382,6 +1385,7 @@ export function TeacherDashboard() {
       )}
 
       {activeMenu === 'grades' && <GradeBook />}
+      {activeMenu === 'practicum' && <PracticumSubmissionsPanel teacher={teacher} />}
       {activeMenu === 'students' && <StudentsManager />}
       {activeMenu === 'assignments' && <AssignmentsManager />}
       {activeMenu === 'materials' && <MaterialsManager />}

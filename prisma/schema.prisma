@@ -29,6 +29,7 @@ model Student {
   catatanSikap CatatanSikap[]
   resetRequests ResetRequest[]
   dailyAttendances DailyAttendance[]
+  practicumSubmissions PracticumSubmission[]
 }
 
 model Teacher {
@@ -121,6 +122,7 @@ model Assignment {
   updatedAt     DateTime  @updatedAt
   // ── NEW v4: back-relation ke Result (untuk include di Prisma query) ──
   results       Result[]
+  practicumSubmissions PracticumSubmission[]
 }
 
 model Material {
@@ -478,4 +480,57 @@ model DailyAttendance {
   @@unique([studentId, tanggal])
   @@index([kelas, tanggal])
   @@index([studentId, tanggal])
+}
+
+// ══════════════════════════════════════════════════════════════════
+// v6: UJIAN PRAKTIK SPREADSHEET (Kelas 8)
+// Siswa mengolah data di spreadsheet terintegrasi dengan formula
+// SUM, AVERAGE, IF, VLOOKUP, HLOOKUP, COUNTIF, RANK
+// Penilaian: berdasarkan penggunaan formula yang tepat
+// ══════════════════════════════════════════════════════════════════
+
+model PracticumSubmission {
+  id            String   @id @default(cuid())
+  studentId     String
+  student       Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assignmentId  String
+  assignment    Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  subject       String   @default("Informatika")
+  kelas         String
+
+  // State spreadsheet siswa (JSON: cells, formulas, colWidths, etc.)
+  // Berisi SEMUA input siswa: data mentah, formula, dan jawaban info
+  spreadsheetData String  @default("{}") // JSON serialized
+
+  // Tracking penggunaan formula untuk auto-grading
+  // JSON: { "SUM": {count: 2, cells: ["D2","D5"]}, "VLOOKUP": {...}, ... }
+  formulasUsed   String   @default("{}") // JSON serialized
+
+  // Jawaban pertanyaan informasi (siswa diminta memberi info dari hasil olah data)
+  // JSON: { questionId: "jawaban siswa" }
+  infoAnswers    String   @default("{}") // JSON serialized
+
+  // Hasil auto-grade (0-100)
+  formulaScore   Float    @default(0) // skor dari penggunaan formula yang tepat (0-100)
+  infoScore      Float    @default(0) // skor dari jawaban info (0-100)
+  totalScore     Float    @default(0) // weighted: 70% formula + 30% info (default)
+  manualGrade    Float?   // nilai manual dari guru (override jika diperlukan)
+  finalScore     Float    @default(0) // final: manualGrade ?? totalScore
+
+  // Detail penilaian per-kriteria
+  // JSON: [{ criterion: "SUM di D10", expected: "SUM(D2:D9)", actual: "SUM(D2:D9)", correct: true, points: 10 }, ...]
+  gradingDetails String  @default("[]") // JSON serialized
+
+  durationSec    Int      @default(0) // lama pengerjaan dalam detik
+  isSubmitted    Boolean  @default(false) // true jika sudah submit final
+  isGraded       Boolean  @default(false) // true jika sudah di-grade (auto atau manual)
+  isReleased     Boolean  @default(false) // true jika nilai sudah dirilis ke siswa
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  submittedAt    DateTime?
+
+  @@index([studentId, assignmentId])
+  @@index([kelas, subject])
+  @@index([assignmentId])
 }
