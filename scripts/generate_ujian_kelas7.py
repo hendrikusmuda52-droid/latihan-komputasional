@@ -8,7 +8,7 @@ Bahan: Berpikir Komputasional, Sistem Komputer, Microsoft Word
 
 import os
 OUTPUT_PATH = "/home/z/my-project/download/insert_ujian_kelas7.sql"
-DUE_DATE = "2026-10-10T23:59:00+07:00"
+DUE_DATE = "2026-12-01T23:59:00+07:00"
 GRADE = "7"
 SUBJECT = "Informatika"
 CP_ID = "cp_inf_7_1"
@@ -127,22 +127,16 @@ ON CONFLICT (id) DO NOTHING;""")
 ({sql_str(qid)}, '{GRADE}', '{SUBJECT}', {sql_str(e['q'])}, '', '', '', '', 0, '', 'Ujian Kelas 7', true, 'essai', '[]', '[]', '', {sql_str(e['a'])}, 'C5', '', '', '{CP_ID}', '{TP_ID}', NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;""")
 
-    # 2 Tugas: typing_quiz (30+40 menit) + quiz_only (40 menit)
-    # Tugas 1: Praktek Mengetik + Ujian Tertulis (typing_quiz = 30 menit mengetik + 40 menit quiz)
-    # Karena sistem 1 tugas = 1 timer, kita buat 2 tugas terpisah
-    # Tugas A: Praktek Mengetik (30 menit, taskType=typing_only)
-    # Tugas B: Ujian Tertulis (40 menit, taskType=quiz_only, 45 soal)
-
+    # 1 Tugas terpadu: typing_quiz (30 menit mengetik + 40 menit quiz = 70 menit total)
+    # typing_quiz = siswa ketik dulu, lalu lanjut jawab soal PG + essai
     c.append(f"""
--- Tugas A: Praktek Mengetik (30 menit)
+-- Tugas Ujian Kelas 7: Praktek Mengetik + Tertulis (typing_quiz, 70 menit, daring)
 INSERT INTO "Assignment" (id, title, description, subject, "targetKelas", "targetJenjang", "isActive", "dueDate", "exerciseType", "questionCount", "taskType", "teacherId", "cpId", "tpId", "taskCategory", "taskTypeName", "tahunAjaran", "semester", "duration", "createdAt", "updatedAt")
-VALUES ('asg_ujian_k7_typing', 'Ujian Praktek Mengetik Kelas 7 (30 menit)', 'Ujian praktek mengetik. Ketik teks yang muncul dengan akurasi dan kecepatan tinggi. Waktu 30 menit.', '{SUBJECT}', '7A,7B,7C', 'SMP', true, '{DUE_DATE}', 'wajib', 0, 'typing_only', NULL, '{CP_ID}', '{TP_ID}', 'daring', '', '2026/2027', 'ganjil', 30, NOW(), NOW())
+VALUES ('asg_ujian_k7_terpadu', 'Ujian Kelas 7: Praktek Mengetik + Tertulis (Typing + 40 PG + 5 Essai, 70 menit)', 'Ujian terpadu: praktek mengetik (30 menit) dilanjutkan ujian tertulis (40 menit). 40 soal PG dengan stimulus + 5 soal essai. Bahan: berpikir komputasional, sistem komputer, Microsoft Word. Total 70 menit.', '{SUBJECT}', '7A,7B,7C', 'SMP', true, '{DUE_DATE}', 'wajib', 45, 'typing_quiz', NULL, '{CP_ID}', '{TP_ID}', 'daring', '', '2026/2027', 'ganjil', 70, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
--- Tugas B: Ujian Tertulis (40 menit, 40 PG + 5 Essai = 45 soal)
-INSERT INTO "Assignment" (id, title, description, subject, "targetKelas", "targetJenjang", "isActive", "dueDate", "exerciseType", "questionCount", "taskType", "teacherId", "cpId", "tpId", "taskCategory", "taskTypeName", "tahunAjaran", "semester", "duration", "createdAt", "updatedAt")
-VALUES ('asg_ujian_k7_quiz', 'Ujian Tertulis Kelas 7: Berpikir Komputasional + Sistem Komputer + MS Word (40 PG + 5 Essai, 40 menit)', 'Ujian tertulis tentang berpikir komputasional (dekomposisi, pengenalan pola, abstraksi, algoritma), sistem komputer (hardware, software, brainware), dan Microsoft Word. 40 soal PG dengan stimulus + 5 soal essai. Waktu 40 menit.', '{SUBJECT}', '7A,7B,7C', 'SMP', true, '{DUE_DATE}', 'wajib', 45, 'quiz_only', NULL, '{CP_ID}', '{TP_ID}', 'luring', '', '2026/2027', 'ganjil', 40, NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+-- Hapus tugas lama yang terpisah (jika sudah pernah di-insert)
+DELETE FROM "Assignment" WHERE id IN ('asg_ujian_k7_typing', 'asg_ujian_k7_quiz');
 
 -- Verifikasi
 SELECT "questionType", COUNT(*) FROM "Question" WHERE id LIKE 'q_ujian_k7_%' GROUP BY "questionType";
@@ -157,8 +151,7 @@ SELECT "questionType", COUNT(*) FROM "Question" WHERE id LIKE 'q_ujian_k7_%' GRO
     size = os.path.getsize(OUTPUT_PATH) / 1024
     print(f"✅ {OUTPUT_PATH} ({size:.1f} KB)")
     print(f"   40 PG + 5 Essai = 45 soal")
-    print(f"   Tugas A: Praktek Mengetik (30 menit)")
-    print(f"   Tugas B: Ujian Tertulis (40 menit, 45 soal)")
+    print(f"   1 tugas terpadu: typing_quiz (70 menit, daring)")
     print(f"   Deadline: {DUE_DATE[:10]}")
 
 if __name__ == "__main__":
