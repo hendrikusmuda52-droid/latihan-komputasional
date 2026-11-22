@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Ujian Kelas 7: Praktek Mengetik (30 menit) + Ujian Tertulis (40 menit)
+Ujian Kelas 7: Praktek Mengetik (40 menit) + Ujian Tertulis (70 menit)
 40 PG + 5 Essai dengan stimulus
 Bahan: Berpikir Komputasional, Sistem Komputer, Microsoft Word
 """
@@ -127,16 +127,20 @@ ON CONFLICT (id) DO NOTHING;""")
 ({sql_str(qid)}, '{GRADE}', '{SUBJECT}', {sql_str(e['q'])}, '', '', '', '', 0, '', 'Ujian Kelas 7', true, 'essai', '[]', '[]', '', {sql_str(e['a'])}, 'C5', '', '', '{CP_ID}', '{TP_ID}', NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;""")
 
-    # 1 Tugas terpadu: typing_quiz (30 menit mengetik + 40 menit quiz = 70 menit total)
-    # typing_quiz = siswa ketik dulu, lalu lanjut jawab soal PG + essai
+    # 2 Tugas terpisah: typing_only (40 menit) + quiz_only (70 menit)
     c.append(f"""
--- Tugas Ujian Kelas 7: Praktek Mengetik + Tertulis (typing_quiz, 70 menit, daring)
+-- Tugas 1: Praktek Mengetik (40 menit, daring)
 INSERT INTO "Assignment" (id, title, description, subject, "targetKelas", "targetJenjang", "isActive", "dueDate", "exerciseType", "questionCount", "taskType", "teacherId", "cpId", "tpId", "taskCategory", "taskTypeName", "tahunAjaran", "semester", "duration", "createdAt", "updatedAt")
-VALUES ('asg_ujian_k7_terpadu', 'Ujian Kelas 7: Praktek Mengetik + Tertulis (Typing + 40 PG + 5 Essai, 70 menit)', 'Ujian terpadu: praktek mengetik (30 menit) dilanjutkan ujian tertulis (40 menit). 40 soal PG dengan stimulus + 5 soal essai. Bahan: berpikir komputasional, sistem komputer, Microsoft Word. Total 70 menit.', '{SUBJECT}', '7A,7B,7C', 'SMP', true, '{DUE_DATE}', 'wajib', 45, 'typing_quiz', NULL, '{CP_ID}', '{TP_ID}', 'daring', '', '2026/2027', 'ganjil', 70, NOW(), NOW())
+VALUES ('asg_ujian_k7_typing', 'Ujian 1 Kelas 7: Praktek Mengetik (40 menit)', 'Ujian praktek mengetik. Ketik teks bacaan dengan akurasi dan kecepatan tinggi. Waktu 40 menit.', '{SUBJECT}', '7A,7B,7C', 'SMP', true, '{DUE_DATE}', 'wajib', 0, 'typing_only', NULL, '{CP_ID}', '{TP_ID}', 'daring', '', '2026/2027', 'ganjil', 40, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
--- Hapus tugas lama yang terpisah (jika sudah pernah di-insert)
-DELETE FROM "Assignment" WHERE id IN ('asg_ujian_k7_typing', 'asg_ujian_k7_quiz');
+-- Tugas 2: Ujian Tertulis (70 menit, 45 soal, daring)
+INSERT INTO "Assignment" (id, title, description, subject, "targetKelas", "targetJenjang", "isActive", "dueDate", "exerciseType", "questionCount", "taskType", "teacherId", "cpId", "tpId", "taskCategory", "taskTypeName", "tahunAjaran", "semester", "duration", "createdAt", "updatedAt")
+VALUES ('asg_ujian_k7_quiz', 'Ujian 2 Kelas 7: Tertulis (40 PG + 5 Essai, 70 menit)', 'Ujian tertulis tentang berpikir komputasional, sistem komputer, dan Microsoft Word. 40 soal PG dengan stimulus + 5 soal essai. Waktu 70 menit.', '{SUBJECT}', '7A,7B,7C', 'SMP', true, '{DUE_DATE}', 'wajib', 45, 'quiz_only', NULL, '{CP_ID}', '{TP_ID}', 'daring', '', '2026/2027', 'ganjil', 70, NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- Hapus tugas lama yang terpadu (jika sudah pernah di-insert)
+DELETE FROM "Assignment" WHERE id = 'asg_ujian_k7_terpadu';
 
 -- Verifikasi
 SELECT "questionType", COUNT(*) FROM "Question" WHERE id LIKE 'q_ujian_k7_%' GROUP BY "questionType";
@@ -151,7 +155,8 @@ SELECT "questionType", COUNT(*) FROM "Question" WHERE id LIKE 'q_ujian_k7_%' GRO
     size = os.path.getsize(OUTPUT_PATH) / 1024
     print(f"✅ {OUTPUT_PATH} ({size:.1f} KB)")
     print(f"   40 PG + 5 Essai = 45 soal")
-    print(f"   1 tugas terpadu: typing_quiz (70 menit, daring)")
+    print(f"   Tugas 1: Praktek Mengetik (40 menit, daring)")
+    print(f"   Tugas 2: Ujian Tertulis (70 menit, 45 soal, daring)")
     print(f"   Deadline: {DUE_DATE[:10]}")
 
 if __name__ == "__main__":
