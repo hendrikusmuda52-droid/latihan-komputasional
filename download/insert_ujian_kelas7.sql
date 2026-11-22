@@ -294,14 +294,14 @@ INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB
 Catatan: algoritma harus berurutan, setiap langkah jelas dan actionable.', 'C5', '', '', 'cp_inf_7_1', 'tp_inf_7_1_1', NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
--- Tugas 1: Praktek Mengetik (40 menit, daring)
+-- Tugas 1: Praktek Mengetik (30 menit, daring)
 INSERT INTO "Assignment" (id, title, description, subject, "targetKelas", "targetJenjang", "isActive", "dueDate", "exerciseType", "questionCount", "taskType", "teacherId", "cpId", "tpId", "taskCategory", "taskTypeName", "tahunAjaran", "semester", "duration", "createdAt", "updatedAt")
-VALUES ('asg_ujian_k7_typing', 'Ujian 1 Kelas 7: Praktek Mengetik (40 menit)', 'Ujian praktek mengetik. Ketik teks bacaan dengan akurasi dan kecepatan tinggi. Waktu 40 menit.', 'Informatika', '7A,7B,7C', 'SMP', true, '2026-12-01T23:59:00+07:00', 'wajib', 0, 'typing_only', NULL, 'cp_inf_7_1', 'tp_inf_7_1_1', 'daring', '', '2026/2027', 'ganjil', 40, NOW(), NOW())
+VALUES ('asg_ujian_k7_typing', 'Ujian 1 Kelas 7: Praktek Mengetik (30 menit)', 'Ujian praktek mengetik. Ketik teks bacaan dengan akurasi dan kecepatan tinggi. Waktu 30 menit.', 'Informatika', '7A,7B,7C', 'SMP', true, '2026-12-01T23:59:00+07:00', 'wajib', 0, 'typing_only', NULL, 'cp_inf_7_1', 'tp_inf_7_1_1', 'daring', '', '2026/2027', 'ganjil', 30, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
--- Tugas 2: Ujian Tertulis (70 menit, 45 soal, daring)
+-- Tugas 2: Ujian Tertulis (40 menit, 45 soal, daring)
 INSERT INTO "Assignment" (id, title, description, subject, "targetKelas", "targetJenjang", "isActive", "dueDate", "exerciseType", "questionCount", "taskType", "teacherId", "cpId", "tpId", "taskCategory", "taskTypeName", "tahunAjaran", "semester", "duration", "createdAt", "updatedAt")
-VALUES ('asg_ujian_k7_quiz', 'Ujian 2 Kelas 7: Tertulis (40 PG + 5 Essai, 70 menit)', 'Ujian tertulis tentang berpikir komputasional, sistem komputer, dan Microsoft Word. 40 soal PG dengan stimulus + 5 soal essai. Waktu 70 menit.', 'Informatika', '7A,7B,7C', 'SMP', true, '2026-12-01T23:59:00+07:00', 'wajib', 45, 'quiz_only', NULL, 'cp_inf_7_1', 'tp_inf_7_1_1', 'daring', '', '2026/2027', 'ganjil', 70, NOW(), NOW())
+VALUES ('asg_ujian_k7_quiz', 'Ujian 2 Kelas 7: Tertulis (40 PG + 5 Essai, 40 menit)', 'Ujian tertulis tentang berpikir komputasional, sistem komputer, dan Microsoft Word. 40 soal PG dengan stimulus + 5 soal essai. Waktu 40 menit.', 'Informatika', '7A,7B,7C', 'SMP', true, '2026-12-01T23:59:00+07:00', 'wajib', 45, 'quiz_only', NULL, 'cp_inf_7_1', 'tp_inf_7_1_1', 'daring', '', '2026/2027', 'ganjil', 40, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- Hapus tugas lama yang terpadu (jika sudah pernah di-insert)
