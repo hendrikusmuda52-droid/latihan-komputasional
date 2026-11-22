@@ -48,13 +48,116 @@ export interface Question {
 
 export const TYPING_TEXTS: Record<GradeLevel, string> = {
   // ---- Kelas 7A: Mengenal Komputer dan Dampak Teknologi ----
-  '7A': `Komputer adalah alat elektronik yang sangat penting dalam kehidupan kita saat ini. Hampir setiap hari kita melihat dan menggunakan komputer, baik di rumah, di sekolah, maupun di tempat umum. Komputer digunakan untuk berbagai keperluan, seperti menulis, menghitung, menggambar, bermain game, mencari informasi di internet, dan berkomunikasi dengan orang lain yang jauh. Komputer terdiri dari dua bagian utama, yaitu perangkat keras dan perangkat lunak. Perangkat keras adalah bagian komputer yang bisa kita lihat dan sentuh, seperti monitor, keyboard, mouse, dan printer. Monitor berfungsi untuk menampilkan gambar dan tulisan. Keyboard digunakan untuk mengetik huruf dan angka. Mouse digunakan untuk menggerakkan kursor di layar. Printer digunakan untuk mencetak dokumen di atas kertas. Perangkat lunak adalah program yang ada di dalam komputer dan tidak bisa kita sentuh. Contoh perangkat lunak adalah sistem operasi, aplikasi pengolah kata, aplikasi presentasi, dan game. Komputer bekerja dengan cara menerima data dari pengguna, memproses data tersebut, lalu menghasilkan informasi yang bisa kita gunakan. Komputer sangat membantu kita dalam belajar. Dengan komputer, kita bisa mencari informasi untuk tugas sekolah, membuat presentasi yang menarik, dan belajar berbagai keterampilan baru. Namun, kita juga harus berhati-hati saat menggunakan komputer. Terlalu lama di depan komputer bisa membuat mata lelah dan tubuh kurang bergerak. Selain itu, tidak semua informasi di internet itu benar, jadi kita harus pintar memilih sumber yang tepercaya. Komputer juga bisa digunakan untuk hal yang buruk, seperti menyebarkan berita bohong atau mencuri data orang lain. Oleh karena itu, kita harus menggunakan komputer dengan bijak dan bertanggung jawab. Teknologi terus berkembang dari waktu ke waktu. Dulu komputer berukuran sangat besar dan hanya digunakan oleh ilmuwan. Sekarang komputer bisa kita simpan di saku dalam bentuk ponsel pintar. Perkembangan teknologi ini membuat hidup kita menjadi lebih mudah, tapi juga menuntut kita untuk terus belajar agar tidak tertinggal. Mari kita gunakan komputer dengan baik untuk hal-hal yang bermanfaat dan jangan lupa untuk tetap berinteraksi dengan teman dan keluarga di dunia nyata.`,
+  '7A': `# Mengenal Komputer dan Dampak Teknologi
+
+Komputer adalah alat elektronik yang sangat penting dalam kehidupan kita saat ini. Hampir setiap hari kita melihat dan menggunakan komputer, baik di rumah, di sekolah, maupun di tempat umum.
+
+## Pengertian Komputer
+
+Komputer digunakan untuk berbagai keperluan, seperti:
+- Menulis dan menghitung
+- Menggambar dan mendesain
+- Bermain game
+- Mencari informasi di internet
+- Berkomunikasi dengan orang lain yang jauh
+
+## Perangkat Keras (Hardware)
+
+Perangkat keras adalah bagian komputer yang bisa kita lihat dan sentuh.
+
+1. **Monitor** berfungsi untuk menampilkan gambar dan tulisan.
+2. **Keyboard** digunakan untuk mengetik huruf dan angka.
+3. **Mouse** digunakan untuk menggerakkan kursor di layar.
+4. **Printer** digunakan untuk mencetak dokumen di atas kertas.
+
+## Perangkat Lunak (Software)
+
+Perangkat lunak adalah program yang ada di dalam komputer dan tidak bisa kita sentuh. Contoh perangkat lunak adalah sistem operasi, aplikasi pengolah kata, aplikasi presentasi, dan game.
+
+## Cara Kerja Komputer
+
+Komputer bekerja dengan cara menerima data dari pengguna, memproses data tersebut, lalu menghasilkan informasi yang bisa kita gunakan.
+
+## Manfaat dan Bahaya Komputer
+
+Komputer sangat membantu kita dalam belajar. Namun, kita juga harus berhati-hati saat menggunakannya. Terlalu lama di depan komputer bisa membuat mata lelah dan tubuh kurang bergerak. Tidak semua informasi di internet itu benar, jadi kita harus pintar memilih sumber yang tepercaya.
+
+Oleh karena itu, kita harus menggunakan komputer dengan bijak dan bertanggung jawab. Mari kita gunakan komputer dengan baik untuk hal-hal yang bermanfaat dan jangan lupa untuk tetap berinteraksi dengan teman dan keluarga di dunia nyata.`,
 
   // ---- Kelas 7B: Penggunaan Teknologi yang Sehat dan Bertanggung Jawab ----
-  '7B': `Di zaman sekarang, hampir semua orang memiliki ponsel pintar. Ponsel pintar adalah alat komunikasi yang sangat canggih. Kita bisa menelepon, mengirim pesan, mengambil foto, merekam video, mendengarkan musik, menonton film, dan mencari informasi di internet. Ponsel pintar juga bisa digunakan untuk berbagai aplikasi, seperti media sosial, aplikasi belanja, aplikasi pembayaran, dan aplikasi pembelajaran. Meskipun ponsel pintar sangat berguna, kita harus menggunakanannya dengan bijak. Terlalu lama bermain ponsel bisa membuat kita lupa waktu, mengabaikan tugas sekolah, dan jarang berinteraksi dengan orang di sekitar kita. Banyak anak yang kecanduan game atau media sosial sehingga waktu belajar dan istirahatnya berkurang. Akibatnya, nilai pelajaran menurun dan kesehatan tubuh terganggu. Oleh karena itu, kita perlu mengatur waktu penggunaan ponsel. Berikut adalah beberapa tips menggunakan ponsel dengan bijak. Pertama, tentukan berapa lama waktu untuk bermain ponsel setiap hari, misalnya maksimal dua jam. Kedua, jangan gunakan ponsel saat makan bersama keluarga atau saat sedang belajar. Ketiga, matikan ponsel saat tidur agar tidak terganggu notifikasi. Keempat, pilih aplikasi yang bermanfaat untuk belajar atau mengembangkan keterampilan. Kelima, jangan percaya semua informasi yang ada di internet, selalu cek kebenarannya. Selain itu, kita juga harus menjaga keamanan saat menggunakan ponsel. Jangan pernah membagikan data pribadi, seperti alamat rumah, nomor rekening, atau password, kepada orang yang tidak dikenal di internet. Waspadai juga penipuan online yang sering terjadi, seperti pesan yang menawarkan hadiah gratis atau meminta transfer uang. Jika menerima pesan mencurigakan, segera beritahu orang tua atau guru. Teknologi memang membuat hidup kita lebih mudah, tetapi kita harus tetap menggunakan akal sehat dan hati-hati. Jangan sampai kita menjadi budak teknologi, tetapi jadilah penguasa teknologi yang bijak. Dengan demikian, ponsel pintar akan menjadi alat yang membantu kita berkembang, bukan sebaliknya. Mari mulai dari sekarang untuk menggunakan ponsel dengan lebih bijak dan bertanggung jawab. Dengan begitu, kita bisa memanfaatkan teknologi untuk hal-hal yang positif tanpa mengorbankan kesehatan, pelajaran, atau hubungan dengan orang-orang di sekitar kita.`,
+  '7B': `# Penggunaan Teknologi yang Sehat dan Bertanggung Jawab
+
+Di zaman sekarang, hampir semua orang memiliki ponsel pintar. Ponsel pintar adalah alat komunikasi yang sangat canggih.
+
+## Fungsi Ponsel Pintar
+
+Kita bisa melakukan berbagai hal dengan ponsel pintar:
+- Menelepon dan mengirim pesan
+- Mengambil foto dan merekam video
+- Mendengarkan musik dan menonton film
+- Mencari informasi di internet
+- Berbelanja dan membayar tagihan
+- Belajar melalui aplikasi pembelajaran
+
+## Bahaya Kecanduan Ponsel
+
+Meskipun sangat berguna, kita harus menggunakan ponsel dengan bijak. Terlalu lama bermain ponsel bisa membuat kita lupa waktu, mengabaikan tugas sekolah, dan jarang berinteraksi dengan orang di sekitar kita.
+
+Akibatnya, nilai pelajaran menurun dan kesehatan tubuh terganggu.
+
+## Tips Menggunakan Ponsel dengan Bijak
+
+1. Tentukan batas waktu penggunaan ponsel, misalnya maksimal dua jam per hari.
+2. Jangan gunakan ponsel saat makan bersama keluarga atau saat belajar.
+3. Matikan ponsel saat tidur agar tidak terganggu notifikasi.
+4. Pilih aplikasi yang bermanfaat untuk belajar atau mengembangkan keterampilan.
+5. Jangan percaya semua informasi di internet, selalu cek kebenarannya.
+
+## Keamanan Saat Menggunakan Ponsel
+
+Kita juga harus menjaga keamanan saat menggunakan ponsel:
+- Jangan membagikan data pribadi (alamat, nomor rekening, password) ke orang tidak dikenal.
+- Waspadai penipuan online, seperti pesan hadiah gratis atau permintaan transfer uang.
+- Jika menerima pesan mencurigakan, segera beritahu orang tua atau guru.
+
+## Kesimpulan
+
+Teknologi memang membuat hidup kita lebih mudah, tetapi kita harus tetap menggunakan akal sehat dan hati-hati. Jangan sampai kita menjadi budak teknologi, tetapi jadilah penguasa teknologi yang bijak. Mari mulai dari sekarang untuk menggunakan ponsel dengan lebih bijak dan bertanggung jawab.`,
 
   // ---- Kelas 7C: Mengenal Internet dan Etika Bermedia Digital ----
-  '7C': `Internet adalah jaringan yang menghubungkan jutaan komputer di seluruh dunia. Dengan internet, kita bisa mencari informasi, berkomunikasi, belajar, berbelanja, dan bahkan bekerja dari jarak jauh. Internet membawa banyak manfaat, tetapi juga memiliki risiko yang perlu kita waspadai. Manfaat internet sangat banyak. Pertama, kita bisa mencari informasi dengan cepat. Ingin tahu tentang sejarah Indonesia, cara memasak suatu makanan, atau berita terbaru, semuanya bisa kita temukan di internet. Kedua, internet memudahkan kita berkomunikasi dengan keluarga atau teman yang jauh. Kita bisa menelepon video, mengirim pesan, atau berbagi foto dan video. Ketiga, internet bisa digunakan untuk belajar. Ada banyak video pembelajaran, artikel, dan kursus online yang bisa diikuti gratis. Keempat, internet membuka peluang bisnis baru. Banyak orang yang berhasil berjualan online atau menjadi content creator. Namun, internet juga memiliki risiko. Pertama, ada banyak informasi yang tidak benar atau hoaks. Kita harus pintar memilih sumber yang tepercaya dan selalu cek kebenaran informasi sebelum mempercayainya atau menyebarkannya. Kedua, ada orang jahat yang menggunakan internet untuk menipu atau mencelakai orang lain, seperti penipuan online, pencurian identitas, atau perundungan maya. Ketiga, terlalu lama di internet bisa membuat kita lupa waktu dan mengabaikan aktivitas lain yang penting, seperti belajar, berolahraga, atau bergaul dengan teman. Keempat, ada konten yang tidak pantas untuk anak, seperti kekerasan atau hal-hal negatif lain. Etika bermedia digital sangat penting untuk dipelajari. Berikut beberapa aturan yang harus kita ikuti. Pertama, hormati privasi orang lain. Jangan membagikan foto atau informasi pribadi orang lain tanpa izin. Kedua, gunakan bahasa yang sopan saat berkomunikasi di internet. Jangan menghina, mencaci, atau menyebarkan kebencian. Ketiga, jangan menyebarkan informasi yang belum tentu benar. Selalu cek dulu kebenarannya. Keempat, hormati hak cipta. Jangan menyalin pekerjaan orang lain tanpa menyebut sumbernya. Kelima, jaga keamanan akun. Gunakan password yang kuat dan jangan membagikannya kepada siapapun. Dengan memahami manfaat dan risiko internet, serta menerapkan etika bermedia digital yang baik, kita bisa menjadi pengguna internet yang bijak dan bertanggung jawab. Mari kita gunakan internet untuk hal-hal yang positif dan bermanfaat, bukan untuk hal-hal yang merugikan diri sendiri atau orang lain. Generasi muda adalah penerus bangsa, jadi mari kita tunjukkan bahwa kita bisa menggunakan teknologi dengan bijak untuk kemajuan bersama.`,
+  '7C': `# Mengenal Internet dan Etika Bermedia Digital
+
+Internet adalah jaringan yang menghubungkan jutaan komputer di seluruh dunia. Dengan internet, kita bisa mencari informasi, berkomunikasi, belajar, berbelanja, dan bahkan bekerja dari jarak jauh.
+
+## Manfaat Internet
+
+1. **Mencari informasi dengan cepat.** Ingin tahu tentang sejarah Indonesia, cara memasak, atau berita terbaru, semuanya bisa kita temukan di internet.
+2. **Berkomunikasi jarak jauh.** Kita bisa menelepon video, mengirim pesan, atau berbagi foto dan video dengan keluarga atau teman yang jauh.
+3. **Belajar online.** Ada banyak video pembelajaran, artikel, dan kursus online gratis.
+4. **Peluang bisnis baru.** Banyak orang berhasil berjualan online atau menjadi content creator.
+
+## Risiko Internet
+
+Namun, internet juga memiliki risiko yang perlu kita waspadai:
+
+- Ada banyak informasi yang tidak benar atau hoaks.
+- Ada orang jahat yang menggunakan internet untuk menipu atau mencelakai orang lain.
+- Terlalu lama di internet bisa membuat kita lupa waktu dan mengabaikan aktivitas penting.
+- Ada konten yang tidak pantas untuk anak, seperti kekerasan atau hal-hal negatif lain.
+
+## Etika Bermedia Digital
+
+Etika bermedia digital sangat penting untuk dipelajari. Berikut beberapa aturan yang harus kita ikuti:
+
+1. **Hormati privasi orang lain.** Jangan membagikan foto atau informasi pribadi orang lain tanpa izin.
+2. **Gunakan bahasa yang sopan.** Jangan menghina, mencaci, atau menyebarkan kebencian.
+3. **Jangan menyebarkan hoaks.** Selalu cek dulu kebenaran informasi sebelum menyebarkannya.
+4. **Hormati hak cipta.** Jangan menyalin pekerjaan orang lain tanpa menyebut sumbernya.
+5. **Jaga keamanan akun.** Gunakan password yang kuat dan jangan membagikannya kepada siapapun.
+
+## Kesimpulan
+
+Dengan memahami manfaat dan risiko internet, serta menerapkan etika bermedia digital yang baik, kita bisa menjadi pengguna internet yang bijak dan bertanggung jawab. Mari kita gunakan internet untuk hal-hal yang positif dan bermanfaat. Generasi muda adalah penerus bangsa, jadi mari kita tunjukkan bahwa kita bisa menggunakan teknologi dengan bijak untuk kemajuan bersama.`,
 
   // ---- Kelas 8A ----
   '8A': `Pernahkah kalian memperhatikan bagaimana cara ibu kita memasak nasi di pagi hari? Pertama, ia mengukur beras dengan gelas takaran. Kedua, ia mencuci beras sampai bersih. Ketiga, ia memasukkan beras ke dalam rice cooker dan menambahkan air sesuai takaran. Keempat, ia menekan tombol cook dan menunggu sampai matang. Tahapan-tahapan ini sebenarnya adalah contoh sederhana dari sebuah konsep yang sangat penting di dunia teknologi, yaitu berpikir komputasional. Berpikir komputasional bukan berarti kita harus menjadi programmer atau menghafal bahasa pemrograman yang rumit. Berpikir komputasional adalah cara kita memecahkan masalah secara sistematis, logis, dan terstruktur, layaknya cara kerja sebuah komputer. Ada empat pilar utama dalam berpikir komputasional yang perlu kalian pahami sebagai siswa SMP. Pilar pertama adalah dekomposisi, yaitu kemampuan memecah masalah besar yang rumit menjadi bagian-bagian kecil yang lebih mudah diselesaikan. Sebagai contoh, ketika kalian mendapat tugas membuat poster untuk hari kemerdekaan, kalian tidak langsung menggambar sekaligus. Kalian memecahnya menjadi: menentukan tema, mencari referensi, membuat sketsa, mewarnai, dan menambahkan tulisan. Pilar kedua adalah pengenalan pola, yaitu kemampuan menemukan kesamaan atau pola yang berulang. Ketika kalian belajar matematika dan menemukan pola bilangan dua, empat, enam, delapan, kalian bisa menebak angka berikutnya adalah sepuluh. Itulah pengenalan pola. Pilar ketiga adalah abstraksi, yaitu fokus pada hal-hal penting saja dan mengabaikan detail yang tidak relevan. Saat kalian membuat jadwal pelajaran, kalian hanya menulis nama mapel, jam, dan guru. Kalian tidak perlu menggambar wajah guru atau warna bajunya. Itulah abstraksi. Pilar keempat adalah algoritma, yaitu langkah-langkah berurutan yang jelas untuk menyelesaikan suatu masalah. Resep masakan, cara membuat origami, atau cara login ke akun sekolah semuanya adalah algoritma. Dengan berpikir komputasional, kalian belajar memecahkan masalah dengan lebih tertib dan efisien. Inilah keterampilan penting di abad ke-21, bukan hanya untuk programmer, tetapi untuk semua orang. Ketika kalian terbiasa berpikir komputasional, kalian akan lebih mudah menyelesaikan tugas-tugas sekolah, lebih cepat menemukan solusi atas masalah sehari-hari, dan lebih siap menghadapi dunia kerja di masa depan. Mulai hari ini, mari kita latih keempat pilar ini dalam setiap aktivitas. Pecah masalah besar jadi langkah kecil, cari pola yang berulang, fokus pada hal penting, dan susun urutan langkah dengan jelas. Dengan begitu, kalian bukan hanya pengguna teknologi, tetapi juga pemikir kreatif yang siap menjadi pencipta solusi di masa depan.`,
