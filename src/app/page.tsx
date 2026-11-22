@@ -46,6 +46,16 @@ function HomeContent() {
   // starts and transient DB connection issues.
   const [authRetry, setAuthRetry] = useState(0)
 
+  // ── FIX: Reset stage ke 'welcome' saat di halaman login (bukan latihan/dashboard)
+  // Bug: jika stage masih 'quiz'/'completed' dari session sebelumnya (Zustand persist),
+  // isLatihanMode = true → trigger auth check → redirect → loop
+  useEffect(() => {
+    if (!isStudentDashboard && !isLatihanMode && stage !== 'welcome') {
+      // Reset stage ke welcome supaya tidak trigger latihan mode
+      useAppStore.getState().setStage('welcome')
+    }
+  }, [isStudentDashboard, isLatihanMode, stage])
+
   // Cek session siswa saat mount ATAU saat URL/stage berubah
   // Selalu re-check ketika masuk dashboard/latihan mode dan belum ada session
   useEffect(() => {
