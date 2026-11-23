@@ -37,6 +37,7 @@ import {
   PRACTICUM_STORY,
   FORMULA_GUIDE,
   INFO_QUESTIONS,
+  PRACTICUM_TITLE,
   getInitialSheetState,
 } from '@/lib/practicum-data'
 import type { SheetState } from '@/lib/practicum-grader'
@@ -175,6 +176,7 @@ export function PracticumStage() {
     const sid = sheetIdRef.current
 
     // Build a 2D array of cell values for Hyperformula
+    // setSheetContent expects (sheetId: number, values: RawCellContent[][])
     const grid: any[][] = []
     for (let r = 0; r < ROWS; r++) {
       const row: any[] = []
@@ -184,28 +186,21 @@ export function PracticumStage() {
         if (!cell) {
           row.push(null)
         } else if (cell.f) {
-          // Formula — store with '=' prefix
+          // Formula — Hyperformula needs '=' prefix
           row.push('=' + cell.f)
         } else if (cell.v !== undefined && cell.v !== null && cell.v !== '') {
-          // Try to parse as number
-          const num = typeof cell.v === 'number' ? cell.v : parseFloat(cell.v)
-          if (!isNaN(num) && typeof cell.v !== 'string') {
-            row.push(num)
-          } else if (typeof cell.v === 'string' && !isNaN(num) && cell.v.trim() !== '' && !isNaN(parseFloat(cell.v))) {
-            row.push(num)
-          } else {
-            row.push(cell.v)
-          }
+          // cell.v is already correctly typed (number or string) by saveCellEdit
+          row.push(cell.v)
         } else {
           row.push(null)
         }
       }
       grid.push(row)
     }
-    // Set sheet contents (need to clear and re-set because Hyperformula tracks formulas)
-    // Note: setSheetContent replaces the whole sheet
+    // Set sheet contents — API: setSheetContent(sheetId: number, values: [][])
+    // CRITICAL: sheetId is positional number, NOT an object { sheet: sid }
     try {
-      hf.setSheetContent({ sheet: sid }, grid)
+      hf.setSheetContent(sid, grid)
       const newValues: Record<string, any> = {}
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
@@ -251,19 +246,31 @@ export function PracticumStage() {
       const addr = toAddr(selectedCell.row, selectedCell.col)
       setSheet((prev) => {
         const newCells = { ...prev.cells }
-        const input = rawInput.trim()
-        if (input === '') {
+        let input = rawInput.trim()
+        if (input === '' || input === '=') {
           delete newCells[addr]
-        } else if (input.startsWith('=')) {
-          // Formula — strip '='
-          newCells[addr] = { f: input.substring(1) }
         } else {
-          // Try to parse as number
-          const num = parseFloat(input)
-          if (!isNaN(num) && input.match(/^-?\d+(\.\d+)?$/)) {
-            newCells[addr] = { v: num }
+          // ── Auto-add '=' prefix if user typed a formula without it ──
+          // e.g. "SUM(C4:F4)" → "=SUM(C4:F4)"
+          const KNOWN_FNS = ['SUM', 'AVERAGE', 'IF', 'VLOOKUP', 'HLOOKUP', 'COUNTIF', 'RANK']
+          const looksLikeFormula = !input.startsWith('=') && KNOWN_FNS.some(
+            (fn) => new RegExp(`\\b${fn}\\s*\\(`, 'i').test(input)
+          )
+          if (looksLikeFormula) {
+            input = '=' + input
+          }
+
+          if (input.startsWith('=')) {
+            // Formula — strip '='
+            newCells[addr] = { f: input.substring(1) }
           } else {
-            newCells[addr] = { v: input }
+            // Try to parse as number
+            const num = parseFloat(input)
+            if (!isNaN(num) && input.match(/^-?\d+(\.\d+)?$/)) {
+              newCells[addr] = { v: num }
+            } else {
+              newCells[addr] = { v: input }
+            }
           }
         }
         return { ...prev, cells: newCells }
@@ -606,6 +613,27 @@ export function PracticumStage() {
                 </p>
               </CardHeader>
               <CardContent>
+                {/* Title heading (di luar tabel, bukan di dalam cell A1) */}
+                <h3 className="text-sm font-bold text-slate-800 mb-2 px-1">
+                  {PRACTICUM_TITLE}
+                </h3>
+
+                {/* Legend — penanda warna kolom */}
+                <div className="flex items-center gap-3 mb-2 text-xs text-slate-500 flex-wrap">
+                  <span className="flex items-center gap-1">
+                    <span className="inline-block w-3 h-3 bg-slate-200 border border-slate-300 rounded"></span>
+                    Data (sudah diisi)
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="inline-block w-3 h-3 bg-amber-200 border border-amber-400 rounded"></span>
+                    Wajib diisi formula (H–M)
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="inline-block w-3 h-3 bg-amber-50 border border-amber-200 rounded"></span>
+                    Belum diisi
+                  </span>
+                </div>
+
                 {/* Formula Bar */}
                 <div className="flex items-center gap-2 mb-2 sticky top-[68px] z-20 bg-white/95 backdrop-blur py-1">
                   <div className="px-2 py-1 bg-slate-100 border rounded text-xs font-mono font-bold w-16 text-center">
@@ -618,13 +646,33 @@ export function PracticumStage() {
                     onChange={(e) => setFormulaInput(e.target.value)}
                     onFocus={() => setEditingFormula(true)}
                     onBlur={() => {
-                      // Don't auto-save on blur if user clicked a cell
-                      setTimeout(() => setEditingFormula(false), 150)
+                      // Save formula on blur (jangan hanya saat Enter)
+                      // Cek apakah input berubah dari nilai cell yang tersimpan
+                      if (selectedCell) {
+                        const addr = toAddr(selectedCell.row, selectedCell.col)
+                        const cell = sheet.cells[addr]
+                        const currentVal = cell?.f
+                          ? cell.f
+                          : cell?.v !== undefined && cell.v !== null
+                          ? String(cell.v)
+                          : ''
+                        if (formulaInput.trim() !== currentVal.trim()) {
+                          saveCellEdit(formulaInput)
+                        } else {
+                          setEditingFormula(false)
+                        }
+                      } else {
+                        setEditingFormula(false)
+                      }
                     }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault()
                         saveCellEdit(formulaInput)
+                        // Pindah ke cell bawah
+                        if (selectedCell) {
+                          setSelectedCell({ row: Math.min(ROWS - 1, selectedCell.row + 1), col: selectedCell.col })
+                        }
                       } else if (e.key === 'Escape') {
                         e.preventDefault()
                         setEditingFormula(false)
@@ -636,7 +684,7 @@ export function PracticumStage() {
                         }
                       }
                     }}
-                    placeholder="Klik cell, lalu ketik formula (contoh: =SUM(C4:F4))"
+                    placeholder="Klik cell → ketik formula → Enter. Contoh: =SUM(C4:F4) atau SUM(C4:F4)"
                     className="flex-1 font-mono text-sm"
                   />
                   {editingFormula && (
@@ -648,21 +696,34 @@ export function PracticumStage() {
 
                 {/* Spreadsheet Grid */}
                 <div className="border border-slate-300 rounded-lg overflow-auto max-h-[60vh] bg-white">
-                  <table className="border-collapse" style={{ fontSize: '12px' }}>
+                  <table className="border-collapse table-fixed" style={{ fontSize: '12px' }}>
+                    <colgroup>
+                      <col style={{ width: '36px' }} />
+                      {colWidths.map((w, i) => (
+                        <col key={i} style={{ width: `${w * 7}px` }} />
+                      ))}
+                    </colgroup>
                     <thead className="sticky top-0 z-10">
                       <tr>
-                        <th className="border border-slate-200 bg-slate-100 px-1 py-1 text-slate-500 font-semibold w-12 sticky left-0 z-20">
+                        <th className="border border-slate-200 bg-slate-200 px-1 py-1 text-slate-500 font-semibold sticky left-0 z-20">
                           {/* empty corner */}
                         </th>
-                        {Array.from({ length: COLS }, (_, c) => (
-                          <th
-                            key={c}
-                            className="border border-slate-200 bg-slate-100 px-2 py-1 text-slate-600 font-semibold text-center"
-                            style={{ minWidth: `${(colWidths[c] || 10) * 7}px` }}
-                          >
-                            {toAddr(0, c).match(/^([A-Z]+)/)?.[1]}
-                          </th>
-                        ))}
+                        {Array.from({ length: COLS }, (_, c) => {
+                          // Kolom formula: H(7) sampai M(12)
+                          const isFormulaCol = c >= 7
+                          return (
+                            <th
+                              key={c}
+                              className={`border border-slate-300 px-2 py-1 font-semibold text-center text-xs ${
+                                isFormulaCol
+                                  ? 'bg-amber-200 text-amber-900'
+                                  : 'bg-slate-200 text-slate-700'
+                              }`}
+                            >
+                              {toAddr(0, c).match(/^([A-Z]+)/)?.[1]}
+                            </th>
+                          )
+                        })}
                       </tr>
                     </thead>
                     <tbody>
@@ -670,35 +731,46 @@ export function PracticumStage() {
                         <tr key={r}>
                           <th
                             className="border border-slate-200 bg-slate-100 px-1 py-1 text-slate-500 font-semibold text-center sticky left-0 z-10"
-                            style={{ minWidth: '32px' }}
                           >
                             {r + 1}
                           </th>
                           {Array.from({ length: COLS }, (_, c) => {
                             const addr = toAddr(r, c)
+                            const cell = sheet.cells[addr]
                             const isSelected = selectedCell?.row === r && selectedCell?.col === c
                             const display = renderCellDisplay(r, c)
                             const isFormula = isFormulaCell(r, c)
                             const isError = isCellError(r, c)
                             // Highlight header rows (row 3)
                             const isHeader = r === 2
-                            const isTitleRow = r === 0 || r === 12 || r === 20 || r === 25
+                            const isFormulaHeader = isHeader && c >= 7 // H-M header
+                            const isDataHeader = isHeader && c <= 6 // A-G header
+                            const isTitleRow = r === 12 || r === 20 || r === 25
+                            // Empty formula target cells: H4:M9 (r 3-8, c 7-12) + B26/B27 (r 25-26, c 1)
+                            const isFormulaTarget =
+                              (r >= 3 && r <= 8 && c >= 7 && c <= 12) ||
+                              (r === 25 && c === 1) ||
+                              (r === 26 && c === 1)
+                            const isEmptyFormulaTarget = isFormulaTarget && !cell
                             return (
                               <td
                                 key={c}
                                 onClick={() => setSelectedCell({ row: r, col: c })}
                                 onKeyDown={(e) => handleKeyDown(e, r, c)}
                                 tabIndex={0}
-                                className={`border border-slate-200 px-2 py-1 cursor-cell select-none whitespace-nowrap overflow-hidden text-ellipsis ${
+                                className={`border border-slate-200 px-2 py-1 cursor-cell select-none whitespace-nowrap overflow-hidden text-ellipsis text-center ${
                                   isSelected
                                     ? 'ring-2 ring-emerald-500 ring-inset bg-emerald-50'
-                                    : isHeader
-                                    ? 'bg-slate-100 font-semibold'
+                                    : isFormulaHeader
+                                    ? 'bg-amber-100 font-bold text-amber-900'
+                                    : isDataHeader
+                                    ? 'bg-slate-100 font-semibold text-slate-700'
                                     : isTitleRow
-                                    ? 'bg-amber-50 font-semibold'
+                                    ? 'bg-blue-50 font-semibold text-left'
+                                    : isEmptyFormulaTarget
+                                    ? 'bg-amber-50/60'
                                     : 'hover:bg-slate-50'
                                 } ${isFormula ? 'text-blue-700 font-medium' : ''} ${isError ? 'bg-red-50 text-red-700' : ''}`}
-                                style={{ minWidth: `${(colWidths[c] || 10) * 7}px` }}
                                 title={isFormula ? (sheet.cells[addr]?.f ? `=${sheet.cells[addr]!.f}` : '') : display}
                               >
                                 {display || '\u00A0'}

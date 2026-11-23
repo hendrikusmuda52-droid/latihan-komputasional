@@ -94,11 +94,13 @@ Setelah mengolah data, jawab pertanyaan informasi berikut di bagian bawah. Gunak
 //
 // Output columns: G (Total), H (Average), I (Status), J (Komisi), K (Kategori Terlaris), L (Rank)
 
+// ── Judul spreadsheet (dirender sebagai heading di luar tabel) ──
+export const PRACTICUM_TITLE = 'Data Penjualan Toko Elektronik Nusantara Jaya — Oktober 2026'
+
 export function getInitialSheetState(): InitialSheet {
   const cells: Record<string, CellData> = {}
 
-  // Title
-  cells['A1'] = { v: 'Data Penjualan Toko Elektronik Nusantara Jaya — Oktober 2026' }
+  // (Title dipindah ke heading di luar tabel — lihat PRACTICUM_TITLE)
 
   // ── Tabel utama (rows 3-9) ──
   // Header row 3
