@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAppStore } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -29,6 +30,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
+  LogOut,
+  Home,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ForceStopOverlay } from '@/components/student/force-stop-overlay'
@@ -74,6 +77,7 @@ const COLS = 13 // A-M (kita pakai sampai kolom M untuk peringkat)
 
 export function PracticumStage() {
   const { setStage, student } = useAppStore()
+  const router = useRouter()
   const [sheet, setSheet] = useState<SheetState>(() => getInitialSheetState())
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>({ row: 3, col: 7 }) // H4
   const [formulaInput, setFormulaInput] = useState<string>('')
@@ -87,6 +91,20 @@ export function PracticumStage() {
   const [duration, setDuration] = useState<number>(DEFAULT_DURATION_SEC)
   const [activeTab, setActiveTab] = useState<'stimulus' | 'spreadsheet' | 'info' | 'guide'>('stimulus')
   const submissionIdRef = useRef<string | null>(null)
+  // ── Guard against double-submit ──
+  const hasSubmittedRef = useRef(false)
+  // ── Success modal state ──
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [submitResult, setSubmitResult] = useState<{
+    totalScore: number
+    formulaScore: number
+    infoScore: number
+    formulaEarned: number
+    formulaMax: number
+    infoEarned: number
+    infoMax: number
+    formulasUsed: Record<string, { count: number; cells: string[] }>
+  } | null>(null)
 
   // ── Load from localStorage + initialize ──
   useEffect(() => {
@@ -111,6 +129,31 @@ export function PracticumStage() {
     }
 
     if (!startTime) setStartTime(Date.now())
+
+    // ── Cek existing submission di server ──
+    // Jika user sudah submit sebelumnya, redirect ke dashboard + beri tahu
+    const assignmentId = typeof window !== 'undefined'
+      ? localStorage.getItem('currentAssignmentId')
+      : null
+    if (student?.id && assignmentId) {
+      fetch(`/api/practicum/save?assignmentId=${assignmentId}`)
+        .then((r) => r.json())
+        .then((data) => {
+          // Jika ditemukan draft (isSubmitted=false), biarkan user lanjut
+          // Jika tidak ditemukan (found=false), berarti belum pernah mulai — biarkan user mulai
+          // Note: API practicum/save GET hanya cari draft (isSubmitted=false).
+          // Untuk cek submitted-final, perlu API terpisah — skip untuk sekarang
+          if (data.found) {
+            submissionIdRef.current = data.submissionId
+            if (data.durationSec && !startTime) {
+              // Resume timer dari durasi yang sudah berjalan
+              const elapsed = data.durationSec * 1000
+              setStartTime(Date.now() - elapsed)
+            }
+          }
+        })
+        .catch(() => {})
+    }
   }, [])
 
   // ── Timer tick ──
@@ -349,6 +392,13 @@ export function PracticumStage() {
 
   // ── Submit final ──
   const handleSubmit = async () => {
+    // ── GUARD: cegah double-submit ──
+    if (hasSubmittedRef.current) {
+      console.log('Submit sudah dipanggil, abaikan')
+      return
+    }
+    hasSubmittedRef.current = true
+
     setSaving(true)
     const assignmentId = typeof window !== 'undefined'
       ? localStorage.getItem('currentAssignmentId')
@@ -368,11 +418,25 @@ export function PracticumStage() {
         }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Gagal submit')
+      if (!res.ok) {
+        // ── Jika "already submitted" — redirect ke dashboard dengan info ──
+        if (res.status === 400 && data.error && data.error.includes('sudah submit')) {
+          toast.info('Anda sudah submit praktikum ini. Mengarahkan ke dashboard...')
+          // Clear localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem(STORAGE_KEY)
+          }
+          // Redirect ke dashboard setelah 1.5 detik
+          setTimeout(() => {
+            setStage('welcome')
+            router.push('/?view=student-dashboard')
+          }, 1500)
+          return
+        }
+        throw new Error(data.error || 'Gagal submit')
+      }
 
-      toast.success(`Praktikum disubmit! Nilai: ${data.totalScore}/100`)
-
-      // Simpan ke Result table agar muncul di dashboard
+      // ── Simpan ke Result table agar muncul di dashboard ──
       try {
         await fetch('/api/result', {
           method: 'POST',
@@ -399,16 +463,48 @@ export function PracticumStage() {
         console.error('Failed to save Result row:', err)
       }
 
-      // Clear localStorage
+      // ── Tutup dialog konfirmasi ──
+      setShowSubmitDialog(false)
+
+      // ── Tampilkan success modal dengan skor ──
+      setSubmitResult({
+        totalScore: data.totalScore,
+        formulaScore: data.formulaScore,
+        infoScore: data.infoScore,
+        formulaEarned: data.formulaEarned,
+        formulaMax: data.formulaMax,
+        infoEarned: data.infoEarned,
+        infoMax: data.infoMax,
+        formulasUsed: data.formulasUsed,
+      })
+      setShowSuccessModal(true)
+
+      // ── Clear localStorage (state praktikum) ──
       if (typeof window !== 'undefined') {
         localStorage.removeItem(STORAGE_KEY)
       }
       setSaving(false)
-      setStage('completed')
+      // ── JANGAN setStage('completed') dulu — biarkan user lihat success modal ──
+      // Redirect akan dihandle oleh tombol di success modal
     } catch (err: any) {
       toast.error(err.message || 'Gagal submit praktikum')
       setSaving(false)
+      // Reset guard agar user bisa coba lagi
+      hasSubmittedRef.current = false
     }
+  }
+
+  // ── Handle redirect dari success modal ──
+  const handleRedirectToDashboard = () => {
+    setShowSuccessModal(false)
+    setStage('welcome')
+    router.push('/?view=student-dashboard')
+  }
+
+  const handleRedirectToLogin = () => {
+    setShowSuccessModal(false)
+    setStage('welcome')
+    router.push('/')
   }
 
   // ── Auto-submit ketika waktu habis ──
@@ -910,13 +1006,112 @@ export function PracticumStage() {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={saving}>Batal</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleSubmit}
+              onClick={(e) => {
+                e.preventDefault() // cegah auto-close dialog sebelum handleSubmit selesai
+                handleSubmit()
+              }}
               disabled={saving}
               className="bg-emerald-600 hover:bg-emerald-700"
             >
               {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
               Ya, Submit
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── SUCCESS MODAL — Tampil setelah submit berhasil ── */}
+      <AlertDialog open={showSuccessModal} onOpenChange={() => {}}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <div className="flex flex-col items-center text-center mb-2">
+              <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="w-12 h-12 text-emerald-600" />
+              </div>
+              <AlertDialogTitle className="text-2xl">
+                Praktikum Berhasil Dikumpulkan! 🎉
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-base text-slate-700">
+                Jawaban Anda telah tersimpan dan otomatis dinilai.
+              </AlertDialogDescription>
+            </div>
+          </AlertDialogHeader>
+
+          {submitResult && (
+            <div className="space-y-3 my-4">
+              {/* Skor besar */}
+              <div className="text-center p-4 bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-lg">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Nilai Akhir</p>
+                <p className="text-5xl font-bold text-emerald-600 my-1">
+                  {submitResult.totalScore}
+                  <span className="text-xl text-slate-400">/100</span>
+                </p>
+              </div>
+
+              {/* Detail skor */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-3 border rounded text-center">
+                  <p className="text-xs text-slate-500">Formula Score (70%)</p>
+                  <p className="text-lg font-bold text-blue-700">
+                    {submitResult.formulaScore}/100
+                  </p>
+                  <p className="text-[10px] text-slate-400">
+                    {submitResult.formulaEarned}/{submitResult.formulaMax} poin
+                  </p>
+                </div>
+                <div className="p-3 border rounded text-center">
+                  <p className="text-xs text-slate-500">Info Score (30%)</p>
+                  <p className="text-lg font-bold text-purple-700">
+                    {submitResult.infoScore}/100
+                  </p>
+                  <p className="text-[10px] text-slate-400">
+                    {submitResult.infoEarned}/{submitResult.infoMax} poin
+                  </p>
+                </div>
+              </div>
+
+              {/* Formula usage */}
+              {submitResult.formulasUsed && Object.keys(submitResult.formulasUsed).length > 0 && (
+                <div className="p-3 bg-slate-50 rounded">
+                  <p className="text-xs text-slate-600 mb-2 font-semibold">Formula yang Anda gunakan:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {Object.entries(submitResult.formulasUsed).map(([fn, info]: [string, any]) => (
+                      <Badge key={fn} className="bg-emerald-100 text-emerald-700">
+                        {fn} ×{info.count}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                💡 Nilai final dapat diubah oleh guru setelah review manual. Cek dashboard untuk melihat nilai yang sudah dirilis.
+              </div>
+            </div>
+          )}
+
+          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-row">
+            <Button
+              onClick={(e) => {
+                e.preventDefault()
+                handleRedirectToLogin()
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
+            >
+              <LogOut className="w-4 h-4 mr-1" />
+              Kembali ke Login
+            </Button>
+            <Button
+              onClick={(e) => {
+                e.preventDefault()
+                handleRedirectToDashboard()
+              }}
+              variant="outline"
+              className="w-full sm:w-auto"
+            >
+              <Home className="w-4 h-4 mr-1" />
+              Lihat Dashboard Saya
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

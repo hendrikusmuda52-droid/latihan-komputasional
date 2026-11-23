@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
 }
 
 // ── GET /api/practicum/save?assignmentId=X ──
-// Get existing saved submission (for resume)
+// Get existing saved submission (for resume) — cari DRAFT atau FINAL
 export async function GET(req: NextRequest) {
   try {
     const student = getStudentFromToken(req)
@@ -92,11 +92,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'assignmentId required' }, { status: 400 })
     }
 
+    // Cari submission mana saja (draft atau final) yang sudah ada
     const submission = await db.practicumSubmission.findFirst({
       where: {
         studentId: student.studentId,
         assignmentId,
-        isSubmitted: false,
       },
       orderBy: { updatedAt: 'desc' },
     })
@@ -108,10 +108,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       found: true,
       submissionId: submission.id,
-      spreadsheetData: submission.spreadsheetData,
-      infoAnswers: submission.infoAnswers,
+      isSubmitted: submission.isSubmitted,
+      isReleased: submission.isReleased,
+      // Hanya kirim spreadsheetData jika masih draft (belum submit)
+      // Kalau sudah submit, jangan kirim data (untuk hindari resume yang tidak diinginkan)
+      spreadsheetData: submission.isSubmitted ? '' : submission.spreadsheetData,
+      infoAnswers: submission.isSubmitted ? '{}' : submission.infoAnswers,
       formulasUsed: submission.formulasUsed,
       durationSec: submission.durationSec,
+      finalScore: submission.isSubmitted ? submission.finalScore : null,
       updatedAt: submission.updatedAt,
     })
   } catch (e: any) {
