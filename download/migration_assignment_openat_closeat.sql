@@ -1,5 +1,5 @@
 -- ════════════════════════════════════════════════════════════════════════
--- MIGRATION v2: Tambah kolom openAt & closeAt di tabel Assignment
+-- MIGRATION: Tambah kolom openAt & closeAt di tabel Assignment
 -- ════════════════════════════════════════════════════════════════════════
 --
 -- WAJIB dijalankan SEBELUM insert_ujian_teori_k11_dkv.sql
@@ -15,38 +15,20 @@
 -- - NULL = tidak ada batasan window (default, tugas lama tidak terpengaruh)
 -- - Set nilai untuk tugas yang butuh batasan waktu ketat (ujian terjadwal)
 --
--- JIKA ANDA SUDAH PERNAH RUN MIGRATION LAMA (TIMESTAMP(3) tanpa TZ):
--- Script ini akan ALTER COLUMN menjadi TIMESTAMPTZ secara otomatis
--- (menggunakan USING clause untuk konversi data lama ke TIMESTAMPTZ).
+-- PENTING: Kolom pakai TIMESTAMPTZ (TIMESTAMP WITH TIME ZONE) supaya
+-- offset +07:00 di-respect. Tanpa ini, '2026-11-27T09:00:00+07:00'
+-- akan disimpan sebagai '2026-11-27 09:00:00+00' (UTC), lalu di-render
+-- di client Asia/Jakarta sebagai 16:00 WIB — BUG!
 -- ════════════════════════════════════════════════════════════════════════
 
 -- Tambah kolom openAt (kapan ujian mulai bisa diakses)
--- PENTING: Pakai TIMESTAMPTZ (WITH TIME ZONE) supaya timezone info
--- tersimpan & dikembalikan dengan benar oleh Prisma.
--- Jika kolom sudah ada (dari migration lama), ALTER ke TIMESTAMPTZ.
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'Assignment' AND column_name = 'openAt'
-  ) THEN
-    ALTER TABLE "Assignment" ADD COLUMN "openAt" TIMESTAMPTZ;
-  ELSE
-    ALTER TABLE "Assignment" ALTER COLUMN "openAt" TYPE TIMESTAMPTZ USING "openAt" AT TIME ZONE 'UTC';
-  END IF;
-END $$;
+-- PENTING: pakai TIMESTAMPTZ bukan TIMESTAMP, supaya offset timezone di-respect
+ALTER TABLE "Assignment"
+  ADD COLUMN IF NOT EXISTS "openAt" TIMESTAMPTZ;
 
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'Assignment' AND column_name = 'closeAt'
-  ) THEN
-    ALTER TABLE "Assignment" ADD COLUMN "closeAt" TIMESTAMPTZ;
-  ELSE
-    ALTER TABLE "Assignment" ALTER COLUMN "closeAt" TYPE TIMESTAMPTZ USING "closeAt" AT TIME ZONE 'UTC';
-  END IF;
-END $$;
+-- Tambah kolom closeAt (kapan ujian berakhir/tidak bisa diakses lagi)
+ALTER TABLE "Assignment"
+  ADD COLUMN IF NOT EXISTS "closeAt" TIMESTAMPTZ;
 
 -- ─── Verifikasi ───
 SELECT
@@ -59,7 +41,7 @@ WHERE table_name = 'Assignment'
 ORDER BY column_name;
 
 -- Expected output:
--- column_name | data_type                   | is_nullable
--- ------------|-----------------------------|-------------
--- closeAt     | timestamp with time zone    | YES
--- openAt      | timestamp with time zone    | YES
+-- column_name | data_type                      | is_nullable
+-- ------------|--------------------------------|-------------
+-- closeAt     | timestamp with time zone       | YES
+-- openAt      | timestamp with time zone       | YES

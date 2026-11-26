@@ -123,8 +123,12 @@ model Assignment {
   // closeAt: kapan ujian berakhir/tidak bisa diakses lagi (setelah ini, auto-submit/disable)
   // dueDate: deadline soft (tampil sebagai "tenggat"), openAt/closeAt = hard window
   // Jika NULL: tidak ada batasan window (selalu bisa diakses selama isActive=true)
-  openAt        DateTime?
-  closeAt       DateTime?
+  // ── FIX v7.1: pakai @db.Timestamptz (TIMESTAMP WITH TIME ZONE) supaya
+  // offset +07:00 dipreserv. Tanpa Timestamptz, offset diabaikan →
+  // '2026-11-27T09:00:00+07:00' disimpan sebagai '2026-11-27 09:00:00+00'
+  // (UTC), lalu di-render di client Asia/Jakarta sebagai 16:00 WIB. BUG!
+  openAt        DateTime? @db.Timestamptz
+  closeAt       DateTime? @db.Timestamptz
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   // ── NEW v4: back-relation ke Result (untuk include di Prisma query) ──

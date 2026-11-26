@@ -7,6 +7,12 @@
 -- Materi: Fotografi Dasar, Adobe Illustrator, Blender Dasar
 -- Jumlah Soal: 50 PG dengan stimulus
 --
+-- PRASYARAT (WAJIB):
+--   Kolom openAt & closeAt di tabel Assignment HARUS tipenya TIMESTAMPTZ.
+--   Jika belum, jalankan SALAH SATU dari:
+--     - download/migration_assignment_openat_closeat.sql (jika kolom belum ada)
+--     - download/fix_migration_openat_closeat_timestamptz.sql (jika kolom sudah ada tapi tipe salah)
+--
 -- CARA RUN:
 -- 1. Buka Supabase Dashboard → SQL Editor → New Query
 -- 2. Copy SEMUA isi file ini, paste di SQL Editor
@@ -156,7 +162,7 @@ VALUES (
   'asg_ujian_teori_k11_dkv',
   'Ujian Teori Kelas 11 DKV — Fotografi, Illustrator, Blender',
   'Ujian teori mata pelajaran Pilihan. 50 soal PG dengan stimulus tentang Fotografi Dasar, Adobe Illustrator, dan Aplikasi Blender Dasar. Waktu pengerjaan 90 menit (09:00-10:30 WIB). Ujian hanya bisa diakses pada tanggal & jam yang ditentukan. Baca materi persiapan terlebih dahulu di menu Materi Belajar.',
-  'Mata Pelajaran Pilihan', '11DKV', 'SMK', true, '2026-11-27T03:30:00Z', 'wajib', 50, 'quiz_only', NULL, NULL, NULL, 'daring', 'Ujian Teori', '2026/2027', 'ganjil', 90, '2026-11-27T02:00:00Z', '2026-11-27T03:30:00Z', NOW(), NOW()
+  'Mata Pelajaran Pilihan', '11DKV', 'SMK', true, '2026-11-27T10:30:00+07:00', 'wajib', 50, 'quiz_only', NULL, NULL, NULL, 'daring', 'Ujian Teori', '2026/2027', 'ganjil', 90, '2026-11-27T09:00:00+07:00', '2026-11-27T10:30:00+07:00', NOW(), NOW()
 )
 ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description, "questionCount" = EXCLUDED."questionCount", duration = EXCLUDED.duration, "dueDate" = EXCLUDED."dueDate", "openAt" = EXCLUDED."openAt", "closeAt" = EXCLUDED."closeAt", "isActive" = EXCLUDED."isActive", "updatedAt" = NOW();
 
@@ -168,4 +174,4 @@ SELECT 'Assignment' AS section, title, "questionCount", duration, "taskType", "o
 -- Expected output:
 -- Materi Persiapan: 3
 -- Soal PG: 50
--- Assignment: 'Ujian Teori Kelas 11 DKV — Fotografi, Illustrator, Blender' | 50 | 90 | quiz_only | 2026-11-26 09:00 | 2026-11-26 10:30
+-- Assignment: 'Ujian Teori Kelas 11 DKV — Fotografi, Illustrator, Blender' | 50 | 90 | quiz_only | 2026-11-27 09:00:00+07 | 2026-11-27 10:30:00+07

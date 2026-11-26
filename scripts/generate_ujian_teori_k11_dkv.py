@@ -22,13 +22,16 @@ import os
 
 OUTPUT_PATH = "/home/z/my-project/download/insert_ujian_teori_k11_dkv.sql"
 # 27 November 2026, 09:00 - 10:30 WIB (UTC+7)
-# PENTING: PostgreSQL kolom TIMESTAMP(3) WITHOUT TIME ZONE menyimpan
-# apa adanya. Karena Prisma menganggap value adalah UTC saat fetch,
-# kita SIMPAN DALAM UTC agar browser konversi benar ke timezone lokal.
-# 09:00 WIB = 02:00 UTC | 10:30 WIB = 03:30 UTC
-OPEN_AT = "2026-11-27T02:00:00Z"   # = 27 Nov 2026 09:00 WIB
-CLOSE_AT = "2026-11-27T03:30:00Z"  # = 27 Nov 2026 10:30 WIB
-DUE_DATE = "2026-11-27T03:30:00Z"  # = 27 Nov 2026 10:30 WIB
+# PENTING: Kolom openAt & closeAt di DB HARUS tipenya TIMESTAMPTZ
+# (TIMESTAMP WITH TIME ZONE). Jika masih TIMESTAMP WITHOUT TIME ZONE,
+# jalankan dulu: download/fix_migration_openat_closeat_timestamptz.sql
+#
+# Dengan TIMESTAMPTZ, offset +07:00 di-respect:
+#   '2026-11-27T09:00:00+07:00' → disimpan sebagai 02:00 UTC
+#   Browser di Asia/Jakarta (UTC+7) → render sebagai 09:00 WIB ✓
+OPEN_AT = "2026-11-27T09:00:00+07:00"   # 27 Nov 2026 09:00 WIB
+CLOSE_AT = "2026-11-27T10:30:00+07:00"  # 27 Nov 2026 10:30 WIB
+DUE_DATE = "2026-11-27T10:30:00+07:00"  # 27 Nov 2026 10:30 WIB (sama dengan closeAt)
 GRADE = "11DKV"
 SUBJECT = "Mata Pelajaran Pilihan"
 
@@ -516,6 +519,12 @@ def generate_sql():
     sql.append("-- Materi: Fotografi Dasar, Adobe Illustrator, Blender Dasar")
     sql.append("-- Jumlah Soal: 50 PG dengan stimulus")
     sql.append("--")
+    sql.append("-- PRASYARAT (WAJIB):")
+    sql.append("--   Kolom openAt & closeAt di tabel Assignment HARUS tipenya TIMESTAMPTZ.")
+    sql.append("--   Jika belum, jalankan SALAH SATU dari:")
+    sql.append("--     - download/migration_assignment_openat_closeat.sql (jika kolom belum ada)")
+    sql.append("--     - download/fix_migration_openat_closeat_timestamptz.sql (jika kolom sudah ada tapi tipe salah)")
+    sql.append("--")
     sql.append("-- CARA RUN:")
     sql.append("-- 1. Buka Supabase Dashboard → SQL Editor → New Query")
     sql.append("-- 2. Copy SEMUA isi file ini, paste di SQL Editor")
@@ -576,7 +585,7 @@ def generate_sql():
     sql.append("-- Expected output:")
     sql.append("-- Materi Persiapan: 3")
     sql.append("-- Soal PG: 50")
-    sql.append("-- Assignment: 'Ujian Teori Kelas 11 DKV — Fotografi, Illustrator, Blender' | 50 | 90 | quiz_only | 2026-11-26 09:00 | 2026-11-26 10:30")
+    sql.append("-- Assignment: 'Ujian Teori Kelas 11 DKV — Fotografi, Illustrator, Blender' | 50 | 90 | quiz_only | 2026-11-27 09:00:00+07 | 2026-11-27 10:30:00+07")
 
     return "\n".join(sql)
 
