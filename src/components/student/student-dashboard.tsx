@@ -26,7 +26,7 @@ import { MaterialMarkdownRenderer } from '@/components/student/material-markdown
 import { UploadTaskPhoto } from '@/components/student/upload-task-photo'
 
 interface StudentInfo { id: string; namaLengkap: string; nisn: string; kelas: string; sekolah: string; jenisKelamin: string }
-interface Assignment { id: string; title: string; description: string; dueDate: string | null; createdAt: string; exerciseType: string; questionCount: number; taskType: string; canRetake: boolean; hasCompleted: boolean; duration?: number; cpId?: string | null; tpId?: string | null; isExpired?: boolean; isPunishment?: boolean; isPassed?: boolean; isFailed?: boolean; score?: number | null }
+interface Assignment { id: string; title: string; description: string; dueDate: string | null; createdAt: string; exerciseType: string; questionCount: number; taskType: string; canRetake: boolean; hasCompleted: boolean; duration?: number; cpId?: string | null; tpId?: string | null; isExpired?: boolean; isPunishment?: boolean; isPassed?: boolean; isFailed?: boolean; score?: number | null; openAt?: string | null; closeAt?: string | null; isCurrentlyAccessible?: boolean; isOpen?: boolean; isClosed?: boolean }
 interface ResultItem { id: string; typingScore: number; quizScore: number; totalScore: number; typingSpeedWPM: number; typingAccuracy: number; quizCorrect: number; quizTotal: number; completedAt: string; releasedAt: string | null; assignmentId?: string | null }
 interface Material { id: string; title: string; content: string; category: string; createdAt: string; mediaType?: string; mediaUrl?: string | null; imageUrl?: string | null }
 interface DashboardData { student: StudentInfo; assignments: Assignment[]; results: ResultItem[]; pendingResultsCount: number; hasActiveProgress: boolean; activeProgressStage: string | null; hasCompletedAnyExercise: boolean; kkm?: number }
@@ -203,6 +203,24 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
       toast.error('Tugas wajib ini sudah dikerjakan. Hubungi guru untuk reset.')
       return
     }
+    // ── NEW v7: Cek window akses ujian (openAt/closeAt) ──
+    if (a.openAt || a.closeAt) {
+      const now = new Date()
+      const openDate = a.openAt ? new Date(a.openAt) : null
+      const closeDate = a.closeAt ? new Date(a.closeAt) : null
+      if (openDate && now < openDate) {
+        const time = openDate.toLocaleString('id-ID', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        })
+        toast.error(`Ujian belum dibuka. Akses mulai: ${time}`)
+        return
+      }
+      if (closeDate && now > closeDate) {
+        toast.error('Waktu ujian sudah berakhir. Hubungi guru untuk info lebih lanjut.')
+        return
+      }
+    }
     setStudent(student); setProgress(null)
     // Store the assignment ID in localStorage for auto-save sync
     if (typeof window !== 'undefined') {
@@ -340,16 +358,39 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
                 // canRetake = persiapan (always) OR !hasCompleted (assignment not yet done / was reset) OR isFailed (remedial)
                 const isLocked = a.hasCompleted && a.exerciseType === 'wajib' && !a.canRetake
                 const kkm = data?.kkm || 75
+                // ── NEW v7: Window akses ujian ──
+                const hasWindow = !!(a.openAt || a.closeAt)
+                const isOpen = a.isOpen ?? true
+                const isClosed = a.isClosed ?? false
+                const isCurrentlyAccessible = a.isCurrentlyAccessible ?? true
+                const windowBlocked = hasWindow && !isCurrentlyAccessible
+                const openDate = a.openAt ? new Date(a.openAt) : null
+                const closeDate = a.closeAt ? new Date(a.closeAt) : null
                 return (
                 <div key={a.id} className="space-y-3">
-                <Card className={`border-0 shadow-md hover:shadow-xl transition-all cursor-pointer group overflow-hidden ${isLocked ? 'opacity-60' : ''} ${a.isPunishment ? 'border-2 border-amber-400' : ''}`} onClick={() => handleStartAssignment(a)}>
-                  <div className={`h-1 ${a.isPunishment ? 'bg-amber-500' : a.exerciseType === 'wajib' ? 'bg-red-500' : 'bg-blue-500'}`} />
+                <Card className={`border-0 shadow-md hover:shadow-xl transition-all group overflow-hidden ${
+                  isLocked || windowBlocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                } ${a.isPunishment ? 'border-2 border-amber-400' : ''}`} onClick={() => !windowBlocked && !isLocked && handleStartAssignment(a)}>
+                  <div className={`h-1 ${a.isPunishment ? 'bg-amber-500' : windowBlocked ? 'bg-slate-400' : a.exerciseType === 'wajib' ? 'bg-red-500' : 'bg-blue-500'}`} />
                   <CardContent className="pt-5 pb-5">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <Badge variant="outline" className="text-xs">{a.taskType === 'game' ? 'Game' : a.taskType === 'drawing' ? 'Menggambar' : a.taskType === 'quiz_only' ? 'Soal HOTS' : a.taskType === 'refleksi_video' ? 'Video' : a.taskType === 'practicum_spreadsheet' ? 'Praktikum' : 'Mengetik + Soal'}</Badge>
                           <Badge className={`text-xs ${a.exerciseType === 'wajib' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{a.exerciseType === 'wajib' ? 'Wajib' : 'Persiapan'}</Badge>
+                          {/* ── NEW v7: Badge status window akses ujian ── */}
+                          {hasWindow && !isCurrentlyAccessible && openDate && new Date() < openDate && (
+                            <Badge className="bg-slate-200 text-slate-700 text-xs">
+                              <Clock className="w-3 h-3 mr-1" />
+                              Dibuka: {openDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </Badge>
+                          )}
+                          {hasWindow && isClosed && (
+                            <Badge className="bg-red-100 text-red-700 text-xs">⏰ Ujian Berakhir</Badge>
+                          )}
+                          {hasWindow && isCurrentlyAccessible && (
+                            <Badge className="bg-emerald-100 text-emerald-700 text-xs animate-pulse">● Ujian Aktif</Badge>
+                          )}
                           {/* ── NEW: Badge status lulus/remedial/hukuman ── */}
                           {a.isPunishment && (
                             <Badge className="bg-amber-100 text-amber-700 text-xs">⚠️ Tugas Hukuman</Badge>
@@ -369,7 +410,7 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
                         </div>
                         <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">{a.title}</h3>
                         {a.description && <p className="text-sm text-slate-500 mt-1">{a.description}</p>}
-                        <div className="flex items-center gap-3 text-xs text-slate-400 mt-3">
+                        <div className="flex items-center gap-3 text-xs text-slate-400 mt-3 flex-wrap">
                           <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{new Date(a.createdAt).toLocaleDateString('id-ID')}</span>
                           {a.dueDate && (
                             <span className={`flex items-center gap-1 ${new Date(a.dueDate) < new Date() ? 'text-red-500 font-medium' : ''}`}>
@@ -377,12 +418,25 @@ export function StudentDashboard({ student, onLogout }: { student: StudentInfo; 
                               Deadline: {new Date(a.dueDate).toLocaleDateString('id-ID')}
                             </span>
                           )}
-                          {/* ── NEW: KKM info ── */}
+                          {/* ── NEW v7: Tampilkan window akses ── */}
+                          {hasWindow && (
+                            <span className="flex items-center gap-1 text-blue-600 font-medium">
+                              <Clock className="w-3 h-3" />
+                              Akses: {openDate?.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} – {closeDate?.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                            </span>
+                          )}
                           <span className="text-slate-400">KKM: {kkm}</span>
                         </div>
                       </div>
                       <div>
-                        {isLocked && !a.isFailed ? (
+                        {windowBlocked ? (
+                          // Window belum dibuka atau sudah berakhir
+                          isClosed ? (
+                            <Button size="sm" variant="outline" disabled className="opacity-50"><Lock className="w-3 h-3 mr-1" />Berakhir</Button>
+                          ) : (
+                            <Button size="sm" variant="outline" disabled className="opacity-50"><Clock className="w-3 h-3 mr-1" />Belum Dibuka</Button>
+                          )
+                        ) : isLocked && !a.isFailed ? (
                           <Button size="sm" variant="outline" disabled className="opacity-50"><Lock className="w-3 h-3 mr-1" />Terkunci</Button>
                         ) : a.isPunishment ? (
                           // Tugas hukuman — bisa dikerjakan

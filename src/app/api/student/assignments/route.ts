@@ -207,6 +207,16 @@ export async function GET(req: NextRequest) {
       // Tugas hukuman: selalu bisa dikerjakan (tidak ada deadline)
       const canRetake = isPunishment || a.exerciseType === 'persiapan' || !hasCompletedThisAssignment || isFailed
 
+      // ── NEW v7: Window akses ujian (openAt/closeAt) ──
+      // Jika assignment punya openAt/closeAt, hitung status akses window
+      const openAt = (a as Record<string, unknown>).openAt as string | Date | null | undefined
+      const closeAt = (a as Record<string, unknown>).closeAt as string | Date | null | undefined
+      const openDate = openAt ? new Date(openAt as string) : null
+      const closeDate = closeAt ? new Date(closeAt as string) : null
+      const isOpen = !openDate || openDate <= now        // openAt sudah lewat (atau tidak ada)
+      const isClosed = !!closeDate && closeDate < now    // closeAt sudah lewat
+      const isCurrentlyAccessible = isOpen && !isClosed  // di dalam window akses
+
       return {
         id: a.id, title: a.title, description: a.description,
         dueDate: a.dueDate, createdAt: a.createdAt,
@@ -222,6 +232,12 @@ export async function GET(req: NextRequest) {
         isPassed,
         isFailed,
         score: score !== undefined ? Number(score) : null,
+        // ── Window akses ujian (v7) ──
+        openAt: openAt as string | null,
+        closeAt: closeAt as string | null,
+        isCurrentlyAccessible,
+        isOpen,
+        isClosed,
       }
     })
 

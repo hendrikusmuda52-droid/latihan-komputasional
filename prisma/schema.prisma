@@ -118,6 +118,13 @@ model Assignment {
   // parentAssignmentId: link ke tugas asli yang tidak dikerjakan
   isPunishment  Boolean   @default(false)
   parentAssignmentId String? // tugas asli yang tidak dikerjakan
+  // ── NEW v7: Window akses ujian (untuk ujian dengan jadwal ketat) ──
+  // openAt: kapan ujian mulai bisa diakses siswa (sebelum ini, SISTERIA tugas)
+  // closeAt: kapan ujian berakhir/tidak bisa diakses lagi (setelah ini, auto-submit/disable)
+  // dueDate: deadline soft (tampil sebagai "tenggat"), openAt/closeAt = hard window
+  // Jika NULL: tidak ada batasan window (selalu bisa diakses selama isActive=true)
+  openAt        DateTime?
+  closeAt       DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   // ── NEW v4: back-relation ke Result (untuk include di Prisma query) ──

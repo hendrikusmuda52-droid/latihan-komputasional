@@ -97,6 +97,8 @@ export async function GET(req: NextRequest) {
           tahunAjaran: true,
           semester: true,
           duration: true,
+          openAt: true,
+          closeAt: true,
           createdAt: true,
           updatedAt: true,
         },
