@@ -558,7 +558,7 @@ def generate_sql():
     sql.append(f"  'asg_ujian_teori_k11_dkv',")
     sql.append(f"  'Ujian Teori Kelas 11 DKV — Fotografi, Illustrator, Blender',")
     sql.append(f"  'Ujian teori mata pelajaran Pilihan. 50 soal PG dengan stimulus tentang Fotografi Dasar, Adobe Illustrator, dan Aplikasi Blender Dasar. Waktu pengerjaan 90 menit (09:00-10:30 WIB). Ujian hanya bisa diakses pada tanggal & jam yang ditentukan. Baca materi persiapan terlebih dahulu di menu Materi Belajar.',")
-    sql.append(f"  '{SUBJECT}', '11DKV', 'SMK', true, '{DUE_DATE}', 'wajib', 50, 'quiz_only', NULL, NULL, NULL, 'daring', 'Ujian Teori', '2026/2027', 'ganjil', 90, '{OPEN_AT}', '{CLOSE_AT}', NOW(), NOW())")
+    sql.append(f"  '{SUBJECT}', '11DKV', 'SMK', true, '{DUE_DATE}', 'wajib', 50, 'quiz_only', NULL, NULL, NULL, 'daring', 'Ujian Teori', '2026/2027', 'ganjil', 90, '{OPEN_AT}', '{CLOSE_AT}', NOW(), NOW()")
     sql.append(")")
     sql.append("ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description, \"questionCount\" = EXCLUDED.\"questionCount\", duration = EXCLUDED.duration, \"dueDate\" = EXCLUDED.\"dueDate\", \"openAt\" = EXCLUDED.\"openAt\", \"closeAt\" = EXCLUDED.\"closeAt\", \"isActive\" = EXCLUDED.\"isActive\", \"updatedAt\" = NOW();")
     sql.append("")

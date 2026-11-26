@@ -156,7 +156,7 @@ VALUES (
   'asg_ujian_teori_k11_dkv',
   'Ujian Teori Kelas 11 DKV — Fotografi, Illustrator, Blender',
   'Ujian teori mata pelajaran Pilihan. 50 soal PG dengan stimulus tentang Fotografi Dasar, Adobe Illustrator, dan Aplikasi Blender Dasar. Waktu pengerjaan 90 menit (09:00-10:30 WIB). Ujian hanya bisa diakses pada tanggal & jam yang ditentukan. Baca materi persiapan terlebih dahulu di menu Materi Belajar.',
-  'Mata Pelajaran Pilihan', '11DKV', 'SMK', true, '2026-11-26T10:30:00+07:00', 'wajib', 50, 'quiz_only', NULL, NULL, NULL, 'daring', 'Ujian Teori', '2026/2027', 'ganjil', 90, '2026-11-26T09:00:00+07:00', '2026-11-26T10:30:00+07:00', NOW(), NOW())
+  'Mata Pelajaran Pilihan', '11DKV', 'SMK', true, '2026-11-26T10:30:00+07:00', 'wajib', 50, 'quiz_only', NULL, NULL, NULL, 'daring', 'Ujian Teori', '2026/2027', 'ganjil', 90, '2026-11-26T09:00:00+07:00', '2026-11-26T10:30:00+07:00', NOW(), NOW()
 )
 ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description, "questionCount" = EXCLUDED."questionCount", duration = EXCLUDED.duration, "dueDate" = EXCLUDED."dueDate", "openAt" = EXCLUDED."openAt", "closeAt" = EXCLUDED."closeAt", "isActive" = EXCLUDED."isActive", "updatedAt" = NOW();
 
