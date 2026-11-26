@@ -557,7 +557,11 @@ def generate_sql():
         cat = "Fotografi" if i < 17 else "Illustrator" if i < 34 else "Blender"
         qid = f"q_ujian_teori_dkv_{i+1:03d}"
         sql.append(f"INSERT INTO \"Question\" (id, \"gradeLevel\", subject, question, \"optionA\", \"optionB\", \"optionC\", \"optionD\", \"correctAnswer\", explanation, category, \"isActive\", \"questionType\", \"correctAnswers\", \"matchPairs\", \"shortAnswer\", \"essayAnswer\", \"levelKognitif\", \"pembahasanBenar\", \"analisisDistraktor\", \"cpId\", \"tpId\", \"createdAt\", \"updatedAt\") VALUES")
-        sql.append(f"('{qid}', '11DKV', {sql_str(SUBJECT)}, {sql_str(q)}, {sql_str(opts[0])}, {sql_str(opts[1])}, {sql_str(opts[2])}, {sql_str(opts[3])}, {correct}, {sql_str(expl)}, '{cat}', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW());")
+        # ── FIX: tambah ON CONFLICT DO UPDATE supaya idempotent ──
+        # Tanpa ini, run ulang SQL akan error 'duplicate key value violates
+        # unique constraint Question_pkey' jika soal sudah ada di DB.
+        sql.append(f"('{qid}', '11DKV', {sql_str(SUBJECT)}, {sql_str(q)}, {sql_str(opts[0])}, {sql_str(opts[1])}, {sql_str(opts[2])}, {sql_str(opts[3])}, {correct}, {sql_str(expl)}, '{cat}', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())")
+        sql.append(f"ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, \"optionA\" = EXCLUDED.\"optionA\", \"optionB\" = EXCLUDED.\"optionB\", \"optionC\" = EXCLUDED.\"optionC\", \"optionD\" = EXCLUDED.\"optionD\", \"correctAnswer\" = EXCLUDED.\"correctAnswer\", explanation = EXCLUDED.explanation, category = EXCLUDED.category, \"isActive\" = EXCLUDED.\"isActive\", \"questionType\" = EXCLUDED.\"questionType\", \"levelKognitif\" = EXCLUDED.\"levelKognitif\", \"updatedAt\" = NOW();")
     sql.append("")
 
     # ── BAGIAN 3: ASSIGNMENT UJIAN TEORI dengan window akses ──
