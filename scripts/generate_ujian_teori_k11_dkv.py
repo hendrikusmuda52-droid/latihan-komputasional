@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Ujian Teori Kelas 11 DKV — Mata Pelajaran Pilihan
-Tanggal: 26 November 2026
+Tanggal: 27 November 2026
 Waktu Akses: 09:00 - 10:30 WIB (90 menit)
 Materi: Fotografi Dasar, Adobe Illustrator, Blender Dasar
 
@@ -21,10 +21,14 @@ Anti-AI strategy untuk soal:
 import os
 
 OUTPUT_PATH = "/home/z/my-project/download/insert_ujian_teori_k11_dkv.sql"
-# 26 November 2026, 09:00 - 10:30 WIB (UTC+7)
-OPEN_AT = "2026-11-26T09:00:00+07:00"
-CLOSE_AT = "2026-11-26T10:30:00+07:00"
-DUE_DATE = "2026-11-26T10:30:00+07:00"
+# 27 November 2026, 09:00 - 10:30 WIB (UTC+7)
+# PENTING: PostgreSQL kolom TIMESTAMP(3) WITHOUT TIME ZONE menyimpan
+# apa adanya. Karena Prisma menganggap value adalah UTC saat fetch,
+# kita SIMPAN DALAM UTC agar browser konversi benar ke timezone lokal.
+# 09:00 WIB = 02:00 UTC | 10:30 WIB = 03:30 UTC
+OPEN_AT = "2026-11-27T02:00:00Z"   # = 27 Nov 2026 09:00 WIB
+CLOSE_AT = "2026-11-27T03:30:00Z"  # = 27 Nov 2026 10:30 WIB
+DUE_DATE = "2026-11-27T03:30:00Z"  # = 27 Nov 2026 10:30 WIB
 GRADE = "11DKV"
 SUBJECT = "Mata Pelajaran Pilihan"
 
@@ -507,7 +511,7 @@ def generate_sql():
     sql.append("-- UJIAN TEORI KELAS 11 DKV — MATA PELAJARAN PILIHAN")
     sql.append("-- ════════════════════════════════════════════════════════════════════════")
     sql.append("--")
-    sql.append("-- Tanggal Ujian: 26 November 2026")
+    sql.append("-- Tanggal Ujian: 27 November 2026")
     sql.append("-- Waktu Akses: 09:00 - 10:30 WIB (90 menit)")
     sql.append("-- Materi: Fotografi Dasar, Adobe Illustrator, Blender Dasar")
     sql.append("-- Jumlah Soal: 50 PG dengan stimulus")
@@ -548,9 +552,9 @@ def generate_sql():
     sql.append("")
 
     # ── BAGIAN 3: ASSIGNMENT UJIAN TEORI dengan window akses ──
-    sql.append("-- ─── BAGIAN 3: ASSIGNMENT UJIAN TEORI (window akses 26 Nov 2026, 09:00-10:30 WIB) ───")
-    sql.append("-- openAt: kapan ujian mulai bisa diakses (26 Nov 2026, 09:00 WIB)")
-    sql.append("-- closeAt: kapan ujian berakhir (26 Nov 2026, 10:30 WIB)")
+    sql.append("-- ─── BAGIAN 3: ASSIGNMENT UJIAN TEORI (window akses 27 Nov 2026, 09:00-10:30 WIB) ───")
+    sql.append("-- openAt: kapan ujian mulai bisa diakses (27 Nov 2026, 09:00 WIB)")
+    sql.append("-- closeAt: kapan ujian berakhir (27 Nov 2026, 10:30 WIB)")
     sql.append("-- dueDate: deadline (sama dengan closeAt untuk ujian dengan window ketat)")
     sql.append("-- duration: 90 menit (dari 09:00 - 10:30)")
     sql.append("INSERT INTO \"Assignment\" (id, title, description, subject, \"targetKelas\", \"targetJenjang\", \"isActive\", \"dueDate\", \"exerciseType\", \"questionCount\", \"taskType\", \"teacherId\", \"cpId\", \"tpId\", \"taskCategory\", \"taskTypeName\", \"tahunAjaran\", \"semester\", \"duration\", \"openAt\", \"closeAt\", \"createdAt\", \"updatedAt\")")

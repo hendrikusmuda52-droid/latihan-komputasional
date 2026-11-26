@@ -2,7 +2,7 @@
 -- UJIAN TEORI KELAS 11 DKV — MATA PELAJARAN PILIHAN
 -- ════════════════════════════════════════════════════════════════════════
 --
--- Tanggal Ujian: 26 November 2026
+-- Tanggal Ujian: 27 November 2026
 -- Waktu Akses: 09:00 - 10:30 WIB (90 menit)
 -- Materi: Fotografi Dasar, Adobe Illustrator, Blender Dasar
 -- Jumlah Soal: 50 PG dengan stimulus
@@ -146,9 +146,9 @@ INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
 ('q_ujian_teori_dkv_050', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda modeling objek dengan modifier Subdivision Surface. Viewport halus, tapi render masih facet (kotak). Penyebab:', 'Modifier tidak aktif untuk render', 'Viewport level = 2, Render level = 0. Set Render level ke 2 atau lebih', 'Material salah', 'Light kurang', 1, 'Subsurf punya 2 level: Viewport (real-time) dan Render. Viewport = 2 = halus di editor. Render = 0 = facet saat render. Set Render level sama/lebih tinggi dari Viewport.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW());
 
--- ─── BAGIAN 3: ASSIGNMENT UJIAN TEORI (window akses 26 Nov 2026, 09:00-10:30 WIB) ───
--- openAt: kapan ujian mulai bisa diakses (26 Nov 2026, 09:00 WIB)
--- closeAt: kapan ujian berakhir (26 Nov 2026, 10:30 WIB)
+-- ─── BAGIAN 3: ASSIGNMENT UJIAN TEORI (window akses 27 Nov 2026, 09:00-10:30 WIB) ───
+-- openAt: kapan ujian mulai bisa diakses (27 Nov 2026, 09:00 WIB)
+-- closeAt: kapan ujian berakhir (27 Nov 2026, 10:30 WIB)
 -- dueDate: deadline (sama dengan closeAt untuk ujian dengan window ketat)
 -- duration: 90 menit (dari 09:00 - 10:30)
 INSERT INTO "Assignment" (id, title, description, subject, "targetKelas", "targetJenjang", "isActive", "dueDate", "exerciseType", "questionCount", "taskType", "teacherId", "cpId", "tpId", "taskCategory", "taskTypeName", "tahunAjaran", "semester", "duration", "openAt", "closeAt", "createdAt", "updatedAt")
@@ -156,7 +156,7 @@ VALUES (
   'asg_ujian_teori_k11_dkv',
   'Ujian Teori Kelas 11 DKV — Fotografi, Illustrator, Blender',
   'Ujian teori mata pelajaran Pilihan. 50 soal PG dengan stimulus tentang Fotografi Dasar, Adobe Illustrator, dan Aplikasi Blender Dasar. Waktu pengerjaan 90 menit (09:00-10:30 WIB). Ujian hanya bisa diakses pada tanggal & jam yang ditentukan. Baca materi persiapan terlebih dahulu di menu Materi Belajar.',
-  'Mata Pelajaran Pilihan', '11DKV', 'SMK', true, '2026-11-26T10:30:00+07:00', 'wajib', 50, 'quiz_only', NULL, NULL, NULL, 'daring', 'Ujian Teori', '2026/2027', 'ganjil', 90, '2026-11-26T09:00:00+07:00', '2026-11-26T10:30:00+07:00', NOW(), NOW()
+  'Mata Pelajaran Pilihan', '11DKV', 'SMK', true, '2026-11-27T03:30:00Z', 'wajib', 50, 'quiz_only', NULL, NULL, NULL, 'daring', 'Ujian Teori', '2026/2027', 'ganjil', 90, '2026-11-27T02:00:00Z', '2026-11-27T03:30:00Z', NOW(), NOW()
 )
 ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description, "questionCount" = EXCLUDED."questionCount", duration = EXCLUDED.duration, "dueDate" = EXCLUDED."dueDate", "openAt" = EXCLUDED."openAt", "closeAt" = EXCLUDED."closeAt", "isActive" = EXCLUDED."isActive", "updatedAt" = NOW();
 
