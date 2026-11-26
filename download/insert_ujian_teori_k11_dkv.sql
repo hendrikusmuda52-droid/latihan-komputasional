@@ -24,7 +24,96 @@ INSERT INTO "Material" (id, title, content, subject, "targetKelas", "targetJenja
 VALUES (
   'mat_ujian_teori_dkv_fotografi',
   'Materi Persiapan Ujian: Fotografi Dasar',
-  '# Materi Persiapan Ujian: Fotografi Dasar\n\n## A. Kamera dan Jenisnya\n\n### 1. DSLR vs Mirrorless\n- **DSLR (Digital Single-Lens Reflex)**: punya cermin (mirror) yang memantulkan cahaya dari lensa ke viewfinder. Saat jepret, cermin naik, shutter terbuka, sensor menangkap cahaya. Contoh: Canon EOS 5D, Nikon D850.\n- **Mirrorless**: TIDAK punya cermin. Cahaya langsung ke sensor, preview via electronic viewfinder (EVF) atau LCD. Lebih ringan, lebih cepat burst. Contoh: Sony A7, Canon R5, Fuji X-T.\n\n### 2. Sensor: Full Frame vs Crop (APS-C)\n- **Full Frame (36×24mm)**: sensor seukuran film 35mm. Low light better, bokeh lebih creamy, wide angle tetap wide.\n- **APS-C (≈23.6×15.6mm)**: sensor lebih kecil. Crop factor 1.5x (Nikon/Sony) atau 1.6x (Canon). Lensa 50mm di APS-C = setara 75mm di full frame.\n\n## B. Exposure Triangle (Segitiga Eksposur)\n\nTiga parameter yang menentukan kecerahan foto:\n\n### 1. Aperture (Bukaan Lensa) — f/number\n- f/1.4, f/1.8, f/2.8 = BUKAAN LEBAR (lebih banyak cahaya, depth of field sempit = background blur)\n- f/8, f/11, f/16 = BUKAAN SEMPIT (sedikit cahaya, depth of field lebar = semua tajam)\n- f-number KECIL = bukaan LEBAR. f-number BESAR = bukaan SEMPIT.\n\n### 2. Shutter Speed (Kecepatan Rana)\n- 1/4000s, 1/2000s, 1/1000s = CEPAT (bekukan gerakan, olahraga)\n- 1/60s = standar handheld (lebih lambat dari ini rawan blur)\n- 1s, 5s, 30s = LAMBAT (light trail, waterfall halus, astrophotography)\n- Rule of thumb: shutter >= 1/focal length. Lensa 50mm → minimal 1/50s handheld.\n\n### 3. ISO (Sensitivitas Sensor)\n- ISO 100, 200 = rendah (cahaya terang, noise minimal)\n- ISO 800, 1600 = sedang (indoor, low light)\n- ISO 6400, 12800 = tinggi (sangat gelap, noise tinggi = grain)\n\n### 4. Hubungan Segitiga\n- Naikkan aperture (f/16 → f/4) = +3 stop cahaya, DOF sempit\n- Percepat shutter (1/30 → 1/250) = -3 stop cahaya, beku gerakan\n- Naikkan ISO (100 → 800) = +3 stop cahaya, noise naik\n\n## C. Komposisi Fotografi\n\n### 1. Rule of Thirds\nBagi frame jadi 9 kotak (3x3). Letakkan subjek utama di titik potong (intersection point), BUKAN di tengah.\n\n### 2. Leading Lines\nGaris (jalan, rel, sungai) yang mengarah ke subjek. Membuat mata penonton terarah.\n\n### 3. Framing\nGunakan elemen di sekitar (pintu, jendela, cabang pohon) untuk "membingkai" subjek.\n\n### 4. Symmetry & Pattern\nKomposisi simetris (refleksi air, gedung) atau pola berulang menarik perhatian.\n\n### 5. Negative Space\nRuang kosong di sekitar subjek. Memberi "napas" dan menonjolkan subjek.\n\n## D. Pencahayaan (Lighting)\n\n### 1. Karakter Cahaya\n- **Hard light**: sumber kecil, bayangan tegas (matahari siang, flash langsung). Kontras tinggi.\n- **Soft light**: sumber besar/diffuse, bayangan halus (mendung, softbox). Kontras rendah.\n\n### 2. Arah Cahaya\n- **Front lighting**: cahaya dari depan subjek. Subjek terang, flat.\n- **Side lighting**: dari samping. Tekstur muncul, dimensi 3D.\n- **Backlighting**: dari belakang. Siluet, halo effect.\n- **Top lighting**: dari atas (tengah hari). Bayangan di mata/bawah hidung.\n\n### 3. White Balance (WB)\nSuhu warna cahaya diukur Kelvin (K):\n- 3200K = Tungsten (lampu pijar) — kekuningan\n- 5500K = Daylight (matahari) — netral\n- 7500K = Shade/Awan — kebiruan\nWB salah → foto terlalu kuning atau biru. Set WB sesuai sumber cahaya.\n\n## E. Depth of Field (DoF)\n\nJarak area yang tajam dalam foto.\n- **DoF Sempit (shallow)**: aperture lebar (f/1.8), lensa tele (85mm), jarak dekat. Hanya subjek tajam, background blur (bokeh).\n- **DoF Lebar (deep)**: aperture sempit (f/11), lensa wide (16mm), jarak jauh. Semua tajam (landscape).\n\n## F. Focal Length (Panjang Fokus)\n\n- **Wide angle (10-24mm)**: sudut lebar, distorsi pinggir. Cocok landscape, arsitektur.\n- **Standard (35-50mm)**: sudut mirip mata manusia. Serbaguna.\n- **Telephoto (85-200mm)**: sudut sempit, kompresi background. Cocok portrait, olahraga, wildlife.\n- **Macro (50-100mm macro)**: fokus sangat dekat. Serangga, detail bunga.\n\n## G. Format File\n- **JPEG**: compressed, 8-bit, langsung jadi. Cocok sharing.\n- **RAW**: tidak terkompresi, 12-14 bit, perlu post-process (Lightroom, Camera Raw). Lebih fleksibel untuk editing exposure, WB, shadow.\n',
+  '# Materi Persiapan Ujian: Fotografi Dasar
+
+## A. Kamera dan Jenisnya
+
+### 1. DSLR vs Mirrorless
+- **DSLR (Digital Single-Lens Reflex)**: punya cermin (mirror) yang memantulkan cahaya dari lensa ke viewfinder. Saat jepret, cermin naik, shutter terbuka, sensor menangkap cahaya. Contoh: Canon EOS 5D, Nikon D850.
+- **Mirrorless**: TIDAK punya cermin. Cahaya langsung ke sensor, preview via electronic viewfinder (EVF) atau LCD. Lebih ringan, lebih cepat burst. Contoh: Sony A7, Canon R5, Fuji X-T.
+
+### 2. Sensor: Full Frame vs Crop (APS-C)
+- **Full Frame (36×24mm)**: sensor seukuran film 35mm. Low light better, bokeh lebih creamy, wide angle tetap wide.
+- **APS-C (≈23.6×15.6mm)**: sensor lebih kecil. Crop factor 1.5x (Nikon/Sony) atau 1.6x (Canon). Lensa 50mm di APS-C = setara 75mm di full frame.
+
+## B. Exposure Triangle (Segitiga Eksposur)
+
+Tiga parameter yang menentukan kecerahan foto:
+
+### 1. Aperture (Bukaan Lensa) — f/number
+- f/1.4, f/1.8, f/2.8 = BUKAAN LEBAR (lebih banyak cahaya, depth of field sempit = background blur)
+- f/8, f/11, f/16 = BUKAAN SEMPIT (sedikit cahaya, depth of field lebar = semua tajam)
+- f-number KECIL = bukaan LEBAR. f-number BESAR = bukaan SEMPIT.
+
+### 2. Shutter Speed (Kecepatan Rana)
+- 1/4000s, 1/2000s, 1/1000s = CEPAT (bekukan gerakan, olahraga)
+- 1/60s = standar handheld (lebih lambat dari ini rawan blur)
+- 1s, 5s, 30s = LAMBAT (light trail, waterfall halus, astrophotography)
+- Rule of thumb: shutter >= 1/focal length. Lensa 50mm → minimal 1/50s handheld.
+
+### 3. ISO (Sensitivitas Sensor)
+- ISO 100, 200 = rendah (cahaya terang, noise minimal)
+- ISO 800, 1600 = sedang (indoor, low light)
+- ISO 6400, 12800 = tinggi (sangat gelap, noise tinggi = grain)
+
+### 4. Hubungan Segitiga
+- Naikkan aperture (f/16 → f/4) = +3 stop cahaya, DOF sempit
+- Percepat shutter (1/30 → 1/250) = -3 stop cahaya, beku gerakan
+- Naikkan ISO (100 → 800) = +3 stop cahaya, noise naik
+
+## C. Komposisi Fotografi
+
+### 1. Rule of Thirds
+Bagi frame jadi 9 kotak (3x3). Letakkan subjek utama di titik potong (intersection point), BUKAN di tengah.
+
+### 2. Leading Lines
+Garis (jalan, rel, sungai) yang mengarah ke subjek. Membuat mata penonton terarah.
+
+### 3. Framing
+Gunakan elemen di sekitar (pintu, jendela, cabang pohon) untuk "membingkai" subjek.
+
+### 4. Symmetry & Pattern
+Komposisi simetris (refleksi air, gedung) atau pola berulang menarik perhatian.
+
+### 5. Negative Space
+Ruang kosong di sekitar subjek. Memberi "napas" dan menonjolkan subjek.
+
+## D. Pencahayaan (Lighting)
+
+### 1. Karakter Cahaya
+- **Hard light**: sumber kecil, bayangan tegas (matahari siang, flash langsung). Kontras tinggi.
+- **Soft light**: sumber besar/diffuse, bayangan halus (mendung, softbox). Kontras rendah.
+
+### 2. Arah Cahaya
+- **Front lighting**: cahaya dari depan subjek. Subjek terang, flat.
+- **Side lighting**: dari samping. Tekstur muncul, dimensi 3D.
+- **Backlighting**: dari belakang. Siluet, halo effect.
+- **Top lighting**: dari atas (tengah hari). Bayangan di mata/bawah hidung.
+
+### 3. White Balance (WB)
+Suhu warna cahaya diukur Kelvin (K):
+- 3200K = Tungsten (lampu pijar) — kekuningan
+- 5500K = Daylight (matahari) — netral
+- 7500K = Shade/Awan — kebiruan
+WB salah → foto terlalu kuning atau biru. Set WB sesuai sumber cahaya.
+
+## E. Depth of Field (DoF)
+
+Jarak area yang tajam dalam foto.
+- **DoF Sempit (shallow)**: aperture lebar (f/1.8), lensa tele (85mm), jarak dekat. Hanya subjek tajam, background blur (bokeh).
+- **DoF Lebar (deep)**: aperture sempit (f/11), lensa wide (16mm), jarak jauh. Semua tajam (landscape).
+
+## F. Focal Length (Panjang Fokus)
+
+- **Wide angle (10-24mm)**: sudut lebar, distorsi pinggir. Cocok landscape, arsitektur.
+- **Standard (35-50mm)**: sudut mirip mata manusia. Serbaguna.
+- **Telephoto (85-200mm)**: sudut sempit, kompresi background. Cocok portrait, olahraga, wildlife.
+- **Macro (50-100mm macro)**: fokus sangat dekat. Serangga, detail bunga.
+
+## G. Format File
+- **JPEG**: compressed, 8-bit, langsung jadi. Cocok sharing.
+- **RAW**: tidak terkompresi, 12-14 bit, perlu post-process (Lightroom, Camera Raw). Lebih fleksibel untuk editing exposure, WB, shadow.
+',
   'Mata Pelajaran Pilihan', '11DKV', 'SMK', 'Fotografi',
   NULL, NULL, true, 'teks', NOW(), NOW()
 )
@@ -34,7 +123,135 @@ INSERT INTO "Material" (id, title, content, subject, "targetKelas", "targetJenja
 VALUES (
   'mat_ujian_teori_dkv_illustrator',
   'Materi Persiapan Ujian: Adobe Illustrator Dasar',
-  '# Materi Persiapan Ujian: Adobe Illustrator Dasar\n\n## A. Konsep Vector vs Raster\n\n### 1. Raster (Bitmap)\n- Terdiri dari pixel. Contoh: foto dari kamera/camera, JPEG, PNG, PSD Photoshop.\n- Perbesar = pecah (pixelated). Tidak scalable tanpa kehilangan kualitas.\n- Resolusi diukur PPI (pixel per inch). Web = 72 PPI, print = 300 PPI.\n\n### 2. Vector\n- Terdiri dari path matematis (titik + garis kurva). Contoh: logo, ilustrasi, font.\n- Perbesar berapa pun = tetap tajam. Scalable tanpa batas.\n- Ukuran file kecil, tidak tergantung resolusi.\n\nIllustrator = editor VECTOR. Photoshop = editor RASTER (meskipun keduanya bisa campur).\n\n## B. Workspace Illustrator\n\n### 1. Komponen Utama\n- **Menu Bar** (atas): File, Edit, Object, Type, Select, Effect, View, Window, Help\n- **Tools Panel** (kiri): Selection (V), Direct Selection (A), Pen (P), Type (T), Rectangle (M), Ellipse (L), Paintbrush (B), Eyedropper (I), dll.\n- **Control Panel** (atas, di bawah menu): kontekstual sesuai tool terpilih\n- **Panels** (kanan): Color, Swatches, Layers, Align, Pathfinder, Stroke, Gradient, dll. Akses via menu Window.\n- **Artboard**: kanvas kerja. 1 file .ai bisa punya multiple artboard.\n- **Pasteboard**: area di luar artboard. Bisa taruh elemen sementara.\n\n### 2. Shortcut Penting\n- V = Selection Tool\n- A = Direct Selection Tool (pilih anchor point individual)\n- P = Pen Tool\n- T = Type Tool\n- M = Rectangle Tool\n- L = Ellipse Tool\n- Ctrl+Z = Undo, Ctrl+Shift+Z = Redo\n- Ctrl+C = Copy, Ctrl+V = Paste, Ctrl+F = Paste in Front, Ctrl+B = Paste in Back\n- Ctrl+G = Group, Ctrl+Shift+G = Ungroup\n- Ctrl+2 = Lock, Ctrl+Alt+2 = Unlock All\n- Ctrl+3 = Hide, Ctrl+Alt+3 = Show All\n- Ctrl+Shift+O = Create Outlines (ubah teks jadi shape)\n\n## C. Tools Utama\n\n### 1. Pen Tool (P)\n- Klik = titik sudut (corner point)\n- Klik + drag = titik kurva (smooth point)\n- Alt + drag handle = ubah ke corner\n- P = close path (klik titik pertama)\n- Tool paling powerful di Illustrator. Wajib dikuasai untuk tracing.\n\n### 2. Shape Tools\n- Rectangle (M): klik-drag = buat persegi. Shift = kotak sempurna. Alt = dari pusat.\n- Ellipse (L): klik-drag = buat lingkaran. Shift = lingkaran sempurna.\n- Polygon, Star, dll: klik = dialog ukuran.\n\n### 3. Pathfinder (Window > Pathfinder)\nOperasi boolean antar shape:\n- **Unite (Add)**: gabung jadi 1 shape\n- **Minus Front (Subtract)**: shape depan "memotong" shape belakang\n- **Intersect**: hanya area yang tumpang tindih\n- **Exclude**: hapus area tumpang tindih, sisanya jadi shape\n- **Divide**: potong jadi banyak shape di area intersection\n\n### 4. Shape Builder (Shift+M)\nAlternatif visual Pathfinder. Drag antar shape untuk gabung, Alt+klik untuk hapus area.\n\n### 5. Type Tool (T)\n- Klik = point type (teks 1 baris, tidak wrap)\n- Drag = area type (teks di dalam shape, wrap otomatis)\n- Type on Path = teks mengikuti garis/path\n- Create Outlines (Ctrl+Shift+O) = ubah font jadi vector shape. Wajib sebelum kirim ke print shop (jaga-jaga font tidak tersedia).\n\n## D. Layers & Organization\n\n- Setiap layer bisa di-lock (🔒), hide (👁), atau lock position.\n- Sub-layer: layer di dalam layer. Untuk organisasi kompleks.\n- Send to Back (Ctrl+Shift+[), Send Backward (Ctrl+[)\n- Bring to Front (Ctrl+Shift+]), Bring Forward (Ctrl+])\n- Layer atas menutupi layer bawah.\n\n## E. Color Management\n\n### 1. Color Mode\n- **RGB**: untuk digital (web, screen). 0-255 per channel. Tambah cahaya = putih.\n- **CMYK**: untuk print. 0-100% per channel (Cyan, Magenta, Yellow, Black). Tambah tinta = hitam.\n- File > Document Color Mode: ubah RGB ↔ CMYK.\n\n### 2. Swatches\n- Panel Swatches: simpan warna yang sering dipakai.\n- Global color: ubah 1 swatch → semua objek yang pakai berubah otomatis.\n- Spot color: warna khusus cetak (Pantone). Bukan campuran CMYK.\n\n### 3. Stroke & Fill\n- Fill = warna isi. Stroke = warna garis tepi.\n- Stroke weight = ketebalan garis (1pt, 2pt, dst).\n- Dashed line = garis putus-putus.\n\n## F. Effects & Appearance\n\n- Effect > Stylize > Drop Shadow: bayangan\n- Effect > Warp > Arch/Bulge/Fish: lengkung shape\n- Effect > 3D > Extrude & Bevel: beri kedalaman 3D\n- Appearance panel: lihat semua effect yang sudah diterapkan. Bisa edit/hapus.\n- Penting: Effect = non-destructive (bisa undo). Expand Appearance = konversi jadi shape permanen.\n\n## G. Export & Save\n\n### 1. Save (File > Save / Save As)\n- .ai = format native Illustrator (editable, vector, layer tersimpan)\n- .eps = format lama, kompatibel print, vector\n\n### 2. Export (File > Export > Export As)\n- .png = raster, transparan, untuk web\n- .jpeg = raster, tidak transparan, untuk foto\n- .svg = vector, untuk web (modern, scalable)\n- .pdf = bisa vector + raster, untuk print/share\n- Export for Screens (Ctrl+Alt+E): export multiple artboard sekaligus berbagai format.\n\n### 3. Export Selection\n- Pilih objek → File > Export Selection. Hanya objek terpilih yang di-export.\n\n## H. Tips Workflow\n\n1. Selalu kerja di layer terpisah (sketch, line, color, text)\n2. Group objek yang berkaitan (Ctrl+G)\n3. Beri nama layer deskriptif (bukan "Layer 1, Layer 2")\n4. Save versi (File_v1.ai, File_v2.ai) sebelum perubahan besar\n5. Gunakan Smart Guides (Ctrl+U) untuk snapping otomatis\n6. Align panel: rata kiri/kanan/tengah, distribusi merata\n',
+  '# Materi Persiapan Ujian: Adobe Illustrator Dasar
+
+## A. Konsep Vector vs Raster
+
+### 1. Raster (Bitmap)
+- Terdiri dari pixel. Contoh: foto dari kamera/camera, JPEG, PNG, PSD Photoshop.
+- Perbesar = pecah (pixelated). Tidak scalable tanpa kehilangan kualitas.
+- Resolusi diukur PPI (pixel per inch). Web = 72 PPI, print = 300 PPI.
+
+### 2. Vector
+- Terdiri dari path matematis (titik + garis kurva). Contoh: logo, ilustrasi, font.
+- Perbesar berapa pun = tetap tajam. Scalable tanpa batas.
+- Ukuran file kecil, tidak tergantung resolusi.
+
+Illustrator = editor VECTOR. Photoshop = editor RASTER (meskipun keduanya bisa campur).
+
+## B. Workspace Illustrator
+
+### 1. Komponen Utama
+- **Menu Bar** (atas): File, Edit, Object, Type, Select, Effect, View, Window, Help
+- **Tools Panel** (kiri): Selection (V), Direct Selection (A), Pen (P), Type (T), Rectangle (M), Ellipse (L), Paintbrush (B), Eyedropper (I), dll.
+- **Control Panel** (atas, di bawah menu): kontekstual sesuai tool terpilih
+- **Panels** (kanan): Color, Swatches, Layers, Align, Pathfinder, Stroke, Gradient, dll. Akses via menu Window.
+- **Artboard**: kanvas kerja. 1 file .ai bisa punya multiple artboard.
+- **Pasteboard**: area di luar artboard. Bisa taruh elemen sementara.
+
+### 2. Shortcut Penting
+- V = Selection Tool
+- A = Direct Selection Tool (pilih anchor point individual)
+- P = Pen Tool
+- T = Type Tool
+- M = Rectangle Tool
+- L = Ellipse Tool
+- Ctrl+Z = Undo, Ctrl+Shift+Z = Redo
+- Ctrl+C = Copy, Ctrl+V = Paste, Ctrl+F = Paste in Front, Ctrl+B = Paste in Back
+- Ctrl+G = Group, Ctrl+Shift+G = Ungroup
+- Ctrl+2 = Lock, Ctrl+Alt+2 = Unlock All
+- Ctrl+3 = Hide, Ctrl+Alt+3 = Show All
+- Ctrl+Shift+O = Create Outlines (ubah teks jadi shape)
+
+## C. Tools Utama
+
+### 1. Pen Tool (P)
+- Klik = titik sudut (corner point)
+- Klik + drag = titik kurva (smooth point)
+- Alt + drag handle = ubah ke corner
+- P = close path (klik titik pertama)
+- Tool paling powerful di Illustrator. Wajib dikuasai untuk tracing.
+
+### 2. Shape Tools
+- Rectangle (M): klik-drag = buat persegi. Shift = kotak sempurna. Alt = dari pusat.
+- Ellipse (L): klik-drag = buat lingkaran. Shift = lingkaran sempurna.
+- Polygon, Star, dll: klik = dialog ukuran.
+
+### 3. Pathfinder (Window > Pathfinder)
+Operasi boolean antar shape:
+- **Unite (Add)**: gabung jadi 1 shape
+- **Minus Front (Subtract)**: shape depan "memotong" shape belakang
+- **Intersect**: hanya area yang tumpang tindih
+- **Exclude**: hapus area tumpang tindih, sisanya jadi shape
+- **Divide**: potong jadi banyak shape di area intersection
+
+### 4. Shape Builder (Shift+M)
+Alternatif visual Pathfinder. Drag antar shape untuk gabung, Alt+klik untuk hapus area.
+
+### 5. Type Tool (T)
+- Klik = point type (teks 1 baris, tidak wrap)
+- Drag = area type (teks di dalam shape, wrap otomatis)
+- Type on Path = teks mengikuti garis/path
+- Create Outlines (Ctrl+Shift+O) = ubah font jadi vector shape. Wajib sebelum kirim ke print shop (jaga-jaga font tidak tersedia).
+
+## D. Layers & Organization
+
+- Setiap layer bisa di-lock (🔒), hide (👁), atau lock position.
+- Sub-layer: layer di dalam layer. Untuk organisasi kompleks.
+- Send to Back (Ctrl+Shift+[), Send Backward (Ctrl+[)
+- Bring to Front (Ctrl+Shift+]), Bring Forward (Ctrl+])
+- Layer atas menutupi layer bawah.
+
+## E. Color Management
+
+### 1. Color Mode
+- **RGB**: untuk digital (web, screen). 0-255 per channel. Tambah cahaya = putih.
+- **CMYK**: untuk print. 0-100% per channel (Cyan, Magenta, Yellow, Black). Tambah tinta = hitam.
+- File > Document Color Mode: ubah RGB ↔ CMYK.
+
+### 2. Swatches
+- Panel Swatches: simpan warna yang sering dipakai.
+- Global color: ubah 1 swatch → semua objek yang pakai berubah otomatis.
+- Spot color: warna khusus cetak (Pantone). Bukan campuran CMYK.
+
+### 3. Stroke & Fill
+- Fill = warna isi. Stroke = warna garis tepi.
+- Stroke weight = ketebalan garis (1pt, 2pt, dst).
+- Dashed line = garis putus-putus.
+
+## F. Effects & Appearance
+
+- Effect > Stylize > Drop Shadow: bayangan
+- Effect > Warp > Arch/Bulge/Fish: lengkung shape
+- Effect > 3D > Extrude & Bevel: beri kedalaman 3D
+- Appearance panel: lihat semua effect yang sudah diterapkan. Bisa edit/hapus.
+- Penting: Effect = non-destructive (bisa undo). Expand Appearance = konversi jadi shape permanen.
+
+## G. Export & Save
+
+### 1. Save (File > Save / Save As)
+- .ai = format native Illustrator (editable, vector, layer tersimpan)
+- .eps = format lama, kompatibel print, vector
+
+### 2. Export (File > Export > Export As)
+- .png = raster, transparan, untuk web
+- .jpeg = raster, tidak transparan, untuk foto
+- .svg = vector, untuk web (modern, scalable)
+- .pdf = bisa vector + raster, untuk print/share
+- Export for Screens (Ctrl+Alt+E): export multiple artboard sekaligus berbagai format.
+
+### 3. Export Selection
+- Pilih objek → File > Export Selection. Hanya objek terpilih yang di-export.
+
+## H. Tips Workflow
+
+1. Selalu kerja di layer terpisah (sketch, line, color, text)
+2. Group objek yang berkaitan (Ctrl+G)
+3. Beri nama layer deskriptif (bukan "Layer 1, Layer 2")
+4. Save versi (File_v1.ai, File_v2.ai) sebelum perubahan besar
+5. Gunakan Smart Guides (Ctrl+U) untuk snapping otomatis
+6. Align panel: rata kiri/kanan/tengah, distribusi merata
+',
   'Mata Pelajaran Pilihan', '11DKV', 'SMK', 'Illustrator',
   NULL, NULL, true, 'teks', NOW(), NOW()
 )
@@ -44,7 +261,167 @@ INSERT INTO "Material" (id, title, content, subject, "targetKelas", "targetJenja
 VALUES (
   'mat_ujian_teori_dkv_blender',
   'Materi Persiapan Ujian: Aplikasi Blender Dasar',
-  '# Materi Persiapan Ujian: Aplikasi Blender Dasar\n\n## A. Pengenalan Blender\n\nBlender = software 3D open-source gratis. Untuk modeling, animasi, rendering, simulation, compositing, video editing, bahkan game creation.\n\n### Versi\n- Blender 4.x (terbaru): UI modern, EEVEE Next, Cycles improved.\n- Blender 3.x: LTS (long term support), stabil.\n\n## B. Interface (UI)\n\n### 1. Screen Layout\n- **Splash screen**: pilih template (General, 2D Animation, Sculpting, Video Editing, dll)\n- **Top menu bar**: File, Edit, Render, Window, Help\n- **Tabs (top)**: Layout, Modeling, Sculpting, UV Editing, Texture Paint, Shading, Animation, Rendering, Compositing, Scripting\n- **Workspace preset**: klik tab untuk switch workspace\n\n### 2. Editor Types (di Layout)\n- **3D Viewport** (tengah): area kerja utama, lihat & edit objek 3D\n- **Outliner** (kanan atas): daftar semua objek di scene (seperti layers di Illustrator)\n- **Properties** (kanan bawah): pengaturan objek, modifier, material, light, render\n- **Timeline** (bawah): keyframe animation\n- **Toolbar** (kiri viewport): tools aktif (move, scale, rotate, annotate)\n\n### 3. Navigation di 3D Viewport\n- **Middle mouse button (MMB) drag** = orbit (putar kamera di sekitar scene)\n- **Shift + MMB drag** = pan (geser kamera)\n- **Scroll wheel** = zoom in/out\n- **Numpad 0** = view dari kamera render\n- **Numpad 1, 3, 7** = front, side, top view (orthographic)\n- **Numpad 5** = toggle perspective/orthographic\n- **Numpad .** = frame selected object\n- **Home** = frame all objects\n\n### 4. Shortcut Transformasi\n- G = Grab (move)\n- R = Rotate\n- S = Scale\n- Setelah tekan G/R/S, ketik angka = precise (G X 2 = move 2 unit di sumbu X)\n- X/Y/Z setelah G/R/S = constrain ke sumbu\n- Shift+X = constrain ke plane YZ (semua kecuali X)\n\n## C. Object Mode vs Edit Mode\n\n- **Object Mode**: pilih & transformasi objek utuh. Operasi: move, scale, rotate, duplicate, delete.\n- **Edit Mode**: edit geometry (vertex, edge, face) di dalam objek. Tekan Tab untuk toggle.\n- Di Edit Mode, ada 3 sub-mode: Vertex (1), Edge (2), Face (3) — tekan angka di keyboard.\n\n### 1. Operasi Edit Mode\n- Pilih vertex/edge/face: klik kanan (default Blender) atau klik kiri (Blender 2.8+)\n- Extrude (E): tarik keluar dari face/edge untuk buat geometry baru\n- Inset (I): buat face lebih kecil di dalam face\n- Loop Cut (Ctrl+R): tambah edge loop melingkar\n- Bevel (Ctrl+B): bulatkan sudut\n- Merge (M): gabung vertex\n- Subdivide: bagi face jadi lebih banyak\n\n## D. Primitives (Objek Dasar)\n\nMenu Add (Shift+A) di Object Mode:\n- Mesh > Cube, Sphere, Cylinder, Plane, Cone, Torus, Monkey (Suzanne)\n- Curve > Bezier, Path\n- Surface > Plane, Sphere\n- Metaball\n- Light > Point, Sun, Spot, Area\n- Camera\n\n## E. Modifier\n\nModifier = operasi non-destructive yang mengubah geometry. Tidak permanen sampai di-Apply.\n- **Subdivision Surface** (Ctrl+1/2/3): haluskan mesh. Viewport vs Render bisa beda level.\n- **Mirror**: mirror geometry di sumbu. Berguna untuk simetri (wajah, mobil).\n- **Boolean**: operasi union/difference/intersect antar 2 mesh.\n- **Array**: duplikasi berulang dengan offset.\n- **Solidify**: beri ketebalan pada plane (jadi volumetrik).\n- **Bevel**: bulatkan sudut secara procedural.\n\nApply modifier = klik "Apply" di Properties > Modifier. Setelah apply, tidak bisa undo via modifier.\n\n## F. Material & Shader\n\n### 1. Material System\n- Blender pakai node-based shader (Principled BSDF default)\n- Properties > Material > New\n- Principled BSDF: 1 shader untuk semua (metallic, roughness, specular, dll)\n\n### 2. Parameter Penting\n- **Base Color**: warna dasar\n- **Metallic**: 0 = non-logam (kulit, kayu), 1 = logam (besi, emas)\n- **Roughness**: 0 = mengkilap (kaca, cermin), 1 = matte (kertas, kapur)\n- **Specular**: intensitas highlight\n- **Emission**: warna yang dipancarkan (lampu, layar)\n\n### 3. Shader Editor (Shader Nodes)\n- Window > Shader Editor, atau split viewport\n- Drag kabel dari socket ke socket\n- Texture node (Image, Noise, Voronoi) → ColorRamp → Principled BSDF\n- Mixing shader: Mix Shader (gabung 2 BSDF)\n\n## G. Lighting\n\n### 1. Jenis Light\n- **Point**: cahaya omnidirectional (seperti bohlam)\n- **Sun**: cahaya paralel (seperti matahari). Intensitas tinggi, bayangan tegas.\n- **Spot**: cahaya kerucut (seperti spotlight panggung)\n- **Area**: cahaya dari area persegi/lingkaran. Soft shadow. Cocok untuk studio.\n\n### 2. World Lighting\n- Properties > World > Surface > Background\n- Color + Strength = ambient light\n- HDRI: gambar 360° sebagai environment light (realistic reflection)\n\n### 3. Three-Point Lighting (Setup Standar)\n- **Key Light**: cahaya utama (paling terang, dari depan-samping)\n- **Fill Light**: cahaya pengisi (sisi lain, lebih redup, haluskan bayangan)\n- **Rim/Back Light**: cahaya belakang (pisahkan subjek dari background)\n\n## H. Render Engine\n\n### 1. EEVEE (Real-time)\n- Render cepat (GPU real-time). Mirip game engine.\n- Kualitas: baik untuk preview, motion graphic, animasi cepat.\n- Tidak seakurat Cycles untuk caustics, volumetrik, SSS.\n\n### 2. Cycles (Path Tracing)\n- Render ray tracing akurat. Lambat tapi realistis.\n- Sample count = kualitas vs waktu (32-128 sample standar, 1024+ untuk final).\n- GPU render (CUDA, OptiX, HIP, Metal) = lebih cepat.\n\n### 3. Render Settings\n- Properties > Render Properties\n- Resolution: 1920x1080 (Full HD), 3840x2160 (4K)\n- Samples: 32 (preview), 128 (medium), 256+ (final)\n- Render > Render Image (F12) atau Render Animation (Ctrl+F12)\n\n## I. Camera\n\n- Add > Camera (Shift+A > Camera)\n- Numpad 0 = view dari kamera\n- Ctrl+Alt+Numpad 0 = align kamera ke view saat ini\n- Properties > Camera > Lens: focal length (35mm, 50mm, 85mm)\n- Depth of Field: aktifkan, pilih objek fokus, atur aperture (f/2.8, f/1.8)\n\n## J. Save & Export\n\n### 1. Save Blender File\n- .blend = format native Blender. Semua tersimpan (object, material, modifier, animation).\n- File > Save (Ctrl+S), Save As (Shift+Ctrl+S)\n\n### 2. Export\n- File > Export > glTF 2.0 (.glb): untuk web, game engine (Unity, Godot)\n- File > Export > FBX (.fbx): untuk Unity, Unreal\n- File > Export > OBJ (.obj): format universal 3D\n- File > Export > STL (.stl): untuk 3D printing\n\n### 3. Render Output\n- Render > Render Image (F12) → Save As PNG/JPEG\n- Properties > Output: set output path, format (PNG, JPEG, OpenEXR), frame range\n- Render > Render Animation (Ctrl+F12) → save frame-by-frame\n',
+  '# Materi Persiapan Ujian: Aplikasi Blender Dasar
+
+## A. Pengenalan Blender
+
+Blender = software 3D open-source gratis. Untuk modeling, animasi, rendering, simulation, compositing, video editing, bahkan game creation.
+
+### Versi
+- Blender 4.x (terbaru): UI modern, EEVEE Next, Cycles improved.
+- Blender 3.x: LTS (long term support), stabil.
+
+## B. Interface (UI)
+
+### 1. Screen Layout
+- **Splash screen**: pilih template (General, 2D Animation, Sculpting, Video Editing, dll)
+- **Top menu bar**: File, Edit, Render, Window, Help
+- **Tabs (top)**: Layout, Modeling, Sculpting, UV Editing, Texture Paint, Shading, Animation, Rendering, Compositing, Scripting
+- **Workspace preset**: klik tab untuk switch workspace
+
+### 2. Editor Types (di Layout)
+- **3D Viewport** (tengah): area kerja utama, lihat & edit objek 3D
+- **Outliner** (kanan atas): daftar semua objek di scene (seperti layers di Illustrator)
+- **Properties** (kanan bawah): pengaturan objek, modifier, material, light, render
+- **Timeline** (bawah): keyframe animation
+- **Toolbar** (kiri viewport): tools aktif (move, scale, rotate, annotate)
+
+### 3. Navigation di 3D Viewport
+- **Middle mouse button (MMB) drag** = orbit (putar kamera di sekitar scene)
+- **Shift + MMB drag** = pan (geser kamera)
+- **Scroll wheel** = zoom in/out
+- **Numpad 0** = view dari kamera render
+- **Numpad 1, 3, 7** = front, side, top view (orthographic)
+- **Numpad 5** = toggle perspective/orthographic
+- **Numpad .** = frame selected object
+- **Home** = frame all objects
+
+### 4. Shortcut Transformasi
+- G = Grab (move)
+- R = Rotate
+- S = Scale
+- Setelah tekan G/R/S, ketik angka = precise (G X 2 = move 2 unit di sumbu X)
+- X/Y/Z setelah G/R/S = constrain ke sumbu
+- Shift+X = constrain ke plane YZ (semua kecuali X)
+
+## C. Object Mode vs Edit Mode
+
+- **Object Mode**: pilih & transformasi objek utuh. Operasi: move, scale, rotate, duplicate, delete.
+- **Edit Mode**: edit geometry (vertex, edge, face) di dalam objek. Tekan Tab untuk toggle.
+- Di Edit Mode, ada 3 sub-mode: Vertex (1), Edge (2), Face (3) — tekan angka di keyboard.
+
+### 1. Operasi Edit Mode
+- Pilih vertex/edge/face: klik kanan (default Blender) atau klik kiri (Blender 2.8+)
+- Extrude (E): tarik keluar dari face/edge untuk buat geometry baru
+- Inset (I): buat face lebih kecil di dalam face
+- Loop Cut (Ctrl+R): tambah edge loop melingkar
+- Bevel (Ctrl+B): bulatkan sudut
+- Merge (M): gabung vertex
+- Subdivide: bagi face jadi lebih banyak
+
+## D. Primitives (Objek Dasar)
+
+Menu Add (Shift+A) di Object Mode:
+- Mesh > Cube, Sphere, Cylinder, Plane, Cone, Torus, Monkey (Suzanne)
+- Curve > Bezier, Path
+- Surface > Plane, Sphere
+- Metaball
+- Light > Point, Sun, Spot, Area
+- Camera
+
+## E. Modifier
+
+Modifier = operasi non-destructive yang mengubah geometry. Tidak permanen sampai di-Apply.
+- **Subdivision Surface** (Ctrl+1/2/3): haluskan mesh. Viewport vs Render bisa beda level.
+- **Mirror**: mirror geometry di sumbu. Berguna untuk simetri (wajah, mobil).
+- **Boolean**: operasi union/difference/intersect antar 2 mesh.
+- **Array**: duplikasi berulang dengan offset.
+- **Solidify**: beri ketebalan pada plane (jadi volumetrik).
+- **Bevel**: bulatkan sudut secara procedural.
+
+Apply modifier = klik "Apply" di Properties > Modifier. Setelah apply, tidak bisa undo via modifier.
+
+## F. Material & Shader
+
+### 1. Material System
+- Blender pakai node-based shader (Principled BSDF default)
+- Properties > Material > New
+- Principled BSDF: 1 shader untuk semua (metallic, roughness, specular, dll)
+
+### 2. Parameter Penting
+- **Base Color**: warna dasar
+- **Metallic**: 0 = non-logam (kulit, kayu), 1 = logam (besi, emas)
+- **Roughness**: 0 = mengkilap (kaca, cermin), 1 = matte (kertas, kapur)
+- **Specular**: intensitas highlight
+- **Emission**: warna yang dipancarkan (lampu, layar)
+
+### 3. Shader Editor (Shader Nodes)
+- Window > Shader Editor, atau split viewport
+- Drag kabel dari socket ke socket
+- Texture node (Image, Noise, Voronoi) → ColorRamp → Principled BSDF
+- Mixing shader: Mix Shader (gabung 2 BSDF)
+
+## G. Lighting
+
+### 1. Jenis Light
+- **Point**: cahaya omnidirectional (seperti bohlam)
+- **Sun**: cahaya paralel (seperti matahari). Intensitas tinggi, bayangan tegas.
+- **Spot**: cahaya kerucut (seperti spotlight panggung)
+- **Area**: cahaya dari area persegi/lingkaran. Soft shadow. Cocok untuk studio.
+
+### 2. World Lighting
+- Properties > World > Surface > Background
+- Color + Strength = ambient light
+- HDRI: gambar 360° sebagai environment light (realistic reflection)
+
+### 3. Three-Point Lighting (Setup Standar)
+- **Key Light**: cahaya utama (paling terang, dari depan-samping)
+- **Fill Light**: cahaya pengisi (sisi lain, lebih redup, haluskan bayangan)
+- **Rim/Back Light**: cahaya belakang (pisahkan subjek dari background)
+
+## H. Render Engine
+
+### 1. EEVEE (Real-time)
+- Render cepat (GPU real-time). Mirip game engine.
+- Kualitas: baik untuk preview, motion graphic, animasi cepat.
+- Tidak seakurat Cycles untuk caustics, volumetrik, SSS.
+
+### 2. Cycles (Path Tracing)
+- Render ray tracing akurat. Lambat tapi realistis.
+- Sample count = kualitas vs waktu (32-128 sample standar, 1024+ untuk final).
+- GPU render (CUDA, OptiX, HIP, Metal) = lebih cepat.
+
+### 3. Render Settings
+- Properties > Render Properties
+- Resolution: 1920x1080 (Full HD), 3840x2160 (4K)
+- Samples: 32 (preview), 128 (medium), 256+ (final)
+- Render > Render Image (F12) atau Render Animation (Ctrl+F12)
+
+## I. Camera
+
+- Add > Camera (Shift+A > Camera)
+- Numpad 0 = view dari kamera
+- Ctrl+Alt+Numpad 0 = align kamera ke view saat ini
+- Properties > Camera > Lens: focal length (35mm, 50mm, 85mm)
+- Depth of Field: aktifkan, pilih objek fokus, atur aperture (f/2.8, f/1.8)
+
+## J. Save & Export
+
+### 1. Save Blender File
+- .blend = format native Blender. Semua tersimpan (object, material, modifier, animation).
+- File > Save (Ctrl+S), Save As (Shift+Ctrl+S)
+
+### 2. Export
+- File > Export > glTF 2.0 (.glb): untuk web, game engine (Unity, Godot)
+- File > Export > FBX (.fbx): untuk Unity, Unreal
+- File > Export > OBJ (.obj): format universal 3D
+- File > Export > STL (.stl): untuk 3D printing
+
+### 3. Render Output
+- Render > Render Image (F12) → Save As PNG/JPEG
+- Properties > Output: set output path, format (PNG, JPEG, OpenEXR), frame range
+- Render > Render Animation (Ctrl+F12) → save frame-by-frame
+',
   'Mata Pelajaran Pilihan', '11DKV', 'SMK', 'Blender',
   NULL, NULL, true, 'teks', NOW(), NOW()
 )
@@ -52,142 +429,224 @@ ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, content = EXCLUDED.conten
 
 -- ─── BAGIAN 2: 50 SOAL PILIHAN GANDA DENGAN STIMULUS ───
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_001', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret konser indoor dengan pencahayaan panggung yang minim. Setting kamera: Aperture f/1.8, ISO 3200, Shutter Speed 1/60s. Setelah review, foto terlihat grainy dan sedikit blur di subjek yang bergerak.\n\nLangkah yang PALING tepat untuk mengurangi noise sekaligus membekukan gerakan subjek:', 'Turunkan ISO ke 800, perpanjang shutter ke 1/15s', 'Naikkan ISO ke 6400, percepat shutter ke 1/250s, lebar aperture di f/1.8', 'Tutup aperture ke f/8, ISO 100, shutter 1/1000s', 'Pakai flash on-camera, ISO 100, shutter 1/200s', 1, 'Untuk bekukan gerakan butuh shutter cepat (1/250s+). Karena cahaya minim, ISO harus naik (6400) untuk kompensasi. Aperture tetap lebar (f/1.8) untuk max cahaya. Noise tinggi tapi motion blur hilang.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_001', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret konser indoor dengan pencahayaan panggung yang minim. Setting kamera: Aperture f/1.8, ISO 3200, Shutter Speed 1/60s. Setelah review, foto terlihat grainy dan sedikit blur di subjek yang bergerak.
+
+Langkah yang PALING tepat untuk mengurangi noise sekaligus membekukan gerakan subjek:', 'Turunkan ISO ke 800, perpanjang shutter ke 1/15s', 'Naikkan ISO ke 6400, percepat shutter ke 1/250s, lebar aperture di f/1.8', 'Tutup aperture ke f/8, ISO 100, shutter 1/1000s', 'Pakai flash on-camera, ISO 100, shutter 1/200s', 1, 'Untuk bekukan gerakan butuh shutter cepat (1/250s+). Karena cahaya minim, ISO harus naik (6400) untuk kompensasi. Aperture tetap lebar (f/1.8) untuk max cahaya. Noise tinggi tapi motion blur hilang.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_002', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret portrait outdoor jam 4 sore (golden hour). Subjek di posisi 3/4 side lighting. Hasil: satu sisi wajah terang, sisi lain terlalu gelap (lost detail).\n\nUntuk menyeimbangkan eksposur tanpa mengubah mood dramatic side lighting:', 'Pakai flash on-camera power penuh dari depan', 'Gunakan reflector di sisi gelap untuk isi shadow (fill light)', 'Pindahkan subjek ke front lighting', 'Ubah aperture dari f/2.8 ke f/8', 1, 'Reflector isi shadow tanpa hilangkan karakter side lighting. Flash on-camera = flat & keras. Front lighting = hilang mood. f/8 = ubah depth of field, tidak solve exposure.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_002', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret portrait outdoor jam 4 sore (golden hour). Subjek di posisi 3/4 side lighting. Hasil: satu sisi wajah terang, sisi lain terlalu gelap (lost detail).
+
+Untuk menyeimbangkan eksposur tanpa mengubah mood dramatic side lighting:', 'Pakai flash on-camera power penuh dari depan', 'Gunakan reflector di sisi gelap untuk isi shadow (fill light)', 'Pindahkan subjek ke front lighting', 'Ubah aperture dari f/2.8 ke f/8', 1, 'Reflector isi shadow tanpa hilangkan karakter side lighting. Flash on-camera = flat & keras. Front lighting = hilang mood. f/8 = ubah depth of field, tidak solve exposure.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_003', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda ingin foto landscape gunung dengan segala detail tajam dari foreground (batu 2m di depan) sampai background (puncak gunung jauh). Lensa 16mm wide angle.\n\nSetting aperture yang tepat:', 'f/1.4 untuk bokeh maksimal', 'f/2.8 untuk isolasi subjek', 'f/11 atau f/16 untuk depth of field lebar', 'f/22 untuk hasil terbaik', 2, 'Landscape butuh DoF lebar = aperture sempit (f/11-f/16). f/22 = diffraction (tajam turun). f/1.4/f/2.8 = bokeh (background blur), kontra dengan tujuan landscape.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_003', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda ingin foto landscape gunung dengan segala detail tajam dari foreground (batu 2m di depan) sampai background (puncak gunung jauh). Lensa 16mm wide angle.
+
+Setting aperture yang tepat:', 'f/1.4 untuk bokeh maksimal', 'f/2.8 untuk isolasi subjek', 'f/11 atau f/16 untuk depth of field lebar', 'f/22 untuk hasil terbaik', 2, 'Landscape butuh DoF lebar = aperture sempit (f/11-f/16). f/22 = diffraction (tajam turun). f/1.4/f/2.8 = bokeh (background blur), kontra dengan tujuan landscape.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_004', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret olahraga basket indoor. Lensa 70-200mm f/2.8. Hasil: pemain beku, tapi foto underexposed (terlalu gelap).\n\nDiagnosis masalah & solusi:', 'Shutter terlalu lambat → perpanjang shutter ke 1/15s', 'Cahaya kurang → naikkan ISO, pertahankan shutter 1/500s+, aperture f/2.8', 'Lensa salah → ganti ke 50mm f/1.8', 'ISO terlalu tinggi → turunkan ke 100', 1, 'Olahraga butuh shutter cepat (1/500s+). Underexposed = cahaya kurang. Solusi: naik ISO (bukan turun), pertahankan shutter. Aperture f/2.8 sudah lebar untuk lensa ini.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_004', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret olahraga basket indoor. Lensa 70-200mm f/2.8. Hasil: pemain beku, tapi foto underexposed (terlalu gelap).
+
+Diagnosis masalah & solusi:', 'Shutter terlalu lambat → perpanjang shutter ke 1/15s', 'Cahaya kurang → naikkan ISO, pertahankan shutter 1/500s+, aperture f/2.8', 'Lensa salah → ganti ke 50mm f/1.8', 'ISO terlalu tinggi → turunkan ke 100', 1, 'Olahraga butuh shutter cepat (1/500s+). Underexposed = cahaya kurang. Solusi: naik ISO (bukan turun), pertahankan shutter. Aperture f/2.8 sudah lebar untuk lensa ini.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_005', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda mengambil foto interior rumah dengan lampu pijar (2700K). White Balance di-set Auto. Hasil: foto terlalu kuning/oranye.\n\nKoreksi yang tepat:', 'Set WB ke Tungsten (3200K) untuk netralkan kuning', 'Set WB ke Daylight (5500K)', 'Naikkan ISO', 'Perpanjang shutter speed', 0, 'Sumber cahaya 2700K (kuning). WB Tungsten (3200K) akan mendinginkan/nekutralkan. Daylight = tambah biru (salah arah). ISO/shutter tidak atasi warna.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_005', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda mengambil foto interior rumah dengan lampu pijar (2700K). White Balance di-set Auto. Hasil: foto terlalu kuning/oranye.
+
+Koreksi yang tepat:', 'Set WB ke Tungsten (3200K) untuk netralkan kuning', 'Set WB ke Daylight (5500K)', 'Naikkan ISO', 'Perpanjang shutter speed', 0, 'Sumber cahaya 2700K (kuning). WB Tungsten (3200K) akan mendinginkan/nekutralkan. Daylight = tambah biru (salah arah). ISO/shutter tidak atasi warna.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_006', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret produk makanan di atas meja dengan jendela di kiri sebagai sumber cahaya. Hasil: bayangan keras di sisi kanan makanan.\n\nUntuk softening bayangan tanpa flash:', 'Tambah lampu LED di kanan dengan intensitas sama', 'Pasang reflector putih/karton di kanan makanan untuk bounce cahaya jendela', 'Tutup jendela separuh', 'Pindah ke ruang gelap total', 1, 'Reflector putih di sisi shadow akan bounce cahaya jendela = soft fill light. Lampu LED = tambah sumber cahaya baru (ubah mood). Tutup jendela = kurangi cahaya utama.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_006', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret produk makanan di atas meja dengan jendela di kiri sebagai sumber cahaya. Hasil: bayangan keras di sisi kanan makanan.
+
+Untuk softening bayangan tanpa flash:', 'Tambah lampu LED di kanan dengan intensitas sama', 'Pasang reflector putih/karton di kanan makanan untuk bounce cahaya jendela', 'Tutup jendela separuh', 'Pindah ke ruang gelap total', 1, 'Reflector putih di sisi shadow akan bounce cahaya jendela = soft fill light. Lampu LED = tambah sumber cahaya baru (ubah mood). Tutup jendela = kurangi cahaya utama.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_007', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Foto Anda dengan lensa 50mm di APS-C (crop factor 1.5x). Subjek portrait kelihatan terlalu besar dalam frame.\n\nEksplanasi & solusi:', 'Lensa 50mm di APS-C = setara 75mm full frame (telephoto). Mundur lebih jauh dari subjek', 'Lensa 50mm di APS-C = setara 35mm. Maju lebih dekat', 'Crop factor tidak mempengaruhi focal length', 'Ganti ke lensa 35mm di APS-C = setara 75mm', 0, 'Crop factor 1.5x: 50mm × 1.5 = 75mm equivalent. Sudut menjadi lebih sempit = telephoto. Mundur untuk framing sama. 35mm di APS-C = 52.5mm equivalent (bukan 75).', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_007', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Foto Anda dengan lensa 50mm di APS-C (crop factor 1.5x). Subjek portrait kelihatan terlalu besar dalam frame.
+
+Eksplanasi & solusi:', 'Lensa 50mm di APS-C = setara 75mm full frame (telephoto). Mundur lebih jauh dari subjek', 'Lensa 50mm di APS-C = setara 35mm. Maju lebih dekat', 'Crop factor tidak mempengaruhi focal length', 'Ganti ke lensa 35mm di APS-C = setara 75mm', 0, 'Crop factor 1.5x: 50mm × 1.5 = 75mm equivalent. Sudut menjadi lebih sempit = telephoto. Mundur untuk framing sama. 35mm di APS-C = 52.5mm equivalent (bukan 75).', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_008', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret sunset. Metering kamera ke mode Evaluative/Matrix. Hasil: langit bagus eksposur, tapi foreground (pohon, orang) jadi siluet gelap total.\n\nUntuk mendapat detail foreground sekaligus langit tidak overexposed:', 'Set exposure compensation +2 (overexpose)', 'Pakai graduated ND filter (gelap di atas, jernih di bawah)', 'Ubah ISO ke 6400', 'Pakai shutter 30 detik', 1, 'Selisih dynamic range langit-foreground besar. Graduated ND filter kurangi cahaya langit saja. +2 EV = langit putih total. ISO tinggi tidak solve dynamic range.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_008', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret sunset. Metering kamera ke mode Evaluative/Matrix. Hasil: langit bagus eksposur, tapi foreground (pohon, orang) jadi siluet gelap total.
+
+Untuk mendapat detail foreground sekaligus langit tidak overexposed:', 'Set exposure compensation +2 (overexpose)', 'Pakai graduated ND filter (gelap di atas, jernih di bawah)', 'Ubah ISO ke 6400', 'Pakai shutter 30 detik', 1, 'Selisih dynamic range langit-foreground besar. Graduated ND filter kurangi cahaya langit saja. +2 EV = langit putih total. ISO tinggi tidak solve dynamic range.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_009', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret bokeh lights (lampu kota malam). Ingin bentuk bokeh bulat dengan halo creamy. Lensa: 50mm f/1.8.\n\nSetting yang tepat:', 'f/1.8, fokus ke subjek dekat, lampu jauh di belakang', 'f/16, fokus ke lampu', 'f/8, fokus ke infinity', 'f/22 dengan flash', 0, 'Bokeh creamy butuh aperture LEBAR (f/1.8) + jarak subjek dekat + lampu jauh di background. f/16 = bokeh kecil & bentuk bintang. f/22 sama, lebih buruk.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_009', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret bokeh lights (lampu kota malam). Ingin bentuk bokeh bulat dengan halo creamy. Lensa: 50mm f/1.8.
+
+Setting yang tepat:', 'f/1.8, fokus ke subjek dekat, lampu jauh di belakang', 'f/16, fokus ke lampu', 'f/8, fokus ke infinity', 'f/22 dengan flash', 0, 'Bokeh creamy butuh aperture LEBAR (f/1.8) + jarak subjek dekat + lampu jauh di background. f/16 = bokeh kecil & bentuk bintang. f/22 sama, lebih buruk.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_010', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Memotret air terjun ingin hasil halus seperti kabut (silky). Cahaya terang (siang hari).\n\nSetting & filter yang dibutuhkan:', 'Shutter 1/1000s, no filter', 'Shutter 5-10 detik + ND filter (gelap) untuk kurangi cahaya', 'ISO 6400, shutter 1/30s', 'Aperture f/1.4, no filter', 1, 'Silky water butuh shutter LAMBAT (5-10s). Cahaya terang = overexpose. ND filter kurangi cahaya = bisa shutter lambat tanpa over.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_010', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Memotret air terjun ingin hasil halus seperti kabut (silky). Cahaya terang (siang hari).
+
+Setting & filter yang dibutuhkan:', 'Shutter 1/1000s, no filter', 'Shutter 5-10 detik + ND filter (gelap) untuk kurangi cahaya', 'ISO 6400, shutter 1/30s', 'Aperture f/1.4, no filter', 1, 'Silky water butuh shutter LAMBAT (5-10s). Cahaya terang = overexpose. ND filter kurangi cahaya = bisa shutter lambat tanpa over.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_011', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret foto produk di studio. Light meter kamera baca: aperture f/8, ISO 100, shutter 1/125s, hasil underexposed 1 stop.\n\nKoreksi yang tepat:', 'Naikkan ISO ke 200', 'Ubah aperture ke f/5.6 (1 stop lebar)', 'Ubah shutter ke 1/250s', 'Pakai ISO 12800', 1, 'Underexposed 1 stop = butuh +1 stop cahaya. f/8 → f/5.6 = +1 stop (aperture LEBAR). ISO 200 = +1 stop (alternatif). Shutter 1/250s = -1 stop (salah arah). Produk butuh f/8 untuk DoF.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_011', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret foto produk di studio. Light meter kamera baca: aperture f/8, ISO 100, shutter 1/125s, hasil underexposed 1 stop.
+
+Koreksi yang tepat:', 'Naikkan ISO ke 200', 'Ubah aperture ke f/5.6 (1 stop lebar)', 'Ubah shutter ke 1/250s', 'Pakai ISO 12800', 1, 'Underexposed 1 stop = butuh +1 stop cahaya. f/8 → f/5.6 = +1 stop (aperture LEBAR). ISO 200 = +1 stop (alternatif). Shutter 1/250s = -1 stop (salah arah). Produk butuh f/8 untuk DoF.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_012', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Memotret pada siang hari dengan matahari tepat di atas (top lighting). Subjek: portrait wajah.\n\nMasalah utama & solusi:', 'Tidak ada masalah, eksposur sempurna', 'Bayangan keras di bawah mata, hidung, dagu. Solusi: pindah ke tempat teduh atau pakai reflector bawah', 'ISO terlalu tinggi, turunkan', 'Aperture harus f/1.4', 1, 'Top lighting = bayangan keras di bawah fitur wajah (raccoon eyes). Pindah ke shade/diffuse atau reflector bawah untuk fill. ISO/aperture tidak atasi masalah ini.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_012', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Memotret pada siang hari dengan matahari tepat di atas (top lighting). Subjek: portrait wajah.
+
+Masalah utama & solusi:', 'Tidak ada masalah, eksposur sempurna', 'Bayangan keras di bawah mata, hidung, dagu. Solusi: pindah ke tempat teduh atau pakai reflector bawah', 'ISO terlalu tinggi, turunkan', 'Aperture harus f/1.4', 1, 'Top lighting = bayangan keras di bawah fitur wajah (raccoon eyes). Pindah ke shade/diffuse atau reflector bawah untuk fill. ISO/aperture tidak atasi masalah ini.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_013', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret olahraga balap motor. Lensa 300mm. Hasil: subjek tajam tapi background masih kelihatan jelas (tidak isolated).\n\nUntuk isolasi subjek dengan background blur:', 'Tutup aperture ke f/11', 'Buka aperture ke f/4 (atau f/2.8 jika lensa support) untuk DoF sempit', 'Naikkan ISO ke 6400', 'Pakai shutter 1/8000s', 1, 'Isolasi subjek = DoF sempit = aperture LEBAR (f/4 atau lebih lebar). f/11 = DoF lebar (semua tajam, kontra tujuan). ISO/shutter tidak atasi DoF.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_013', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret olahraga balap motor. Lensa 300mm. Hasil: subjek tajam tapi background masih kelihatan jelas (tidak isolated).
+
+Untuk isolasi subjek dengan background blur:', 'Tutup aperture ke f/11', 'Buka aperture ke f/4 (atau f/2.8 jika lensa support) untuk DoF sempit', 'Naikkan ISO ke 6400', 'Pakai shutter 1/8000s', 1, 'Isolasi subjek = DoF sempit = aperture LEBAR (f/4 atau lebih lebar). f/11 = DoF lebar (semua tajam, kontra tujuan). ISO/shutter tidak atasi DoF.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_014', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret street photography malam dengan lampu jalan. Tidak bawa tripod. Lensa 35mm f/1.4.\n\nSetting aman untuk menghindari motion blur handheld:', 'f/1.4, ISO 100, shutter 1s', 'f/1.4, ISO 3200-6400, shutter 1/30s atau lebih cepat', 'f/16, ISO 100, shutter 30s', 'f/8, ISO 200, shutter 1/2s', 1, 'Handheld rule: shutter >= 1/focal length = 1/35s minimum. Lensa 35mm f/1.4 lebar = max cahaya. ISO naik untuk kompensasi low light. f/16 = kurang cahaya. Shutter 1s = blur handheld.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_014', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret street photography malam dengan lampu jalan. Tidak bawa tripod. Lensa 35mm f/1.4.
+
+Setting aman untuk menghindari motion blur handheld:', 'f/1.4, ISO 100, shutter 1s', 'f/1.4, ISO 3200-6400, shutter 1/30s atau lebih cepat', 'f/16, ISO 100, shutter 30s', 'f/8, ISO 200, shutter 1/2s', 1, 'Handheld rule: shutter >= 1/focal length = 1/35s minimum. Lensa 35mm f/1.4 lebar = max cahaya. ISO naik untuk kompensasi low light. f/16 = kurang cahaya. Shutter 1s = blur handheld.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_015', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Foto portrait di studio. Light meter baca: f/8, ISO 100, shutter 1/200s, hasil overexposed 2 stop.\n\nKoreksi yang tepat:', 'f/8 → f/16 (tutup 2 stop) ATAU ISO 100 → ISO 25 (turun 2 stop)', 'f/8 → f/4 (buka 2 stop)', 'Shutter 1/200 → 1/50 (perlambat 2 stop)', 'ISO 100 → 400', 0, 'Overexposed 2 stop = butuh -2 stop cahaya. f/8→f/16 = -2 stop (aperture SEMPIT). Alt: ISO 100→25 (-2 stop). f/8→f/4 = +2 stop (salah arah). Shutter 1/200→1/50 = +2 stop (salah).', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_015', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Foto portrait di studio. Light meter baca: f/8, ISO 100, shutter 1/200s, hasil overexposed 2 stop.
+
+Koreksi yang tepat:', 'f/8 → f/16 (tutup 2 stop) ATAU ISO 100 → ISO 25 (turun 2 stop)', 'f/8 → f/4 (buka 2 stop)', 'Shutter 1/200 → 1/50 (perlambat 2 stop)', 'ISO 100 → 400', 0, 'Overexposed 2 stop = butuh -2 stop cahaya. f/8→f/16 = -2 stop (aperture SEMPIT). Alt: ISO 100→25 (-2 stop). f/8→f/4 = +2 stop (salah arah). Shutter 1/200→1/50 = +2 stop (salah).', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_016', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Memotret macro serangga (kupu-kupu) di pagi hari. Lensa macro 100mm f/2.8. Subjek sangat kecil, ingin detail sayap tajam.\n\nTantangan utama & solusi:', 'DoF sangat sempit di macro. Tutup aperture ke f/16-f/22 untuk DoF cukup, gunakan tripod', 'Buka aperture f/2.8 untuk bokeh', 'Pakai shutter 1/30s handheld', 'Naikkan ISO ke 6400', 0, 'Macro di magnifikasi tinggi = DoF sangat tipis (mm). f/16-f/22 untuk DoF cukup. Tripod wajib karena shutter lambat + subjek kecil. f/2.8 = DoF terlalu tipis, hanya sebagian sayap tajam.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_016', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Memotret macro serangga (kupu-kupu) di pagi hari. Lensa macro 100mm f/2.8. Subjek sangat kecil, ingin detail sayap tajam.
+
+Tantangan utama & solusi:', 'DoF sangat sempit di macro. Tutup aperture ke f/16-f/22 untuk DoF cukup, gunakan tripod', 'Buka aperture f/2.8 untuk bokeh', 'Pakai shutter 1/30s handheld', 'Naikkan ISO ke 6400', 0, 'Macro di magnifikasi tinggi = DoF sangat tipis (mm). f/16-f/22 untuk DoF cukup. Tripod wajib karena shutter lambat + subjek kecil. f/2.8 = DoF terlalu tipis, hanya sebagian sayap tajam.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
 ('q_ujian_teori_dkv_017', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda memotret landscape golden hour. Inikah foto langsung JPEG atau RAW lebih baik untuk situasi ini?', 'JPEG karena file lebih kecil', 'RAW karena lebih fleksibel untuk editing exposure, WB, dan shadow recovery di post-process', 'JPEG karena lebih tajam', 'Tidak ada bedanya', 1, 'RAW = data mentah 12-14 bit. Bisa recover shadow/highlight yang hilang di JPEG. WB bisa diubah tanpa loss. Golden hour = dynamic range besar, RAW wajib.', 'Fotografi', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_018', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Di Illustrator, Anda membuat logo dengan 2 shape lingkaran yang saling tumpang tindih. Anda ingin BAGIAN yang tumpang tindih HILANG, sehingga terlihat seperti 2 lingkaran terpotong (bentuk seperti Venn diagram kosong di tengah).\n\nOperasi Pathfinder yang tepat:', 'Unite (Add)', 'Minus Front', 'Intersect', 'Exclude', 3, 'Exclude = hapus area intersection, sisanya jadi shape. Unite = gabung. Minus Front = shape depan potong belakang. Intersect = ambil hanya intersection.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_018', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Di Illustrator, Anda membuat logo dengan 2 shape lingkaran yang saling tumpang tindih. Anda ingin BAGIAN yang tumpang tindih HILANG, sehingga terlihat seperti 2 lingkaran terpotong (bentuk seperti Venn diagram kosong di tengah).
+
+Operasi Pathfinder yang tepat:', 'Unite (Add)', 'Minus Front', 'Intersect', 'Exclude', 3, 'Exclude = hapus area intersection, sisanya jadi shape. Unite = gabung. Minus Front = shape depan potong belakang. Intersect = ambil hanya intersection.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_019', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat typography logo. Setelah selesai, klien minta kirim ke print shop untuk dicetak. Font yang Anda pakai mungkin tidak ada di print shop.\n\nLangkah penting sebelum save .ai untuk kirim:', 'Flatten transparency', 'Create Outlines (Ctrl+Shift+O) untuk ubah teks jadi vector shape', 'Embed all linked images', 'Convert color mode CMYK', 1, 'Create Outlines = ubah font jadi shape vector. Tidak lagi butuh font install. Wajib sebelum kirim ke print shop. Embed images = terkait gambar. CMYK = terkait warna.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_019', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat typography logo. Setelah selesai, klien minta kirim ke print shop untuk dicetak. Font yang Anda pakai mungkin tidak ada di print shop.
+
+Langkah penting sebelum save .ai untuk kirim:', 'Flatten transparency', 'Create Outlines (Ctrl+Shift+O) untuk ubah teks jadi vector shape', 'Embed all linked images', 'Convert color mode CMYK', 1, 'Create Outlines = ubah font jadi shape vector. Tidak lagi butuh font install. Wajib sebelum kirim ke print shop. Embed images = terkait gambar. CMYK = terkait warna.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_020', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda tracing logo kompleks dengan Pen Tool. Saat membuat kurva, handle terlalu panjang sehingga kurva berlebihan (overshoot). Anda ingin sesuaikan handle tanpa hilangkan smoothness.\n\nCara yang tepat:', 'Hapus anchor point dan ulangi', 'Pakai Direct Selection Tool (A), drag handle untuk pendekkan', 'Convert anchor point ke corner', 'Pakai Shape Builder', 1, 'Direct Selection Tool (A) = pilih & edit anchor/handle individual. Drag handle = adjust kurva. Hapus anchor = rusak path. Convert corner = ubah tipe titik.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_020', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda tracing logo kompleks dengan Pen Tool. Saat membuat kurva, handle terlalu panjang sehingga kurva berlebihan (overshoot). Anda ingin sesuaikan handle tanpa hilangkan smoothness.
+
+Cara yang tepat:', 'Hapus anchor point dan ulangi', 'Pakai Direct Selection Tool (A), drag handle untuk pendekkan', 'Convert anchor point ke corner', 'Pakai Shape Builder', 1, 'Direct Selection Tool (A) = pilih & edit anchor/handle individual. Drag handle = adjust kurva. Hapus anchor = rusak path. Convert corner = ubah tipe titik.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_021', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda kerja di Illustrator dengan 50+ layer. Beberapa objek tidak sengaja tergeser. Anda ingin kunci objek agar tidak bisa diedit sementara, tapi tetap terlihat.\n\nLangkah:', 'Hide (Ctrl+3)', 'Lock (Ctrl+2)', 'Delete objek', 'Move ke layer terpisah', 1, 'Lock (Ctrl+2) = objek tidak bisa diseleksi/edit tapi tetap terlihat. Hide (Ctrl+3) = hilang dari view. Delete = permanen. Unlock All = Ctrl+Alt+2.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_021', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda kerja di Illustrator dengan 50+ layer. Beberapa objek tidak sengaja tergeser. Anda ingin kunci objek agar tidak bisa diedit sementara, tapi tetap terlihat.
+
+Langkah:', 'Hide (Ctrl+3)', 'Lock (Ctrl+2)', 'Delete objek', 'Move ke layer terpisah', 1, 'Lock (Ctrl+2) = objek tidak bisa diseleksi/edit tapi tetap terlihat. Hide (Ctrl+3) = hilang dari view. Delete = permanen. Unlock All = Ctrl+Alt+2.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_022', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat logo untuk web app. Klien minta file bisa di-scale tanpa pecah, file size kecil, support transparansi.\n\nFormat export yang tepat:', 'JPEG', 'PNG 8-bit', 'SVG (vector)', 'PSD', 2, 'SVG = vector format untuk web. Scalable tanpa batas, file kecil, support transparansi. JPEG = raster, tidak transparan. PNG = raster, scalable = pecah. PSD = Photoshop.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_022', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat logo untuk web app. Klien minta file bisa di-scale tanpa pecah, file size kecil, support transparansi.
+
+Format export yang tepat:', 'JPEG', 'PNG 8-bit', 'SVG (vector)', 'PSD', 2, 'SVG = vector format untuk web. Scalable tanpa batas, file kecil, support transparansi. JPEG = raster, tidak transparan. PNG = raster, scalable = pecah. PSD = Photoshop.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_023', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat desain poster untuk print. Saat ini dokumen Color Mode = RGB. Print shop minta CMYK.\n\nSetelah convert ke CMYK, beberapa warna (terutama bright neon/biru elektrik) terlihat pudar. Penyebab:', 'Color profile salah', 'RGB gamut lebih besar dari CMYK. Warna di luar CMYK gamut (out of gamut) tidak bisa direproduksi tinta CMYK', 'Resolusi terlalu rendah', 'Blender tidak kompatibel', 1, 'RGB additive (cahaya) = gamut besar. CMYK subtractive (tinta) = gamut lebih kecil. Warna terang (neon, electric blue) tidak ada di CMYK, otomatis dipetakan ke warna terdekat = pudar.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_023', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat desain poster untuk print. Saat ini dokumen Color Mode = RGB. Print shop minta CMYK.
+
+Setelah convert ke CMYK, beberapa warna (terutama bright neon/biru elektrik) terlihat pudar. Penyebab:', 'Color profile salah', 'RGB gamut lebih besar dari CMYK. Warna di luar CMYK gamut (out of gamut) tidak bisa direproduksi tinta CMYK', 'Resolusi terlalu rendah', 'Blender tidak kompatibel', 1, 'RGB additive (cahaya) = gamut besar. CMYK subtractive (tinta) = gamut lebih kecil. Warna terang (neon, electric blue) tidak ada di CMYK, otomatis dipetakan ke warna terdekat = pudar.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_024', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat ilustrasi karakter di Illustrator. Ada elemen mata, hidung, mulut, rambut. Saat ini semuanya terpisah. Anda ingin ketika warna kulit diubah, mata/hidung/mulut tidak ikut berubah.\n\nStrategi layer/organisasi:', 'Group semua jadi 1 group (Ctrl+G)', 'Pakai global color untuk kulit saja, jangan untuk mata/hidung/mulut', 'Pakai layer terpisah', 'Lock semua objek', 1, 'Global color = ubah 1 swatch → semua objek yang pakai berubah. Pakai global untuk kulit, jangan untuk fitur lain. Group = organisasi, tidak atasi warna. Layer = organisasi.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_024', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat ilustrasi karakter di Illustrator. Ada elemen mata, hidung, mulut, rambut. Saat ini semuanya terpisah. Anda ingin ketika warna kulit diubah, mata/hidung/mulut tidak ikut berubah.
+
+Strategi layer/organisasi:', 'Group semua jadi 1 group (Ctrl+G)', 'Pakai global color untuk kulit saja, jangan untuk mata/hidung/mulut', 'Pakai layer terpisah', 'Lock semua objek', 1, 'Global color = ubah 1 swatch → semua objek yang pakai berubah. Pakai global untuk kulit, jangan untuk fitur lain. Group = organisasi, tidak atasi warna. Layer = organisasi.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_025', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat brosur A4 dengan multiple artboard (4 halaman). Klien minta export semua halaman sekaligus ke PNG dengan ukuran 1080×1080 px untuk Instagram.\n\nFitur yang tepat:', 'File > Export > Export As (one by one)', 'File > Export > Export for Screens (Ctrl+Alt+E) - batch export', 'File > Save for Web', 'Print to PDF', 1, 'Export for Screens = batch export multiple artboard, berbagai format & ukuran sekaligus. Export As = 1 file per save. Save for Web = 1 file. Print to PDF = bukan PNG.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_025', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat brosur A4 dengan multiple artboard (4 halaman). Klien minta export semua halaman sekaligus ke PNG dengan ukuran 1080×1080 px untuk Instagram.
+
+Fitur yang tepat:', 'File > Export > Export As (one by one)', 'File > Export > Export for Screens (Ctrl+Alt+E) - batch export', 'File > Save for Web', 'Print to PDF', 1, 'Export for Screens = batch export multiple artboard, berbagai format & ukuran sekaligus. Export As = 1 file per save. Save for Web = 1 file. Print to PDF = bukan PNG.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_026', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat logo dengan shape berbentuk ''donut'' (lingkaran dengan lubang di tengah). Punya 2 lingkaran: besar (luar) dan kecil (dalam).\n\nOperasi Pathfinder yang tepat:', 'Unite', 'Minus Front (lingkaran kecil di depan, besar di belakang)', 'Intersect', 'Crop', 1, 'Minus Front = shape depan (lingkaran kecil) memotong shape belakang (lingkaran besar) = lubang di tengah. Unite = gabung jadi 1 lingkaran besar. Intersect = bentuk kecil.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_026', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat logo dengan shape berbentuk ''donut'' (lingkaran dengan lubang di tengah). Punya 2 lingkaran: besar (luar) dan kecil (dalam).
+
+Operasi Pathfinder yang tepat:', 'Unite', 'Minus Front (lingkaran kecil di depan, besar di belakang)', 'Intersect', 'Crop', 1, 'Minus Front = shape depan (lingkaran kecil) memotong shape belakang (lingkaran besar) = lubang di tengah. Unite = gabung jadi 1 lingkaran besar. Intersect = bentuk kecil.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_027', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda mengetik judul di Illustrator dengan Type Tool. Setelah selesai, Anda ingin judul melengkung mengikuti bentuk setengah lingkaran (arc).\n\nCara yang tepat:', 'Effect > Warp > Arc (lalu Expand Appearance)', 'Type on Path Tool ( klik di atas path setengah lingkaran)', 'Rotasi manual tiap huruf', 'Pakai Photoshop', 1, 'Type on Path = teks mengikuti garis/path. Buat path arc, lalu Type on Path tool, klik di path = teks mengikuti. Effect Warp Arc = distorsi teks (bukan follow path). Expand = permanen.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_027', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda mengetik judul di Illustrator dengan Type Tool. Setelah selesai, Anda ingin judul melengkung mengikuti bentuk setengah lingkaran (arc).
+
+Cara yang tepat:', 'Effect > Warp > Arc (lalu Expand Appearance)', 'Type on Path Tool ( klik di atas path setengah lingkaran)', 'Rotasi manual tiap huruf', 'Pakai Photoshop', 1, 'Type on Path = teks mengikuti garis/path. Buat path arc, lalu Type on Path tool, klik di path = teks mengikuti. Effect Warp Arc = distorsi teks (bukan follow path). Expand = permanen.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_028', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat ilustrasi kompleks dengan banyak shape yang saling overlap. Ingin melihat bentuk akhir tanpa path individual terlihat.\n\nView mode yang tepat:', 'Outline view (Ctrl+Y)', 'Preview view (Ctrl+Y toggle = kembali ke preview)', 'Pixel Preview', 'Overprint Preview', 1, 'Preview = tampilan final (warna, fill, stroke). Outline (Ctrl+Y) = hanya path (wireframe). Toggle Ctrl+Y untuk switch. Pixel Preview = lihat raster. Overprint = untuk print proofing.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_028', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat ilustrasi kompleks dengan banyak shape yang saling overlap. Ingin melihat bentuk akhir tanpa path individual terlihat.
+
+View mode yang tepat:', 'Outline view (Ctrl+Y)', 'Preview view (Ctrl+Y toggle = kembali ke preview)', 'Pixel Preview', 'Overprint Preview', 1, 'Preview = tampilan final (warna, fill, stroke). Outline (Ctrl+Y) = hanya path (wireframe). Toggle Ctrl+Y untuk switch. Pixel Preview = lihat raster. Overprint = untuk print proofing.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_029', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat shape dengan Pen Tool, tapi saat menutup path (close), ada gap kecil antara titik awal dan akhir.\n\nCara menutup path dengan benar:', 'Stop di titik akhir, biarkan gap', 'Klik titik pertama saat tool Pen dekat titik awal (muncul icon ''close path'' bulat kecil di cursor)', 'Pakai Direct Selection Tool, drag kedua titik jadi tumpang', 'Hapus path dan ulangi', 1, 'Pen Tool: hover di atas anchor pertama, cursor muncul icon */○ kecil = close path indicator. Klik = path tertutup. Otomatis gabung endpoint.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_029', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat shape dengan Pen Tool, tapi saat menutup path (close), ada gap kecil antara titik awal dan akhir.
+
+Cara menutup path dengan benar:', 'Stop di titik akhir, biarkan gap', 'Klik titik pertama saat tool Pen dekat titik awal (muncul icon ''close path'' bulat kecil di cursor)', 'Pakai Direct Selection Tool, drag kedua titik jadi tumpang', 'Hapus path dan ulangi', 1, 'Pen Tool: hover di atas anchor pertama, cursor muncul icon */○ kecil = close path indicator. Klik = path tertutup. Otomatis gabung endpoint.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_030', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda ingin duplikasi objek dengan jarak konsisten & rotasi tertentu (misal 12 kelopak bunga dengan rotasi 30° tiap kelopak).\n\nFitur yang tepat:', 'Copy-paste manual 12 kali', 'Effect > Distort & Transform > Transform (scale 100%, copy 11, rotate 30°)', 'Blend Tool', 'Pattern Brush', 1, 'Effect > Transform = duplikasi procedural dengan scale, move, rotate, copy. Bisa edit kapan saja (non-destructive). Expand Appearance untuk permanen. Manual = tedious. Blend = interpolasi 2 objek.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_030', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda ingin duplikasi objek dengan jarak konsisten & rotasi tertentu (misal 12 kelopak bunga dengan rotasi 30° tiap kelopak).
+
+Fitur yang tepat:', 'Copy-paste manual 12 kali', 'Effect > Distort & Transform > Transform (scale 100%, copy 11, rotate 30°)', 'Blend Tool', 'Pattern Brush', 1, 'Effect > Transform = duplikasi procedural dengan scale, move, rotate, copy. Bisa edit kapan saja (non-destructive). Expand Appearance untuk permanen. Manual = tedious. Blend = interpolasi 2 objek.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_031', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat pattern berulang (contoh: pola batik) di Illustrator. Ingin pola otomatis berulang saat diisi di shape apapun.\n\nFitur yang tepat:', 'Object > Pattern > Make (Pattern Editor)', 'Copy-paste manual', 'Symbol Sprayer', 'Brush', 0, 'Pattern Maker: buat 1 tile, otomatis repeat. Save ke Swatches. Apply ke shape = pattern fill otomatis. Edit pattern = update semua. Manual = tidak dynamic.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_031', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat pattern berulang (contoh: pola batik) di Illustrator. Ingin pola otomatis berulang saat diisi di shape apapun.
+
+Fitur yang tepat:', 'Object > Pattern > Make (Pattern Editor)', 'Copy-paste manual', 'Symbol Sprayer', 'Brush', 0, 'Pattern Maker: buat 1 tile, otomatis repeat. Save ke Swatches. Apply ke shape = pattern fill otomatis. Edit pattern = update semua. Manual = tidak dynamic.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_032', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat ilustrasi di Illustrator, lalu ingin export ke format yang bisa di-edit di Photoshop dengan layer terpisah (preservasi layer).\n\nFormat export:', 'JPEG', 'PNG', 'PSD (export as PSD dengan ''Write Layers'' option)', 'SVG', 2, 'Export As PSD dengan ''Write Layers'' = layer terpisah di Photoshop. Buka di PSD = layer editable. JPEG/PNG = flatten (1 layer). SVG = vector, PSD tidak support vector sepenuhnya.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_032', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat ilustrasi di Illustrator, lalu ingin export ke format yang bisa di-edit di Photoshop dengan layer terpisah (preservasi layer).
+
+Format export:', 'JPEG', 'PNG', 'PSD (export as PSD dengan ''Write Layers'' option)', 'SVG', 2, 'Export As PSD dengan ''Write Layers'' = layer terpisah di Photoshop. Buka di PSD = layer editable. JPEG/PNG = flatten (1 layer). SVG = vector, PSD tidak support vector sepenuhnya.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_033', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat logo dengan teks yang diputar 45°. Setelah Create Outlines, ingin rotasi teks balik ke horizontal untuk editing, tanpa rotasi shape.\n\nMasalah yang terjadi:', 'Tidak bisa edit setelah Create Outlines', 'Teks sudah jadi shape. Rotasi shape tidak bisa balik tanpa rotasi ulang. Pre-Create Outlines, rotasi teks masih reversible. Post-Outlines, rotasi dianggap shape rotation', 'Create Outlines selalu reversible', 'Tidak ada masalah', 1, 'Create Outlines = convert teks jadi shape. Rotasi setelahnya = rotasi shape (reversible via transform). Tapi teks tidak bisa di-edit lagi (sudah vector). Pre-Outlines, rotasi teks reversible. Post, treat as shape.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_033', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat logo dengan teks yang diputar 45°. Setelah Create Outlines, ingin rotasi teks balik ke horizontal untuk editing, tanpa rotasi shape.
+
+Masalah yang terjadi:', 'Tidak bisa edit setelah Create Outlines', 'Teks sudah jadi shape. Rotasi shape tidak bisa balik tanpa rotasi ulang. Pre-Create Outlines, rotasi teks masih reversible. Post-Outlines, rotasi dianggap shape rotation', 'Create Outlines selalu reversible', 'Tidak ada masalah', 1, 'Create Outlines = convert teks jadi shape. Rotasi setelahnya = rotasi shape (reversible via transform). Tapi teks tidak bisa di-edit lagi (sudah vector). Pre-Outlines, rotasi teks reversible. Post, treat as shape.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_034', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat ilustrasi dengan banyak elemen. Beberapa objek tersembunyi di belakang objek lain. Ingin seleksi objek yang tertutup tanpa move objek di atas.\n\nCara yang tepat:', 'View > Outline (Ctrl+Y) lalu pilih', 'Pakai Selection Tool + klik berulang dengan Cmd/Ctrl, atau Select > Next Object Below/Behind', 'Hapus objek di atas', 'Lock semua objek', 1, 'Cmd/Ctrl+click berulang = cycle through overlapping objects di bawah cursor. Select > Next Object Behind = alternatif. Outline view = lihat semua path tapi pilih manual.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_034', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat ilustrasi dengan banyak elemen. Beberapa objek tersembunyi di belakang objek lain. Ingin seleksi objek yang tertutup tanpa move objek di atas.
+
+Cara yang tepat:', 'View > Outline (Ctrl+Y) lalu pilih', 'Pakai Selection Tool + klik berulang dengan Cmd/Ctrl, atau Select > Next Object Below/Behind', 'Hapus objek di atas', 'Lock semua objek', 1, 'Cmd/Ctrl+click berulang = cycle through overlapping objects di bawah cursor. Select > Next Object Behind = alternatif. Outline view = lihat semua path tapi pilih manual.', 'Illustrator', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_035', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Di Blender, Anda sedang modeling di Object Mode dengan objek Cube terpilih. Anda ingin memodifikasi vertex/edge/face individual.\n\nLangkah pertama yang harus dilakukan:', 'Tekan G untuk move', 'Tekan Tab untuk masuk Edit Mode', 'Tekan Shift+A untuk add object', 'Tekan Numpad 0', 1, 'Tab = toggle Object Mode ↔ Edit Mode. Tanpa masuk Edit Mode, tidak bisa edit vertex/edge/face. G = move (operasi Object Mode). Shift+A = add new object.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_035', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Di Blender, Anda sedang modeling di Object Mode dengan objek Cube terpilih. Anda ingin memodifikasi vertex/edge/face individual.
+
+Langkah pertama yang harus dilakukan:', 'Tekan G untuk move', 'Tekan Tab untuk masuk Edit Mode', 'Tekan Shift+A untuk add object', 'Tekan Numpad 0', 1, 'Tab = toggle Object Mode ↔ Edit Mode. Tanpa masuk Edit Mode, tidak bisa edit vertex/edge/face. G = move (operasi Object Mode). Shift+A = add new object.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
 ('q_ujian_teori_dkv_036', '11DKV', 'Mata Pelajaran Pilihan', '**Stulus:** Anda ingin membuat tangan karakter simetris. Sudah model tangan kanan. Cara tercepat untuk membuat tangan kiri yang identik:', 'Model ulang dari awal', 'Tambah Modifier Mirror di sumbu X pada tangan kanan, lalu model = otomatis mirror', 'Duplicate (Shift+D) dan scale -1 di X', 'Pakai Boolean', 1, 'Mirror Modifier = otomatis mirror geometry di sumbu. Edit tangan kanan = tangan kiri ikut. Non-destructive. Duplicate + scale -1 = manual, tidak otomatis saat edit.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_037', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda modeling karakter di Edit Mode. Ada sudut yang terlalu tajam. Ingin bulatkan sedikit tanpa tambah banyak geometry manual.\n\nOperasi yang tepat:', 'Bevel (Ctrl+B) lalu drag untuk adjust width', 'Subdivide', 'Extrude (E)', 'Inset (I)', 0, 'Bevel (Ctrl+B) = bulatkan sudut. Drag = width. Scroll = segment (jumlah loop, lebih banyak = lebih halus). Subdivide = bagi face, tidak khusus bevel. Extrude = tambah geometry keluar.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_037', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda modeling karakter di Edit Mode. Ada sudut yang terlalu tajam. Ingin bulatkan sedikit tanpa tambah banyak geometry manual.
+
+Operasi yang tepat:', 'Bevel (Ctrl+B) lalu drag untuk adjust width', 'Subdivide', 'Extrude (E)', 'Inset (I)', 0, 'Bevel (Ctrl+B) = bulatkan sudut. Drag = width. Scroll = segment (jumlah loop, lebih banyak = lebih halus). Subdivide = bagi face, tidak khusus bevel. Extrude = tambah geometry keluar.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
 ('q_ujian_teori_dkv_038', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda ingin render scene Blender. Kualitas preview cepat untuk cek komposisi sebelum final render. Render engine yang tepat:', 'Cycles dengan sample 256', 'EEVEE (real-time, cepat)', 'Cycles dengan sample 4096', 'Workbench', 1, 'EEVEE = real-time, cepat. Cocok preview komposisi. Cycles = ray tracing akurat tapi lambat. Workbench = viewport mode (bukan render final).', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_039', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda modeling di Blender. Ingin tambah edge loop melingkar di tengah kubus untuk detail (misal untuk bevel lebih halus di sudut).\n\nShortcut yang tepat:', 'Ctrl+R (Loop Cut)', 'E (Extrude)', 'I (Inset)', 'M (Merge)', 0, 'Ctrl+R = Loop Cut. Hover di edge = preview loop. Klik = confirm. Scroll = multiple loops. E = extrude. I = inset face. M = merge vertex.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_039', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda modeling di Blender. Ingin tambah edge loop melingkar di tengah kubus untuk detail (misal untuk bevel lebih halus di sudut).
+
+Shortcut yang tepat:', 'Ctrl+R (Loop Cut)', 'E (Extrude)', 'I (Inset)', 'M (Merge)', 0, 'Ctrl+R = Loop Cut. Hover di edge = preview loop. Klik = confirm. Scroll = multiple loops. E = extrude. I = inset face. M = merge vertex.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_040', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda ingin pindah kamera view di Blender ke perspektif tertentu, lalu set kamera render sesuai view saat ini.\n\nUrutan langkah yang tepat:', 'Numpad 0, lalu Ctrl+Alt+Numpad 0', 'Ctrl+Alt+Numpad 0, lalu Numpad 0', 'Shift+A > Camera, lalu F12', 'Numpad 5', 0, 'Pertama Numpad 0 = view dari kamera existing (untuk lihat). Tapi untuk ALIGN kamera ke VIEW: position view 3D sesuai keinginan, lalu Ctrl+Alt+Numpad 0 = kamera pindah ke view. Atau: Numpad 0 first, lalu Lock Camera to View (N panel) untuk navigasi.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_040', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda ingin pindah kamera view di Blender ke perspektif tertentu, lalu set kamera render sesuai view saat ini.
+
+Urutan langkah yang tepat:', 'Numpad 0, lalu Ctrl+Alt+Numpad 0', 'Ctrl+Alt+Numpad 0, lalu Numpad 0', 'Shift+A > Camera, lalu F12', 'Numpad 5', 0, 'Pertama Numpad 0 = view dari kamera existing (untuk lihat). Tapi untuk ALIGN kamera ke VIEW: position view 3D sesuai keinginan, lalu Ctrl+Alt+Numpad 0 = kamera pindah ke view. Atau: Numpad 0 first, lalu Lock Camera to View (N panel) untuk navigasi.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
 ('q_ujian_teori_dkv_041', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Material di Blender: Anda membuat objek logam besi. Property yang harus di-set di Principled BSDF?', 'Base Color hitam, Metallic 0, Roughness 0.5', 'Base Color abu-abu metalik, Metallic 1.0, Roughness 0.2-0.4 (tergantung finish)', 'Base Color silver, Metallic 0, Roughness 0', 'Metallic 0.5, Roughness 1.0', 1, 'Logam = Metallic 1.0. Roughness: 0 = cermin mengkilap, 0.2-0.4 = besi standard, 0.5+ = matte/berkarat. Base Color = warna dasar (abu-abu, silver, gelap). Non-logam = Metallic 0.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_042', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda modeling di Blender, ingin hapus salah satu face dari kubus di Edit Mode.\n\nLangkah yang tepat:', 'Tekan X lalu pilih ''Faces'' (atau Delete lalu Faces)', 'Tekan Delete (no menu)', 'Tekan H', 'Tekan M', 0, 'X di Edit Mode = menu Delete (Vertices, Edges, Faces, All). Pilih Faces = hapus face terpilih. Delete (Del) = langsung hapus semua terpilih. H = hide. M = merge.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_042', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda modeling di Blender, ingin hapus salah satu face dari kubus di Edit Mode.
+
+Langkah yang tepat:', 'Tekan X lalu pilih ''Faces'' (atau Delete lalu Faces)', 'Tekan Delete (no menu)', 'Tekan H', 'Tekan M', 0, 'X di Edit Mode = menu Delete (Vertices, Edges, Faces, All). Pilih Faces = hapus face terpilih. Delete (Del) = langsung hapus semua terpilih. H = hide. M = merge.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
 ('q_ujian_teori_dkv_043', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda ingin render scene dengan caustics (cahaya membengkok melalui kaca/air). Render engine yang HARUS dipakai:', 'EEVEE', 'Cycles (ray tracing support caustics)', 'Workbench', 'Tidak bisa di Blender', 1, 'Cycles = path tracing, support caustics (refraksi cahaya kompleks). EEVEE = real-time, tidak support caustics akurat. Workbench = preview only. Untuk kaca/air realistis = Cycles.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_044', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda ingin lihat scene dari atas (top view) untuk cek alignment objek.\n\nShortcut yang tepat:', 'Numpad 1', 'Numpad 3', 'Numpad 7', 'Numpad 0', 2, 'Numpad 7 = top view (orthographic). Numpad 1 = front view. Numpad 3 = side (right) view. Numpad 0 = camera view. Numpad 5 = toggle perspective/orthographic.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_044', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda ingin lihat scene dari atas (top view) untuk cek alignment objek.
+
+Shortcut yang tepat:', 'Numpad 1', 'Numpad 3', 'Numpad 7', 'Numpad 0', 2, 'Numpad 7 = top view (orthographic). Numpad 1 = front view. Numpad 3 = side (right) view. Numpad 0 = camera view. Numpad 5 = toggle perspective/orthographic.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_045', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda modeling objek kompleks. Ingin hapus beberapa bagian dengan operasi boolean: shape A (kubus) dikurangi shape B (silinder) = kubus dengan lubang silinder.\n\nModifier yang tepat:', 'Subdivision Surface', 'Boolean (Difference)', 'Mirror', 'Array', 1, 'Boolean modifier dengan operation = Difference. Object = silinder (B). Apply = kubus A dikurangi silinder B = lubang. Union = gabung. Intersect = ambil intersection.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_045', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda modeling objek kompleks. Ingin hapus beberapa bagian dengan operasi boolean: shape A (kubus) dikurangi shape B (silinder) = kubus dengan lubang silinder.
+
+Modifier yang tepat:', 'Subdivision Surface', 'Boolean (Difference)', 'Mirror', 'Array', 1, 'Boolean modifier dengan operation = Difference. Object = silinder (B). Apply = kubus A dikurangi silinder B = lubang. Union = gabung. Intersect = ambil intersection.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_046', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda modeling di Blender, ingin duplikasi objek yang ada. Setelah duplikasi, objek asli tetap di tempat, objek baru bisa di-move terpisah.\n\nShortcut yang tepat:', 'Alt+D (linked duplicate)', 'Shift+D (duplicate)', 'Ctrl+D (copy)', 'Ctrl+C, Ctrl+V', 1, 'Shift+D = duplicate (objek baru independent, punya data sendiri). Alt+D = linked duplicate (share mesh data, edit 1 = semua ikut). Untuk objek terpisah = Shift+D.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_046', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda modeling di Blender, ingin duplikasi objek yang ada. Setelah duplikasi, objek asli tetap di tempat, objek baru bisa di-move terpisah.
+
+Shortcut yang tepat:', 'Alt+D (linked duplicate)', 'Shift+D (duplicate)', 'Ctrl+D (copy)', 'Ctrl+C, Ctrl+V', 1, 'Shift+D = duplicate (objek baru independent, punya data sendiri). Alt+D = linked duplicate (share mesh data, edit 1 = semua ikut). Untuk objek terpisah = Shift+D.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
 ('q_ujian_teori_dkv_047', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda membuat material kaca (glass) di Blender. Pengaturan yang tepat di Principled BSDF untuk efek transparan + refraksi:', 'Transmission 1.0, Roughness 0, IOR 1.45 (glass)', 'Metallic 1.0', 'Emission putih', 'Roughness 1.0', 0, 'Transmission 1.0 = cahaya tembus (refraksi). IOR 1.45 = indeks refraksi kaca (air = 1.33, diamond = 2.42). Roughness 0 = transparan sempurna. Butuh Cycles untuk render transmission akurat (EEVEE limited).', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
@@ -196,7 +655,9 @@ INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB
 ('q_ujian_teori_dkv_048', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda ingin rendering animasi 100 frame. Setelah render selesai, format output yang PALING tepat untuk di-edit lagi di video editor (preservasi kualitas):', 'JPEG per frame', 'PNG (lossless) per frame + sequence', 'MP4 langsung dari Blender', 'AVI uncompressed', 1, 'PNG sequence (frame_0001.png, frame_0002.png, ...) = lossless, bisa import ke video editor (Premiere, Resolve, Blender VSE). JPEG = lossy. MP4 langsung = sudah compressed, sulit edit ulang. AVI uncompressed = file besar.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
-('q_ujian_teori_dkv_049', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda ingin setup three-point lighting di Blender untuk render karakter. Subjek di tengah scene.\n\nPosisi yang tepat:', '1 light dari depan (Key), 1 light dari belakang (Rim), 1 light dari samping lain (Fill)', '1 light dari atas', '3 light semua dari depan', '1 light point di tengah', 0, 'Three-point: Key (depan-samping, terang), Fill (sisi lain, lebih redup, haluskan shadow), Rim/Back (belakang, pisahkan subjek dari bg).', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
+('q_ujian_teori_dkv_049', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda ingin setup three-point lighting di Blender untuk render karakter. Subjek di tengah scene.
+
+Posisi yang tepat:', '1 light dari depan (Key), 1 light dari belakang (Rim), 1 light dari samping lain (Fill)', '1 light dari atas', '3 light semua dari depan', '1 light point di tengah', 0, 'Three-point: Key (depan-samping, terang), Fill (sisi lain, lebih redup, haluskan shadow), Rim/Back (belakang, pisahkan subjek dari bg).', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET question = EXCLUDED.question, "optionA" = EXCLUDED."optionA", "optionB" = EXCLUDED."optionB", "optionC" = EXCLUDED."optionC", "optionD" = EXCLUDED."optionD", "correctAnswer" = EXCLUDED."correctAnswer", explanation = EXCLUDED.explanation, category = EXCLUDED.category, "isActive" = EXCLUDED."isActive", "questionType" = EXCLUDED."questionType", "levelKognitif" = EXCLUDED."levelKognitif", "updatedAt" = NOW();
 INSERT INTO "Question" (id, "gradeLevel", subject, question, "optionA", "optionB", "optionC", "optionD", "correctAnswer", explanation, category, "isActive", "questionType", "correctAnswers", "matchPairs", "shortAnswer", "essayAnswer", "levelKognitif", "pembahasanBenar", "analisisDistraktor", "cpId", "tpId", "createdAt", "updatedAt") VALUES
 ('q_ujian_teori_dkv_050', '11DKV', 'Mata Pelajaran Pilihan', '**Stimulus:** Anda modeling objek dengan modifier Subdivision Surface. Viewport halus, tapi render masih facet (kotak). Penyebab:', 'Modifier tidak aktif untuk render', 'Viewport level = 2, Render level = 0. Set Render level ke 2 atau lebih', 'Material salah', 'Light kurang', 1, 'Subsurf punya 2 level: Viewport (real-time) dan Render. Viewport = 2 = halus di editor. Render = 0 = facet saat render. Set Render level sama/lebih tinggi dari Viewport.', 'Blender', true, 'pilihan_ganda', '[]', '[]', '', '', 'C4', '', '', NULL, NULL, NOW(), NOW())

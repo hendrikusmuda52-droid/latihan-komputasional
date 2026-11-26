@@ -18,7 +18,13 @@ SUBJECT = "Informatika"
 def sql_escape(text):
     if text is None:
         return ""
-    return text.replace("'", "''").replace("\n", "\\n")
+    # ── FIX: JANGAN replace \n dengan \\n ──
+    # PostgreSQL single-quoted string support multi-line dengan actual newline char.
+    # Jika kita replace \n → \\n (literal backslash-n), nilai di DB jadi 2 chars
+    # literal '\n' (bukan newline), markdown renderer tidak bisa split baris,
+    # heading ## ** tidak ter-render. BUG!
+    # Cukup escape single quote (PostgreSQL standard).
+    return text.replace("'", "''")
 
 def sql_str(text):
     return f"'{sql_escape(text)}'"
